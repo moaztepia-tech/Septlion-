@@ -1,0 +1,1 @@
+import { Module } from '@nestjs/common'; import { OrderIntentController } from './order-intent.controller'; import { OrderIntentService } from './order-intent.service'; @Module({controllers:[OrderIntentController],providers:[OrderIntentService]}) export class OrderIntentModule{}

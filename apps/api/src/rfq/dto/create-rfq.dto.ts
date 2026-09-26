@@ -1,0 +1,4 @@
+import { Type } from 'class-transformer';
+import { IsArray, IsDateString, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested } from 'class-validator';
+class RFQItemDto { @IsUUID() skuId!: string; @Type(() => Number) @IsNumber() @Min(0.0001) quantity!: number; @IsString() unit!: string; @IsOptional() @Type(() => Number) @IsNumber() @Min(0) targetPrice?: number; }
+export class CreateRfqDto { @IsOptional() @IsUUID() supplierOrgId?: string; @IsUUID() sectorId!: string; @IsOptional() @IsString() deliveryCountry?: string; @IsOptional() @IsString() deliveryPort?: string; @IsOptional() @IsString() incoterm?: string; @IsOptional() @IsDateString() requestedDate?: string; @IsOptional() @IsString() notes?: string; @IsArray() @ValidateNested({ each: true }) @Type(() => RFQItemDto) items!: RFQItemDto[]; }
