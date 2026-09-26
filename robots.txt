@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://septlion.com/sitemap.xml

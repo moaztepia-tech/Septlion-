@@ -1,3 +1,0 @@
-import './globals.css';
-export const metadata={metadataBase:new URL('https://septlion.com'),title:'Septlion Supply — Demand-Led Product Development & Managed Supply',description:'Septlion turns buyer requirements into production-ready products and managed supply programs across MENA and Africa.',keywords:['B2B supply','private label','product development','MENA','Africa','managed supply'],openGraph:{title:'Septlion Supply',description:'You define the need. Septlion builds the supply.',url:'https://septlion.com',siteName:'Septlion Supply',type:'website'},robots:{index:true,follow:true}};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>}

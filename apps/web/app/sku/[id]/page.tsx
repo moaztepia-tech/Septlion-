@@ -1,3 +1,0 @@
-'use client';
-import {useEffect,useState} from 'react'; import {api,accessToken} from '../../../lib/api'; import {SkuExperience} from '../../../components/sku/SkuExperience';
-export default function SkuPage({params}:{params:{id:string}}){const [sku,setSku]=useState<any>(null);const [error,setError]=useState('');useEffect(()=>{const token=accessToken();if(!token){window.location.href='/';return;}api(`/catalog/public/sku/${params.id}`,{},token).then(setSku).catch(e=>setError(e.message));},[params.id]);if(error)return <main className="min-h-screen grid place-items-center p-6">{error}</main>;if(!sku)return <main className="min-h-screen grid place-items-center p-6">Loading SKU…</main>;return <SkuExperience sku={sku}/>}
