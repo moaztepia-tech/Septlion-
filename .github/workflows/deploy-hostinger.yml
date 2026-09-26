@@ -1,5 +1,4 @@
 name: Deploy Septlion to Hostinger
-# Deploy through the primary Hostinger FTP account
 
 on:
   push:
@@ -14,11 +13,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout deployment files
+      - name: Checkout source
         uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          ref: hostinger-deploy
-          path: publish
+          version: 9.15.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build website
+        run: pnpm --filter @septlion/web build
 
       - name: Upload to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
@@ -28,30 +41,6 @@ jobs:
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           protocol: ftps
           port: 21
-          local-dir: publish/
+          local-dir: apps/web/out/
           server-dir: /domains/septlion.com/public_html/
-
-      - name: Fix Hostinger permissions
-        env:
-          FTP_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-        run: |
-          python - <<'PY'
-          import ftplib, os
-          ftp = ftplib.FTP_TLS()
-          ftp.connect(os.environ["FTP_SERVER"], 21, timeout=20)
-          ftp.login(os.environ["FTP_USERNAME"], os.environ["FTP_PASSWORD"])
-          ftp.prot_p()
-          ftp.cwd("/domains/septlion.com/public_html")
-          for name in ["index.html", "404.html", "robots.txt", "sitemap.xml", "llms.txt", "index.txt"]:
-              try:
-                  ftp.sendcmd(f"SITE CHMOD 644 {name}")
-              except ftplib.all_errors:
-                  pass
-          try:
-              ftp.sendcmd("SITE CHMOD 755 _next")
-          except ftplib.all_errors:
-              pass
-          ftp.quit()
-          PY
+          dangerous-clean-slate: true
