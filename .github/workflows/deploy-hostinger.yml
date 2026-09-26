@@ -1,4 +1,5 @@
 name: Deploy Septlion to Hostinger
+# Production FTP account targets the domain document root
 
 on:
   push:
