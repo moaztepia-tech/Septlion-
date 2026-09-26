@@ -28,4 +28,4 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: publish/
-          server-dir: /
+          server-dir: public_html/
