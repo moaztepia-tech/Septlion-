@@ -29,3 +29,25 @@ jobs:
           port: 21
           local-dir: publish/
           server-dir: /
+
+      - name: Fix Hostinger permissions
+        env:
+          FTP_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        run: |
+          python - <<'PY'
+          import ftplib, os
+          ftp = ftplib.FTP_TLS()
+          ftp.connect(os.environ["FTP_SERVER"], 21, timeout=20)
+          ftp.login(os.environ["FTP_USERNAME"], os.environ["FTP_PASSWORD"])
+          ftp.prot_p()
+          ftp.sendcmd("SITE CHMOD 755 /")
+          for name in ["index.html", "404.html", "robots.txt", "sitemap.xml", "llms.txt", "index.txt"]:
+              try:
+                  ftp.sendcmd(f"SITE CHMOD 644 {name}")
+              except ftplib.all_errors:
+                  pass
+          ftp.sendcmd("SITE CHMOD 755 _next")
+          ftp.quit()
+          PY
