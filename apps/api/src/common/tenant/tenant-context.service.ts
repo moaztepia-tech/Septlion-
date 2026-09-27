@@ -12,4 +12,7 @@ export class TenantContextService {
     if (!ctx) throw new Error('Tenant context not initialized');
     return ctx;
   }
+  get organizationId() { return this.get().organizationId; }
+  get userId() { return this.get().userId; }
+  get role() { return this.get().role; }
 }

@@ -1,134 +1,259 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum OrganizationType { BUYER SELLER BOTH }
-enum UserRole { BUYER SALES ADMIN }
-enum OrganizationStatus { ACTIVE SUSPENDED PENDING }
-enum CatalogVisibility { PUBLIC PRIVATE }
-enum ProductStatus { DRAFT ACTIVE ARCHIVED }
-enum MediaType { IMAGE VIDEO }
-enum RFQStatus { DRAFT OPEN QUOTED NEGOTIATING ACCEPTED REJECTED CANCELLED EXPIRED }
-enum QuoteStatus { DRAFT SUBMITTED REVISED ACCEPTED REJECTED EXPIRED WITHDRAWN }
-enum QuoteRevisionStatus { PROPOSED ACCEPTED REJECTED SUPERSEDED }
-enum OrderIntentStatus { CREATED CONFIRMED CANCELLED }
-enum AuditAction { CREATE UPDATE DELETE STATUS_CHANGE LOGIN LOGOUT RFQ_CREATED RFQ_UPDATED QUOTE_CREATED QUOTE_SUBMITTED QUOTE_UPDATED ORDER_INTENT_CREATED ORDER_INTENT_UPDATED DOCUMENT_UPLOADED MESSAGE_SENT NOTIFICATION_READ }
-enum WorkspaceEntityType { RFQ QUOTE ORDER_INTENT }
-enum DocumentStatus { PENDING READY QUARANTINED DELETED }
-enum MessageType { TEXT SYSTEM DOCUMENT }
-enum NotificationType { RFQ QUOTE NEGOTIATION DOCUMENT MESSAGE ORDER_INTENT SYSTEM }
-enum OutboxStatus { PENDING PROCESSING PROCESSED FAILED }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrganizationType {
+  BUYER
+  SELLER
+  BOTH
+}
+
+enum UserRole {
+  BUYER
+  SALES
+  ADMIN
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum CatalogVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum RFQStatus {
+  DRAFT
+  OPEN
+  QUOTED
+  NEGOTIATING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum QuoteStatus {
+  DRAFT
+  SUBMITTED
+  REVISED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum QuoteRevisionStatus {
+  PROPOSED
+  ACCEPTED
+  REJECTED
+  SUPERSEDED
+}
+
+enum OrderIntentStatus {
+  CREATED
+  CONFIRMED
+  CANCELLED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+  LOGIN
+  LOGOUT
+  RFQ_CREATED
+  RFQ_UPDATED
+  QUOTE_CREATED
+  QUOTE_SUBMITTED
+  QUOTE_UPDATED
+  ORDER_INTENT_CREATED
+  ORDER_INTENT_UPDATED
+  DOCUMENT_UPLOADED
+  MESSAGE_SENT
+  NOTIFICATION_READ
+}
+
+enum WorkspaceEntityType {
+  RFQ
+  QUOTE
+  ORDER_INTENT
+}
+
+enum DocumentStatus {
+  PENDING
+  READY
+  QUARANTINED
+  DELETED
+}
+
+enum MessageType {
+  TEXT
+  SYSTEM
+  DOCUMENT
+}
+
+enum NotificationType {
+  RFQ
+  QUOTE
+  NEGOTIATION
+  DOCUMENT
+  MESSAGE
+  ORDER_INTENT
+  SYSTEM
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum MaritimeRfqStatus {
+  ESTIMATED
+  SUBMITTED
+  EXPIRED
+  CANCELLED
+}
 
 model Organization {
-  id String @id @default(uuid())
-  name String
-  legalName String?
-  country String?
-  organizationType OrganizationType @default(BOTH)
-  status OrganizationStatus @default(ACTIVE)
-  memberships Membership[]
-  products Product[]
-  buyerRfqs RFQ[] @relation("RFQBuyer")
-  supplierRfqs RFQ[] @relation("RFQSupplier")
-  buyerQuotes Quote[] @relation("QuoteBuyer")
-  supplierQuotes Quote[] @relation("QuoteSupplier")
-  buyerOrderIntents OrderIntent[] @relation("OrderIntentBuyer")
-  supplierOrderIntents OrderIntent[] @relation("OrderIntentSupplier")
-  auditLogs AuditLog[]
-  documents CommercialDocument[]
-  conversations ConversationParticipant[]
-  notifications Notification[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String                    @id @default(uuid())
+  name                 String
+  legalName            String?
+  country              String?
+  organizationType     OrganizationType          @default(BOTH)
+  status               OrganizationStatus        @default(ACTIVE)
+  memberships          Membership[]
+  products             Product[]
+  buyerRfqs            RFQ[]                     @relation("RFQBuyer")
+  supplierRfqs         RFQ[]                     @relation("RFQSupplier")
+  buyerQuotes          Quote[]                   @relation("QuoteBuyer")
+  supplierQuotes       Quote[]                   @relation("QuoteSupplier")
+  buyerOrderIntents    OrderIntent[]             @relation("OrderIntentBuyer")
+  supplierOrderIntents OrderIntent[]             @relation("OrderIntentSupplier")
+  auditLogs            AuditLog[]
+  documents            CommercialDocument[]
+  conversations        ConversationParticipant[]
+  notifications        Notification[]
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
   @@index([status])
   @@index([country])
 }
 
 model User {
-  id String @id @default(uuid())
-  email String @unique
-  passwordHash String
-  firstName String?
-  lastName String?
-  isActive Boolean @default(true)
-  sessionVersion Int @default(1)
-  memberships Membership[]
-  refreshSessions RefreshSession[]
-  messages Message[]
+  id                String               @id @default(uuid())
+  email             String               @unique
+  passwordHash      String
+  firstName         String?
+  lastName          String?
+  isActive          Boolean              @default(true)
+  sessionVersion    Int                  @default(1)
+  memberships       Membership[]
+  refreshSessions   RefreshSession[]
+  messages          Message[]
   uploadedDocuments CommercialDocument[] @relation("DocumentUploader")
-  notifications Notification[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  notifications     Notification[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
   @@index([email])
 }
 
 model Membership {
-  id String @id @default(uuid())
-  userId String
+  id             String       @id @default(uuid())
+  userId         String
   organizationId String
-  role UserRole
-  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
-  organization Organization @relation(fields:[organizationId], references:[id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  role           UserRole
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
   @@unique([userId, organizationId])
   @@index([organizationId])
   @@index([userId])
 }
 
 model RefreshSession {
-  id String @id @default(uuid())
-  userId String
+  id             String    @id @default(uuid())
+  userId         String
   organizationId String
-  tokenHash String @unique
-  expiresAt DateTime
-  revokedAt DateTime?
-  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  tokenHash      String    @unique
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+
   @@index([userId, organizationId])
   @@index([expiresAt])
 }
 
 model Sector {
-  id String @id @default(uuid())
-  code String @unique
-  name String
+  id          String         @id @default(uuid())
+  code        String         @unique
+  name        String
   description String?
-  policies SectorPolicy[]
-  products Product[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  policies    SectorPolicy[]
+  products    Product[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 model SectorPolicy {
-  id String @id @default(uuid())
-  sectorId String
-  sector Sector @relation(fields:[sectorId], references:[id], onDelete: Cascade)
-  defaultCurrency String @default("USD")
-  defaultUnit String @default("MT")
-  minimumOrderQty Decimal? @db.Decimal(18,4)
-  requiresCertificate Boolean @default(false)
-  requiresOrigin Boolean @default(false)
-  requiresPackingList Boolean @default(false)
-  shippingRules Json?
-  requiredDocuments Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  sectorId            String
+  sector              Sector   @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+  defaultCurrency     String   @default("USD")
+  defaultUnit         String   @default("MT")
+  minimumOrderQty     Decimal? @db.Decimal(18, 4)
+  requiresCertificate Boolean  @default(false)
+  requiresOrigin      Boolean  @default(false)
+  requiresPackingList Boolean  @default(false)
+  shippingRules       Json?
+  requiredDocuments   Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
   @@index([sectorId])
 }
 
 model Product {
-  id String @id @default(uuid())
+  id             String            @id @default(uuid())
   organizationId String
-  sectorId String
-  name String
-  slug String
-  description String?
-  status ProductStatus @default(DRAFT)
-  visibility CatalogVisibility @default(PRIVATE)
-  organization Organization @relation(fields:[organizationId], references:[id], onDelete: Cascade)
-  sector Sector @relation(fields:[sectorId], references:[id])
-  skus SKU[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sectorId       String
+  name           String
+  slug           String
+  description    String?
+  status         ProductStatus     @default(DRAFT)
+  visibility     CatalogVisibility @default(PRIVATE)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sector         Sector            @relation(fields: [sectorId], references: [id])
+  skus           SKU[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
   @@unique([organizationId, slug])
   @@index([organizationId])
   @@index([sectorId])
@@ -136,57 +261,60 @@ model Product {
 }
 
 model SKU {
-  id String @id @default(uuid())
-  organizationId String
-  productId String
-  skuCode String
-  name String
-  unit String
-  minimumOrderQty Decimal @db.Decimal(18,4)
-  currency String @default("USD")
-  specifications Json?
-  shipping Json?
-  product Product @relation(fields:[productId], references:[id], onDelete: Cascade)
-  media Media[]
-  rfqItems RFQItem[]
-  quoteItems QuoteItem[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String      @id @default(uuid())
+  organizationId  String
+  productId       String
+  skuCode         String
+  name            String
+  unit            String
+  minimumOrderQty Decimal     @db.Decimal(18, 4)
+  currency        String      @default("USD")
+  specifications  Json?
+  shipping        Json?
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  media           Media[]
+  rfqItems        RFQItem[]
+  quoteItems      QuoteItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
   @@unique([organizationId, skuCode])
   @@index([organizationId])
   @@index([productId])
 }
 
 model Media {
-  id String @id @default(uuid())
-  skuId String
-  type MediaType
-  url String
-  sortOrder Int @default(0)
-  sku SKU @relation(fields:[skuId], references:[id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id        String    @id @default(uuid())
+  skuId     String
+  type      MediaType
+  url       String
+  sortOrder Int       @default(0)
+  sku       SKU       @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
   @@index([skuId])
 }
 
 model RFQ {
-  id String @id @default(uuid())
-  buyerOrgId String
-  supplierOrgId String?
-  sectorId String
-  reference String @unique
-  status RFQStatus @default(DRAFT)
-  deliveryCountry String?
-  deliveryPort String?
-  incoterm String?
+  id                 String        @id @default(uuid())
+  buyerOrgId         String
+  supplierOrgId      String?
+  sectorId           String
+  reference          String        @unique
+  status             RFQStatus     @default(DRAFT)
+  deliveryCountry    String?
+  deliveryPort       String?
+  incoterm           String?
   requestedDocuments Json?
-  requestedDate DateTime?
-  notes String?
-  buyer Organization @relation("RFQBuyer", fields:[buyerOrgId], references:[id])
-  supplier Organization? @relation("RFQSupplier", fields:[supplierOrgId], references:[id])
-  items RFQItem[]
-  quotes Quote[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  requestedDate      DateTime?
+  notes              String?
+  buyer              Organization  @relation("RFQBuyer", fields: [buyerOrgId], references: [id])
+  supplier           Organization? @relation("RFQSupplier", fields: [supplierOrgId], references: [id])
+  items              RFQItem[]
+  quotes             Quote[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
   @@index([buyerOrgId])
   @@index([supplierOrgId])
   @@index([sectorId])
@@ -194,46 +322,97 @@ model RFQ {
 }
 
 model RFQItem {
-  id String @id @default(uuid())
-  rfqId String
-  skuId String
-  quantity Decimal @db.Decimal(18,4)
-  unit String
-  targetPrice Decimal? @db.Decimal(18,4)
-  rfq RFQ @relation(fields:[rfqId], references:[id], onDelete: Cascade)
-  sku SKU @relation(fields:[skuId], references:[id])
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  rfqId       String
+  skuId       String
+  quantity    Decimal  @db.Decimal(18, 4)
+  unit        String
+  targetPrice Decimal? @db.Decimal(18, 4)
+  rfq         RFQ      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  sku         SKU      @relation(fields: [skuId], references: [id])
+  createdAt   DateTime @default(now())
+
   @@index([rfqId])
   @@index([skuId])
 }
 
+model MaritimeRFQ {
+  id                String             @id @default(uuid())
+  reference         String             @unique
+  idempotencyKey    String             @unique
+  customerName      String
+  company           String
+  email             String
+  phone             String
+  containerCount    Int
+  containerType     String
+  teu               Int
+  pol               String
+  pod               String
+  incoterm          String
+  cargoType         String
+  shipDate          DateTime
+  grossWeight       Decimal?           @db.Decimal(18, 3)
+  cbm               Decimal?           @db.Decimal(18, 3)
+  finalDestinations Int                @default(1)
+  paymentTerm       String?
+  notes             String?
+  sCode             String
+  exclusiveName     String
+  maritimeTerm      String
+  priceMin          Decimal            @db.Decimal(18, 2)
+  priceMax          Decimal            @db.Decimal(18, 2)
+  currency          String             @default("USD")
+  surcharges        Json
+  validUntil        DateTime
+  status            MaritimeRfqStatus  @default(SUBMITTED)
+  audits            MaritimeRFQAudit[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([email, createdAt])
+  @@index([sCode])
+  @@index([status])
+}
+
+model MaritimeRFQAudit {
+  id        String      @id @default(uuid())
+  rfqId     String
+  action    String
+  metadata  Json?
+  rfq       MaritimeRFQ @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@index([rfqId, createdAt])
+}
+
 model Quote {
-  id String @id @default(uuid())
-  rfqId String
-  buyerOrgId String
+  id            String          @id @default(uuid())
+  rfqId         String
+  buyerOrgId    String
   supplierOrgId String
-  status QuoteStatus @default(DRAFT)
-  currency String @default("USD")
-  validUntil DateTime?
-  paymentTerms String?
+  status        QuoteStatus     @default(DRAFT)
+  currency      String          @default("USD")
+  validUntil    DateTime?
+  paymentTerms  String?
   shippingTerms String?
-  notes String?
-  rfq RFQ @relation(fields:[rfqId], references:[id], onDelete: Cascade)
-  buyer Organization @relation("QuoteBuyer", fields:[buyerOrgId], references:[id])
-  supplier Organization @relation("QuoteSupplier", fields:[supplierOrgId], references:[id])
-  items QuoteItem[]
-  revisions QuoteRevision[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  notes         String?
+  rfq           RFQ             @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  buyer         Organization    @relation("QuoteBuyer", fields: [buyerOrgId], references: [id])
+  supplier      Organization    @relation("QuoteSupplier", fields: [supplierOrgId], references: [id])
+  items         QuoteItem[]
+  revisions     QuoteRevision[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
   @@index([rfqId])
   @@index([buyerOrgId])
   @@index([supplierOrgId])
   @@index([status])
 }
 
-
 model QuoteRevision {
-  id            String             @id @default(uuid())
+  id            String              @id @default(uuid())
   quoteId       String
   revisionNo    Int
   status        QuoteRevisionStatus @default(PROPOSED)
@@ -243,147 +422,155 @@ model QuoteRevision {
   shippingTerms String?
   notes         String?
   snapshot      Json
-  quote         Quote              @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  createdAt     DateTime           @default(now())
+  quote         Quote               @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  createdAt     DateTime            @default(now())
 
   @@unique([quoteId, revisionNo])
   @@index([quoteId, createdAt])
 }
 
 model QuoteItem {
-  id String @id @default(uuid())
-  quoteId String
-  skuId String
-  quantity Decimal @db.Decimal(18,4)
-  unitPrice Decimal @db.Decimal(18,4)
-  quote Quote @relation(fields:[quoteId], references:[id], onDelete: Cascade)
-  sku SKU @relation(fields:[skuId], references:[id])
+  id        String   @id @default(uuid())
+  quoteId   String
+  skuId     String
+  quantity  Decimal  @db.Decimal(18, 4)
+  unitPrice Decimal  @db.Decimal(18, 4)
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  sku       SKU      @relation(fields: [skuId], references: [id])
   createdAt DateTime @default(now())
+
   @@index([quoteId])
   @@index([skuId])
 }
 
 model OrderIntent {
-  id String @id @default(uuid())
-  quoteId String @unique
-  buyerOrgId String
+  id            String            @id @default(uuid())
+  quoteId       String            @unique
+  buyerOrgId    String
   supplierOrgId String
-  status OrderIntentStatus @default(CREATED)
-  buyer Organization @relation("OrderIntentBuyer", fields:[buyerOrgId], references:[id])
-  supplier Organization @relation("OrderIntentSupplier", fields:[supplierOrgId], references:[id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status        OrderIntentStatus @default(CREATED)
+  buyer         Organization      @relation("OrderIntentBuyer", fields: [buyerOrgId], references: [id])
+  supplier      Organization      @relation("OrderIntentSupplier", fields: [supplierOrgId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
   @@index([buyerOrgId])
   @@index([supplierOrgId])
 }
 
 model AuditLog {
-  id String @id @default(uuid())
+  id             String       @id @default(uuid())
   organizationId String
-  userId String?
-  action AuditAction
-  entityType String
-  entityId String
-  before Json?
-  after Json?
-  metadata Json?
-  organization Organization @relation(fields:[organizationId], references:[id])
-  createdAt DateTime @default(now())
+  userId         String?
+  action         AuditAction
+  entityType     String
+  entityId       String
+  before         Json?
+  after          Json?
+  metadata       Json?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+
   @@index([organizationId])
   @@index([entityType, entityId])
   @@index([createdAt])
 }
 
-
 model CommercialDocument {
-  id String @id @default(uuid())
-  organizationId String
-  uploadedById String
-  entityType WorkspaceEntityType
-  entityId String
-  fileName String
-  mimeType String
-  byteSize BigInt
-  storageKey String @unique
-  sha256 String
-  status DocumentStatus @default(PENDING)
-  visibilityToCounterparty Boolean @default(false)
-  organization Organization @relation(fields:[organizationId], references:[id], onDelete:Cascade)
-  uploadedBy User @relation("DocumentUploader", fields:[uploadedById], references:[id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                       String              @id @default(uuid())
+  organizationId           String
+  uploadedById             String
+  entityType               WorkspaceEntityType
+  entityId                 String
+  fileName                 String
+  mimeType                 String
+  byteSize                 BigInt
+  storageKey               String              @unique
+  sha256                   String
+  status                   DocumentStatus      @default(PENDING)
+  visibilityToCounterparty Boolean             @default(false)
+  organization             Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedBy               User                @relation("DocumentUploader", fields: [uploadedById], references: [id])
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+
   @@index([organizationId, entityType, entityId])
   @@index([sha256])
 }
 
 model Conversation {
-  id String @id @default(uuid())
-  entityType WorkspaceEntityType
-  entityId String
+  id           String                    @id @default(uuid())
+  entityType   WorkspaceEntityType
+  entityId     String
   participants ConversationParticipant[]
-  messages Message[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  messages     Message[]
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+
   @@unique([entityType, entityId])
   @@index([entityType, entityId])
 }
 
 model ConversationParticipant {
-  id String @id @default(uuid())
+  id             String       @id @default(uuid())
   conversationId String
   organizationId String
-  conversation Conversation @relation(fields:[conversationId], references:[id], onDelete:Cascade)
-  organization Organization @relation(fields:[organizationId], references:[id], onDelete:Cascade)
-  joinedAt DateTime @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime     @default(now())
+
   @@unique([conversationId, organizationId])
   @@index([organizationId])
 }
 
 model Message {
-  id String @id @default(uuid())
+  id             String       @id @default(uuid())
   conversationId String
-  senderUserId String
-  senderOrgId String
-  type MessageType @default(TEXT)
-  body String
-  documentId String?
-  conversation Conversation @relation(fields:[conversationId], references:[id], onDelete:Cascade)
-  sender User @relation(fields:[senderUserId], references:[id])
-  createdAt DateTime @default(now())
+  senderUserId   String
+  senderOrgId    String
+  type           MessageType  @default(TEXT)
+  body           String
+  documentId     String?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderUserId], references: [id])
+  createdAt      DateTime     @default(now())
+
   @@index([conversationId, createdAt])
   @@index([senderOrgId])
 }
 
 model Notification {
-  id String @id @default(uuid())
+  id             String               @id @default(uuid())
   organizationId String
-  userId String?
-  type NotificationType
-  title String
-  body String
-  entityType WorkspaceEntityType?
-  entityId String?
-  readAt DateTime?
-  organization Organization @relation(fields:[organizationId], references:[id], onDelete:Cascade)
-  user User? @relation(fields:[userId], references:[id], onDelete:Cascade)
-  createdAt DateTime @default(now())
+  userId         String?
+  type           NotificationType
+  title          String
+  body           String
+  entityType     WorkspaceEntityType?
+  entityId       String?
+  readAt         DateTime?
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime             @default(now())
+
   @@index([organizationId, readAt, createdAt])
   @@index([userId, readAt])
 }
 
 model OutboxEvent {
-  id String @id @default(uuid())
+  id             String       @id @default(uuid())
   organizationId String
-  type String
-  aggregateType String
-  aggregateId String
-  payload Json
-  status OutboxStatus @default(PENDING)
-  attempts Int @default(0)
-  availableAt DateTime @default(now())
-  processedAt DateTime?
-  lastError String?
-  createdAt DateTime @default(now())
+  type           String
+  aggregateType  String
+  aggregateId    String
+  payload        Json
+  status         OutboxStatus @default(PENDING)
+  attempts       Int          @default(0)
+  availableAt    DateTime     @default(now())
+  processedAt    DateTime?
+  lastError      String?
+  createdAt      DateTime     @default(now())
+
   @@index([status, availableAt])
   @@index([organizationId, createdAt])
 }
