@@ -35,9 +35,10 @@ jobs:
 
       - name: Prepare static deployment
         run: |
-          mkdir -p deploy/_next
+          mkdir -p deploy/_next deploy/maritime-rfq
           cp apps/web/.next/server/app/index.html deploy/index.html
           cp apps/web/.next/server/app/index.html deploy/404.html
+          cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
           cp -R apps/web/.next/static deploy/_next/static
           if [ -d apps/web/public ]; then cp -R apps/web/public/. deploy/; fi
           if [ -f apps/web/.next/server/app/robots.txt.body ]; then cp apps/web/.next/server/app/robots.txt.body deploy/robots.txt; fi
