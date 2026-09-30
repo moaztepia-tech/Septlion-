@@ -112,6 +112,7 @@ Deno.serve(async (req: Request) => {
         type: "TENDER",
         market: value(r, "country_name", "project_ctry_name") || "Unresolved market",
         product: value(r, "bid_description", "notice_text") || "Flour procurement",
+        productKey: "wheat_flour",
         quantity: null,
         buyerName: null,
         publishedAt: value(r, "publication_date", "noticedate") || null,
