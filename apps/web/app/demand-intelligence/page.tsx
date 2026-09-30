@@ -1,10 +1,7 @@
 import Link from 'next/link';
+import {demandSignals} from './signals';
 
-const signals=[
- {type:'TENDER',market:'Saudi Arabia',product:'Wheat Flour',stage:'Open',intent:'Institutional procurement',action:'Build bid brief'},
- {type:'RFQ',market:'East Africa',product:'Wheat Flour 50kg',stage:'Detected',intent:'Commercial / FCL',action:'Resolve buyer'},
- {type:'AUCTION',market:'MENA',product:'Food & Packaging',stage:'Watch',intent:'Timed opportunity',action:'Qualify opportunity'}
-];
+const signals=demandSignals;
 const pipeline=['Detect demand','Extract requirement','Resolve buyer','Qualify opportunity','Build exact offer','Attract matching demand','Convert to RFQ'];
 
 export const metadata={title:'Septlion Demand Intelligence — Tenders, RFQs & Auctions',description:'Demand intelligence for tenders, RFQs and auctions. Detect demand, qualify opportunities and turn intent into executable supply briefs.'};
@@ -15,7 +12,7 @@ export default function DemandIntelligence(){
   <section className="di-hero shell"><p className="kicker">SEPTLION DEMAND INTELLIGENCE ENGINE</p><h1>Find demand.<br/>Predict demand.<br/><em>Attract demand.</em></h1><p>One operating layer for tenders, RFQs and auctions — turning public buying signals into qualified opportunities, exact offers and buyer-intent pages.</p><div className="di-actions"><a href="#radar">Open demand radar ↓</a><Link href="/#contact">Create supply brief ↗</Link></div></section>
   <section className="di-strip"><div className="shell">{pipeline.map((x,i)=><div key={x}><span>0{i+1}</span><b>{x}</b></div>)}</div></section>
   <section id="radar" className="di-section shell"><div className="di-head"><div><p className="kicker">LIVE OPERATING VIEW</p><h2>Demand Radar</h2></div><p>The first implementation is focused on wheat flour. Signals are treated as leads until independently verified; the engine separates detection from verification.</p></div>
-   <div className="di-table"><div className="di-row di-th"><span>Signal</span><span>Market</span><span>Requirement</span><span>Intent</span><span>Status</span><span>Next action</span></div>{signals.map(s=><div className="di-row" key={s.type+s.market}><strong>{s.type}</strong><span>{s.market}</span><b>{s.product}</b><span>{s.intent}</span><i>{s.stage}</i><button>{s.action} ↗</button></div>)}</div>
+   <div className="di-table"><div className="di-row di-th"><span>Signal</span><span>Market</span><span>Requirement</span><span>Intent</span><span>Status</span><span>Next action</span></div>{signals.map(s=><div className="di-row" key={s.id}><strong>{s.type}</strong><span>{s.market}</span><b>{s.product}<small style={{display:'block',marginTop:5,fontWeight:500}}>{s.quantity}</small></b><span>{s.published}</span><i>{s.status}</i><Link href="/#contact">Open brief ↗</Link></div>)}</div>
   </section>
   <section className="di-section di-dark"><div className="shell"><div className="di-head"><div><p className="kicker">THE DIFFERENCE</p><h2>Not a tender directory.</h2></div><p>Septlion is designed to move beyond discovery. Each signal becomes structured commercial intelligence and, when useful, an intent page capable of attracting buyers with the same requirement.</p></div><div className="di-grid">
    <article><span>01</span><h3>Demand Resolution</h3><p>Product, specification, quantity, destination, deadline, buyer entity and evidence are separated into verifiable fields.</p></article>
