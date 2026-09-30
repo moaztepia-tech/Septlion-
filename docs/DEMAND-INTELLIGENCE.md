@@ -29,6 +29,10 @@ The public site exposes only a sanitized signal projection. Buyer identity, evid
 - `DemandCollectorRun` — collector telemetry.
 - `DemandCollectorState` — throttling / last-run state.
 - `DemandOperatorKey` — hashed internal workbench access keys.
+- `DemandAlert` — private actionable alert queue.
+- `DemandPushSubscription` — private browser push subscriptions.
+- `DemandSupplierProfile` — private supplier capability profiles.
+- `DemandSupplierFit` — per-opportunity supplier-fit scoring.
 
 ## Public/private boundary
 
@@ -110,6 +114,32 @@ It displays:
 
 Operator actions can start, block, close or advance tasks. Qualification advancement now writes `QUALIFIED`, allowing the database automation to generate the offer and intent-page drafts.
 
+## Instant RFQ alerts
+
+A newly submitted public RFQ now triggers the execution layer immediately:
+
+1. create / refresh a `DemandOfferBuild` draft;
+2. run `refresh_supplier_fit(signalId)`;
+3. create a `NEW_RFQ` alert;
+4. create / preserve the `FOLLOW_UP` task;
+5. queue the Web Push dispatcher.
+
+The Workbench polls silently while open and can also register a browser Push subscription. The service worker displays a generic RFQ notification without exposing buyer details in the push payload. Detailed buyer / RFQ data stays behind the operator-key Workbench.
+
+Web Push is opt-in per browser/device and requires the operator to click **Enable RFQ notifications** once.
+
+## Supplier Fit
+
+Supplier profiles are private and product-key driven. The first matching rules score:
+
+- product capability,
+- incoterm fit,
+- packing fit,
+- supplier verification,
+- served-market fit.
+
+The offer draft records `CANDIDATES_FOUND` or `NO_CANDIDATES` and the candidate count. No supplier is fabricated when the supplier network is empty.
+
 ## Prediction layer
 
 Prediction is based on recurrence timing, not fabricated certainty.
@@ -120,8 +150,8 @@ Prediction is based on recurrence timing, not fabricated certainty.
 
 ## Next milestones
 
-1. Activate a third reliable official collector.
-2. Build structured editing for offer price / supplier fit / logistics.
-3. Generate publishable intent pages from `DemandIntentPage` drafts.
-4. Connect real buyer RFQ submission to the `RFQ` stage.
+1. Add verified real supplier profiles to the private supplier network.
+2. Add structured commercial pricing / logistics inputs to generated offer drafts.
+3. Add an optional external alert channel (email / WhatsApp) without exposing buyer data.
+4. Activate additional reliable official collectors.
 5. Add source-level health alerts and retry policy.
