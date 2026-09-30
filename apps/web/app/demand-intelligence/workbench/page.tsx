@@ -23,6 +23,7 @@ type BuyerItem={
  lastBuyingSignalAt?:string|null;buyingIntentScore:number;contactReadinessScore:number;executionScore:number;
  primaryContactName?:string|null;primaryContactRole?:string|null;primaryEmail?:string|null;primaryPhone?:string|null;
  primaryWhatsapp?:string|null;contactVerification?:string|null;
+ latestSource?:string|null;latestProduct?:string|null;latestQuantity?:string|null;latestSourceUrl?:string|null;latestIsPlatform?:boolean|null;sources?:string[]|null;
 };
 type Snapshot={
  operator:string;
@@ -196,9 +197,9 @@ export default function DemandWorkbench(){
     {data.buyers.map(b=><article className="dw-buyer" key={b.id}>
      <div className="dw-buyer-score"><b>{b.executionScore}</b><span>EXEC</span></div>
      <div className="dw-buyer-main">
-      <small>{b.verificationStatus} · {b.confidence}%</small>
+      <small>{b.latestIsPlatform?'PLATFORM BUY REQUEST · ':''}{b.verificationStatus} · {b.confidence}%</small>
       <h3>{b.displayName}</h3>
-      <p>{b.country||'—'} · {(b.productKeys||[]).join(', ')||'Product unresolved'}</p>
+      <p>{b.country||'—'} · {b.latestProduct||((b.productKeys||[]).join(', ')||'Product unresolved')}{b.latestQuantity?' · '+b.latestQuantity:''}</p>
       <div className="dw-buyer-metrics"><span>Intent <b>{b.buyingIntentScore}</b></span><span>Contact <b>{b.contactReadinessScore}</b></span><span>Signals <b>{b.signalCount}</b></span><span>Sources <b>{b.sourceCount}</b></span></div>
      </div>
      <div className="dw-buyer-contact">
@@ -207,6 +208,7 @@ export default function DemandWorkbench(){
       {b.primaryEmail&&<a href={'mailto:'+b.primaryEmail}>{b.primaryEmail}</a>}
       {b.primaryWhatsapp&&<a href={'https://wa.me/'+b.primaryWhatsapp.replace(/\D/g,'')} target="_blank" rel="noreferrer">{b.primaryWhatsapp} · WhatsApp ↗</a>}
       {!b.primaryWhatsapp&&b.primaryPhone&&<a href={'tel:'+b.primaryPhone}>{b.primaryPhone}</a>}
+      {b.latestSourceUrl&&<a href={b.latestSourceUrl} target="_blank" rel="noreferrer">{b.latestSource||'المصدر'} ↗</a>}
       {b.website&&<a href={b.website} target="_blank" rel="noreferrer">الموقع ↗</a>}
      </div>
      <div className="dw-buyer-time"><span>آخر إشارة شراء</span><b>{b.lastBuyingSignalAt?.slice(0,10)||'—'}</b></div>
