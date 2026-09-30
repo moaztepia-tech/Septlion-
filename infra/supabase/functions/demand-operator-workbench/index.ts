@@ -146,31 +146,62 @@ Deno.serve(async (req: Request) => {
         .eq("id", task.signalId)
         .single();
 
-      const next: Record<string,string> = {
-        DETECTED: "BUYER_RESOLUTION",
-        BUYER_RESOLUTION: "QUALIFICATION",
-        QUALIFICATION: "OFFER_BUILD",
-        OFFER_BUILD: "INTENT_PAGE",
-        INTENT_PAGE: "RFQ",
-      };
-      const nextStage = next[signal?.stage || ""];
-      if (!nextStage) return json(req, { error: "No next stage" }, 409);
+      const currentStage = signal?.stage || "";
 
-      await db.from("DemandTask")
-        .update({ status: "DONE", updatedAt: new Date().toISOString() })
-        .eq("id", taskId);
+      if (currentStage === "QUALIFICATION") {
+        await db.from("DemandQualification")
+          .update({ decision: "QUALIFIED", updatedAt: new Date().toISOString() })
+          .eq("signalId", task.signalId);
+      } else if (currentStage === "OFFER_BUILD") {
+        await db.from("DemandOfferBuild")
+          .update({ status: "READY", approvedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+          .eq("signalId", task.signalId);
 
-      await db.from("DemandSignal")
-        .update({ stage: nextStage })
-        .eq("id", task.signalId);
+        await db.from("DemandTask")
+          .update({ status: "DONE", updatedAt: new Date().toISOString() })
+          .eq("id", taskId);
 
-      await db.from("DemandOpportunityEvent").insert({
-        signalId: task.signalId,
-        stage: nextStage,
-        eventType: "OPERATOR_ADVANCE",
-        note,
-        metadata: { taskId, from: signal?.stage, to: nextStage },
-      });
+        await db.from("DemandSignal")
+          .update({ stage: "INTENT_PAGE" })
+          .eq("id", task.signalId);
+
+        await db.from("DemandOpportunityEvent").insert({
+          signalId: task.signalId,
+          stage: "INTENT_PAGE",
+          eventType: "OFFER_READY",
+          note,
+          metadata: { taskId, from: "OFFER_BUILD", to: "INTENT_PAGE" },
+        });
+      } else if (currentStage === "INTENT_PAGE") {
+        await db.from("DemandIntentPage")
+          .update({ status: "READY", updatedAt: new Date().toISOString() })
+          .eq("signalId", task.signalId);
+
+        return json(req, { ok: true, stage: "INTENT_PAGE", intentStatus: "READY", note: "RFQ requires a buyer submission." });
+      } else {
+        const next: Record<string,string> = {
+          DETECTED: "BUYER_RESOLUTION",
+          BUYER_RESOLUTION: "QUALIFICATION",
+        };
+        const nextStage = next[currentStage];
+        if (!nextStage) return json(req, { error: "No next stage" }, 409);
+
+        await db.from("DemandTask")
+          .update({ status: "DONE", updatedAt: new Date().toISOString() })
+          .eq("id", taskId);
+
+        await db.from("DemandSignal")
+          .update({ stage: nextStage })
+          .eq("id", task.signalId);
+
+        await db.from("DemandOpportunityEvent").insert({
+          signalId: task.signalId,
+          stage: nextStage,
+          eventType: "OPERATOR_ADVANCE",
+          note,
+          metadata: { taskId, from: currentStage, to: nextStage },
+        });
+      }
     }
 
     return json(req, { ok: true });
