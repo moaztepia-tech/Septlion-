@@ -104,7 +104,7 @@ Deno.serve(async (req: Request) => {
     const action = String(body?.action || "");
     const note = body?.note ? String(body.note).slice(0, 2000) : null;
 
-    if (!taskId || !["start","complete","block","reopen","advance"].includes(action)) {
+    if (!taskId || !["start","complete","block","reopen","advance","publish_intent"].includes(action)) {
       return json(req, { error: "Invalid action" }, 400);
     }
 
@@ -122,6 +122,42 @@ Deno.serve(async (req: Request) => {
       block: "BLOCKED",
       reopen: "OPEN",
     };
+
+    if (action === "publish_intent") {
+      const { data: signal } = await db.from("DemandSignal")
+        .select("stage")
+        .eq("id", task.signalId)
+        .single();
+
+      if (signal?.stage !== "INTENT_PAGE") return json(req, { error: "Intent page is not the current stage" }, 409);
+
+      const { data: intent } = await db.from("DemandIntentPage")
+        .select("id,status,slug")
+        .eq("signalId", task.signalId)
+        .maybeSingle();
+
+      if (!intent) return json(req, { error: "Intent draft not found" }, 404);
+      if (!["READY","PUBLISHED"].includes(intent.status)) return json(req, { error: "Intent page must be READY before publishing" }, 409);
+
+      const now = new Date().toISOString();
+      await db.from("DemandIntentPage")
+        .update({ status: "PUBLISHED", publishedAt: now, updatedAt: now })
+        .eq("id", intent.id);
+
+      await db.from("DemandTask")
+        .update({ status: "DONE", updatedAt: now })
+        .eq("id", taskId);
+
+      await db.from("DemandOpportunityEvent").insert({
+        signalId: task.signalId,
+        stage: "INTENT_PAGE",
+        eventType: "INTENT_PUBLISHED",
+        note,
+        metadata: { taskId, slug: intent.slug },
+      });
+
+      return json(req, { ok: true, stage: "INTENT_PAGE", intentStatus: "PUBLISHED", slug: intent.slug });
+    }
 
     if (action !== "advance") {
       await db.from("DemandTask")
