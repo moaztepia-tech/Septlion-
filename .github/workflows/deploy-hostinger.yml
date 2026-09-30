@@ -31,14 +31,23 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build website
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD
         run: pnpm --filter @septlion/web build
 
       - name: Prepare static deployment
         run: |
-          mkdir -p deploy/_next deploy/maritime-rfq
+          mkdir -p deploy/_next deploy/maritime-rfq deploy/demand-intelligence deploy/intent/wheat-flour
           cp apps/web/.next/server/app/index.html deploy/index.html
           cp apps/web/.next/server/app/index.html deploy/404.html
           cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
+          if [ -f apps/web/.next/server/app/demand-intelligence.html ]; then
+            cp apps/web/.next/server/app/demand-intelligence.html deploy/demand-intelligence/index.html
+          fi
+          if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then
+            cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html
+          fi
           cp -R apps/web/.next/static deploy/_next/static
           if [ -d apps/web/public ]; then cp -R apps/web/public/. deploy/; fi
           if [ -f apps/web/.next/server/app/robots.txt.body ]; then cp apps/web/.next/server/app/robots.txt.body deploy/robots.txt; fi
