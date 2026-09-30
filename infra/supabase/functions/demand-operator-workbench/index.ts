@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
     .eq("id", operator.id);
 
   if (req.method === "GET") {
-    const [queue, signals, sources, patterns, runs] = await Promise.all([
+    const [queue, signals, sources, patterns, runs, alerts, pushSubscriptions, supplierProfiles] = await Promise.all([
       db.from("DemandWorkbenchQueue")
         .select("*")
         .in("taskStatus", ["OPEN","IN_PROGRESS","BLOCKED"])
@@ -74,6 +74,17 @@ Deno.serve(async (req: Request) => {
         .select("sourceId,status,scanned,accepted,error,startedAt,finishedAt")
         .order("startedAt", { ascending: false })
         .limit(20),
+      db.from("DemandAlert")
+        .select("id,type,severity,title,body,metadata,createdAt,readAt")
+        .is("readAt", null)
+        .order("createdAt", { ascending: false })
+        .limit(20),
+      db.from("DemandPushSubscription")
+        .select("id", { count: "exact", head: false })
+        .eq("active", true),
+      db.from("DemandSupplierProfile")
+        .select("id", { count: "exact", head: false })
+        .eq("active", true),
     ]);
 
     const rows = signals.data || [];
@@ -86,6 +97,9 @@ Deno.serve(async (req: Request) => {
       intentPage: rows.filter((x: any) => x.stage === "INTENT_PAGE").length,
       rfq: rows.filter((x: any) => x.stage === "RFQ").length,
       markets: new Set(rows.map((x: any) => x.market)).size,
+      unreadAlerts: (alerts.data || []).length,
+      activePushSubscriptions: (pushSubscriptions.data || []).length,
+      supplierProfiles: (supplierProfiles.data || []).length,
     };
 
     return json(req, {
@@ -95,6 +109,7 @@ Deno.serve(async (req: Request) => {
       sources: sources.data || [],
       patterns: patterns.data || [],
       recentRuns: runs.data || [],
+      alerts: alerts.data || [],
     });
   }
 
@@ -103,6 +118,46 @@ Deno.serve(async (req: Request) => {
     const taskId = String(body?.taskId || "");
     const action = String(body?.action || "");
     const note = body?.note ? String(body.note).slice(0, 2000) : null;
+
+    if (action === "register_push") {
+      const subscription = body?.subscription || {};
+      const endpoint = String(subscription?.endpoint || "");
+      const p256dh = String(subscription?.keys?.p256dh || "");
+      const auth = String(subscription?.keys?.auth || "");
+      if (!endpoint.startsWith("https://") || !p256dh || !auth) {
+        return json(req, { error: "Invalid push subscription" }, 400);
+      }
+
+      const now = new Date().toISOString();
+      const { error } = await db.from("DemandPushSubscription").upsert({
+        endpoint,
+        p256dh,
+        auth,
+        userAgent: req.headers.get("user-agent") || null,
+        active: true,
+        lastError: null,
+        updatedAt: now,
+      }, { onConflict: "endpoint" });
+
+      if (error) return json(req, { error: "Unable to register push subscription" }, 500);
+      return json(req, { ok: true, push: "enabled" });
+    }
+
+    if (action === "mark_alert_read") {
+      const alertId = String(body?.alertId || "");
+      if (!alertId) return json(req, { error: "Alert id required" }, 400);
+      await db.from("DemandAlert")
+        .update({ readAt: new Date().toISOString() })
+        .eq("id", alertId);
+      return json(req, { ok: true });
+    }
+
+    if (action === "mark_all_alerts_read") {
+      await db.from("DemandAlert")
+        .update({ readAt: new Date().toISOString() })
+        .is("readAt", null);
+      return json(req, { ok: true });
+    }
 
     if (!taskId || !["start","complete","block","reopen","advance","publish_intent"].includes(action)) {
       return json(req, { error: "Invalid action" }, 400);
