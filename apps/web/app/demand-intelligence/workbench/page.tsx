@@ -10,6 +10,7 @@ type QueueItem={
  source:string;sourceUrl?:string|null;buyerConfidence?:number|null;
  buyerVerificationStatus?:string|null;qualificationDecision?:string|null;
  localPartnerRequired?:boolean|null;nextAction?:string|null;
+ offerStatus?:string|null;intentStatus?:string|null;intentSlug?:string|null;
 };
 type Snapshot={
  operator:string;
@@ -134,12 +135,12 @@ export default function DemandWorkbench(){
       <div><span>المشتري</span><b>{item.buyerName||'غير محلول'}</b><small>{item.buyerVerificationStatus||'UNRESOLVED'}{item.buyerConfidence!=null?' · '+item.buyerConfidence+'%':''}</small></div>
       <div><span>التأهيل</span><b>{item.qualificationDecision||'PENDING'}</b><small>{item.localPartnerRequired===true?'شريك محلي مطلوب':item.localPartnerRequired===false?'لا يحتاج شريكًا محليًا':'لم يُحسم'}</small></div>
       <div><span>الموعد</span><b>{item.deadlineAt?.slice(0,10)||'—'}</b><small>{item.source}</small></div>
-      <div><span>الخطوة التالية</span><b>{item.nextAction||taskAr[item.taskType]||item.taskType}</b></div>
+      <div><span>الخطوة التالية</span><b>{item.nextAction||taskAr[item.taskType]||item.taskType}</b><small>{item.offerStatus?'Offer: '+item.offerStatus:''}{item.intentStatus?(item.offerStatus?' · ':'')+'Intent: '+item.intentStatus:''}</small></div>
      </div>
      <div className="dw-actions">
       {item.taskStatus==='OPEN'&&<button onClick={()=>act(item,'start')}>بدء المهمة</button>}
       {item.taskStatus==='BLOCKED'&&<button onClick={()=>act(item,'reopen')}>إعادة فتح</button>}
-      <button className="dw-primary" onClick={()=>act(item,'advance')}>إكمال والانتقال للمرحلة التالية</button>
+      <button className="dw-primary" onClick={()=>act(item,'advance')}>{item.stage==='QUALIFICATION'?'اعتماد التأهيل وإنشاء العرض':item.stage==='OFFER_BUILD'?'اعتماد العرض والانتقال لصفحة النية':item.stage==='INTENT_PAGE'?'تجهيز صفحة النية': 'إكمال والانتقال للمرحلة التالية'}</button>
       <button onClick={()=>act(item,'complete')}>إغلاق المهمة</button>
       <button onClick={()=>act(item,'block')}>تعليق</button>
       {item.sourceUrl&&<a href={item.sourceUrl} target="_blank" rel="noreferrer">فتح المصدر ↗</a>}
