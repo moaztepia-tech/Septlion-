@@ -8,9 +8,10 @@ type QueueItem={
  signalId:string;stage:string;signalStatus:string;score:number;type:string;market:string;
  product:string;quantity?:string|null;buyerName?:string|null;deadlineAt?:string|null;
  source:string;sourceUrl?:string|null;buyerConfidence?:number|null;
- buyerVerificationStatus?:string|null;qualificationDecision?:string|null;
- localPartnerRequired?:boolean|null;nextAction?:string|null;
+ buyerVerificationStatus?:string|null;buyerContactName?:string|null;buyerEmail?:string|null;buyerPhone?:string|null;
+ qualificationDecision?:string|null;localPartnerRequired?:boolean|null;nextAction?:string|null;
  offerStatus?:string|null;intentStatus?:string|null;intentSlug?:string|null;
+ rfqReference?:string|null;rfqSubmissionStatus?:string|null;
 };
 type Snapshot={
  operator:string;
@@ -76,7 +77,7 @@ export default function DemandWorkbench(){
   if(draft.trim())await load(draft.trim());
  }
 
- async function act(item:QueueItem,action:'start'|'complete'|'block'|'reopen'|'advance'){
+ async function act(item:QueueItem,action:'start'|'complete'|'block'|'reopen'|'advance'|'publish_intent'){
   setBusy(true);setError('');
   try{
    await api(key,{method:'POST',body:JSON.stringify({taskId:item.taskId,action})});
@@ -132,15 +133,18 @@ export default function DemandWorkbench(){
       <i>{stageAr[item.stage]||item.stage}</i>
      </div>
      <div className="dw-task-grid">
-      <div><span>المشتري</span><b>{item.buyerName||'غير محلول'}</b><small>{item.buyerVerificationStatus||'UNRESOLVED'}{item.buyerConfidence!=null?' · '+item.buyerConfidence+'%':''}</small></div>
+      <div><span>المشتري</span><b>{item.buyerName||'غير محلول'}</b><small>{item.buyerContactName||item.buyerVerificationStatus||'UNRESOLVED'}{item.buyerEmail?' · '+item.buyerEmail:''}{item.buyerPhone?' · '+item.buyerPhone:''}{item.buyerConfidence!=null?' · '+item.buyerConfidence+'%':''}</small></div>
       <div><span>التأهيل</span><b>{item.qualificationDecision||'PENDING'}</b><small>{item.localPartnerRequired===true?'شريك محلي مطلوب':item.localPartnerRequired===false?'لا يحتاج شريكًا محليًا':'لم يُحسم'}</small></div>
       <div><span>الموعد</span><b>{item.deadlineAt?.slice(0,10)||'—'}</b><small>{item.source}</small></div>
-      <div><span>الخطوة التالية</span><b>{item.nextAction||taskAr[item.taskType]||item.taskType}</b><small>{item.offerStatus?'Offer: '+item.offerStatus:''}{item.intentStatus?(item.offerStatus?' · ':'')+'Intent: '+item.intentStatus:''}</small></div>
+      <div><span>الخطوة التالية</span><b>{item.rfqReference?item.rfqReference:(item.nextAction||taskAr[item.taskType]||item.taskType)}</b><small>{item.rfqSubmissionStatus?'RFQ: '+item.rfqSubmissionStatus:''}{item.offerStatus?(item.rfqSubmissionStatus?' · ':'')+'Offer: '+item.offerStatus:''}{item.intentStatus?((item.rfqSubmissionStatus||item.offerStatus)?' · ':'')+'Intent: '+item.intentStatus:''}</small></div>
      </div>
      <div className="dw-actions">
       {item.taskStatus==='OPEN'&&<button onClick={()=>act(item,'start')}>بدء المهمة</button>}
       {item.taskStatus==='BLOCKED'&&<button onClick={()=>act(item,'reopen')}>إعادة فتح</button>}
-      <button className="dw-primary" onClick={()=>act(item,'advance')}>{item.stage==='QUALIFICATION'?'اعتماد التأهيل وإنشاء العرض':item.stage==='OFFER_BUILD'?'اعتماد العرض والانتقال لصفحة النية':item.stage==='INTENT_PAGE'?'تجهيز صفحة النية': 'إكمال والانتقال للمرحلة التالية'}</button>
+      {item.stage!=='RFQ'&&item.stage!=='INTENT_PAGE'&&<button className="dw-primary" onClick={()=>act(item,'advance')}>{item.stage==='QUALIFICATION'?'اعتماد التأهيل وإنشاء العرض':item.stage==='OFFER_BUILD'?'اعتماد العرض والانتقال لصفحة النية':'إكمال والانتقال للمرحلة التالية'}</button>}
+      {item.stage==='INTENT_PAGE'&&item.intentStatus!=='READY'&&item.intentStatus!=='PUBLISHED'&&<button className="dw-primary" onClick={()=>act(item,'advance')}>تجهيز صفحة النية</button>}
+      {item.stage==='INTENT_PAGE'&&item.intentStatus==='READY'&&<button className="dw-primary" onClick={()=>act(item,'publish_intent')}>نشر صفحة النية</button>}
+      {item.stage==='INTENT_PAGE'&&item.intentStatus==='PUBLISHED'&&item.intentSlug&&<a href={'/intent/demand/?slug='+encodeURIComponent(item.intentSlug)} target="_blank" rel="noreferrer">فتح صفحة النية ↗</a>}
       <button onClick={()=>act(item,'complete')}>إغلاق المهمة</button>
       <button onClick={()=>act(item,'block')}>تعليق</button>
       {item.sourceUrl&&<a href={item.sourceUrl} target="_blank" rel="noreferrer">فتح المصدر ↗</a>}
