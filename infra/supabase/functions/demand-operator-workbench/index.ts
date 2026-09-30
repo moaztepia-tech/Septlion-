@@ -1,11 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const cors = {
-  "Access-Control-Allow-Origin": "https://septlion.com",
-  "Access-Control-Allow-Headers": "content-type,x-operator-key",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-};
+const allowedOrigins = new Set(["https://septlion.com","https://www.septlion.com"]);
+function corsFor(req: Request) {
+  const origin = req.headers.get("origin") || "https://septlion.com";
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : "https://septlion.com",
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "content-type,x-operator-key",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  };
+}
 
 async function sha256(value: string) {
   const bytes = new TextEncoder().encode(value);
@@ -13,15 +18,15 @@ async function sha256(value: string) {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function json(body: unknown, status = 200) {
+function json(req: Request, body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...cors, "Content-Type": "application/json" },
+    headers: { ...corsFor(req), "Content-Type": "application/json" },
   });
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsFor(req) });
 
   const db = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -30,7 +35,7 @@ Deno.serve(async (req: Request) => {
   );
 
   const key = req.headers.get("x-operator-key") || "";
-  if (!key || key.length < 20) return json({ error: "Unauthorized" }, 401);
+  if (!key || key.length < 20) return json(req, { error: "Unauthorized" }, 401);
 
   const keyHash = await sha256(key);
   const { data: operator } = await db
@@ -41,7 +46,7 @@ Deno.serve(async (req: Request) => {
     .is("revokedAt", null)
     .maybeSingle();
 
-  if (!operator) return json({ error: "Unauthorized" }, 401);
+  if (!operator) return json(req, { error: "Unauthorized" }, 401);
 
   await db.from("DemandOperatorKey")
     .update({ lastUsedAt: new Date().toISOString() })
@@ -56,7 +61,7 @@ Deno.serve(async (req: Request) => {
         .order("dueAt", { ascending: true, nullsFirst: false })
         .limit(100),
       db.from("DemandSignal")
-        .select("status,stage,market")
+        .select("status,stage,market", { count: "exact", head: false })
         .neq("status", "ARCHIVED"),
       db.from("DemandSource")
         .select("id,name,sourceType,active,priority,lastSuccessAt,lastError,collector,cadenceMinutes")
@@ -83,7 +88,7 @@ Deno.serve(async (req: Request) => {
       markets: new Set(rows.map((x: any) => x.market)).size,
     };
 
-    return json({
+    return json(req, {
       operator: operator.label,
       stats,
       queue: queue.data || [],
@@ -100,7 +105,7 @@ Deno.serve(async (req: Request) => {
     const note = body?.note ? String(body.note).slice(0, 2000) : null;
 
     if (!taskId || !["start","complete","block","reopen","advance"].includes(action)) {
-      return json({ error: "Invalid action" }, 400);
+      return json(req, { error: "Invalid action" }, 400);
     }
 
     const { data: task } = await db
@@ -109,7 +114,7 @@ Deno.serve(async (req: Request) => {
       .eq("id", taskId)
       .maybeSingle();
 
-    if (!task) return json({ error: "Task not found" }, 404);
+    if (!task) return json(req, { error: "Task not found" }, 404);
 
     const statusMap: Record<string,string> = {
       start: "IN_PROGRESS",
@@ -149,7 +154,7 @@ Deno.serve(async (req: Request) => {
         INTENT_PAGE: "RFQ",
       };
       const nextStage = next[signal?.stage || ""];
-      if (!nextStage) return json({ error: "No next stage" }, 409);
+      if (!nextStage) return json(req, { error: "No next stage" }, 409);
 
       await db.from("DemandTask")
         .update({ status: "DONE", updatedAt: new Date().toISOString() })
@@ -168,8 +173,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    return json({ ok: true });
+    return json(req, { ok: true });
   }
 
-  return json({ error: "Method not allowed" }, 405);
+  return json(req, { error: "Method not allowed" }, 405);
 });
