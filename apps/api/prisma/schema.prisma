@@ -574,3 +574,47 @@ model OutboxEvent {
   @@index([status, availableAt])
   @@index([organizationId, createdAt])
 }
+
+
+enum DemandSignalType {
+  TENDER
+  RFQ
+  AUCTION
+}
+
+enum DemandSignalStatus {
+  WATCH
+  RESOLVE_BUYER
+  QUALIFY_NOW
+  ARCHIVED
+}
+
+model DemandSignal {
+  id                  String             @id @default(uuid())
+  source              String
+  sourceRecordId      String
+  sourceUrl           String?
+  type                DemandSignalType
+  status              DemandSignalStatus @default(WATCH)
+  market              String
+  product             String
+  quantity            String?
+  buyerName           String?
+  publishedAt         DateTime?
+  deadlineAt          DateTime?
+  incoterm            String?
+  packing             String?
+  evidence            Json?
+  score               Int                @default(0)
+  verification        String              @default("SOURCE_SIGNAL")
+  intentPageCandidate Boolean             @default(false)
+  raw                 Json?
+  firstSeenAt         DateTime            @default(now())
+  lastSeenAt          DateTime            @updatedAt
+
+  @@unique([source, sourceRecordId])
+  @@index([status, score])
+  @@index([market, product])
+  @@index([publishedAt])
+  @@index([deadlineAt])
+}
