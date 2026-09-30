@@ -17,14 +17,22 @@ type QueueItem={
 type AlertItem={
  id:string;type:string;severity:string;title:string;body:string;metadata?:Record<string,unknown>|null;createdAt:string;readAt?:string|null;
 };
+type BuyerItem={
+ id:string;displayName:string;legalName?:string|null;country?:string|null;website?:string|null;buyerType?:string|null;
+ verificationStatus:string;confidence:number;productKeys:string[];signalCount:number;sourceCount:number;
+ lastBuyingSignalAt?:string|null;buyingIntentScore:number;contactReadinessScore:number;executionScore:number;
+ primaryContactName?:string|null;primaryContactRole?:string|null;primaryEmail?:string|null;primaryPhone?:string|null;
+ primaryWhatsapp?:string|null;contactVerification?:string|null;
+};
 type Snapshot={
  operator:string;
- stats:{activeSignals:number;qualifyNow:number;buyerResolution:number;qualification:number;offerBuild:number;intentPage:number;rfq:number;markets:number;unreadAlerts:number;activePushSubscriptions:number;supplierProfiles:number};
+ stats:{activeSignals:number;qualifyNow:number;buyerResolution:number;qualification:number;offerBuild:number;intentPage:number;rfq:number;markets:number;unreadAlerts:number;activePushSubscriptions:number;supplierProfiles:number;buyers:number;buyerVerified:number;buyerExecutable:number;buyerContactReady:number};
  queue:QueueItem[];
  sources:Array<{id:string;name:string;sourceType:string;active:boolean;priority:number;lastSuccessAt?:string|null;lastError?:string|null;collector?:string|null;cadenceMinutes?:number|null}>;
  patterns:Array<{productKey:string;market:string;signalCount:number;patternStatus:string;confidence:number;predictedWindowStart?:string|null;predictedWindowEnd?:string|null}>;
  recentRuns:Array<{sourceId:string;status:string;scanned:number;accepted:number;error?:string|null;startedAt:string;finishedAt?:string|null}>;
  alerts:AlertItem[];
+ buyers:BuyerItem[];
 };
 
 const endpoint='https://jfbmxowdmfdzyoauqgwn.supabase.co/functions/v1/demand-operator-workbench';
@@ -161,9 +169,9 @@ export default function DemandWorkbench(){
   </header>
 
   <section className="dw-hero shell">
-   <p className="kicker">DETECT → RESOLVE → QUALIFY → OFFER → INTENT → RFQ</p>
-   <h1>غرفة تشغيل الطلب.</h1>
-   <p>ترتيب الإشارات والمهام حسب الأولوية، ومراقبة المصادر، وحالة التأهيل، وتراكم أنماط الطلب من مكان واحد.</p>
+   <p className="kicker">BUYER FIRST · SIGNAL → BUYER → INTENT → RFQ</p>
+   <h1>غرفة استخبارات المشترين.</h1>
+   <p>الأولوية الآن للمشتري: من يشتري، ماذا يريد، متى ظهر طلبه، هل هويته مؤكدة، وهل لدينا قناة تواصل تجارية جاهزة.</p>
   </section>
 
   <section className="dw-stats shell">
@@ -173,6 +181,38 @@ export default function DemandWorkbench(){
    <article><span>قيد التأهيل</span><b>{data.stats.qualification}</b></article>
    <article><span>بناء العرض</span><b>{data.stats.offerBuild}</b></article>
    <article><span>الأسواق</span><b>{data.stats.markets}</b></article>
+  </section>
+
+  <section className="dw-buyer-stats shell">
+   <article><span>المشترون</span><b>{data.stats.buyers}</b></article>
+   <article><span>موثّق / Self-submitted</span><b>{data.stats.buyerVerified}</b></article>
+   <article><span>تنفيذ ≥ 70</span><b>{data.stats.buyerExecutable}</b></article>
+   <article><span>تواصل جاهز</span><b>{data.stats.buyerContactReady}</b></article>
+  </section>
+
+  <section className="dw-section shell dw-buyers-section">
+   <div className="dw-head"><div><p className="kicker">BUYER INTELLIGENCE</p><h2>المشترون أولًا</h2></div><p>Execution Score يجمع قوة نية الشراء مع جاهزية الوصول إلى المشتري. لا نعتبر الاسم وحده مشتريًا جاهزًا للتنفيذ.</p></div>
+   <div className="dw-buyers">
+    {data.buyers.map(b=><article className="dw-buyer" key={b.id}>
+     <div className="dw-buyer-score"><b>{b.executionScore}</b><span>EXEC</span></div>
+     <div className="dw-buyer-main">
+      <small>{b.verificationStatus} · {b.confidence}%</small>
+      <h3>{b.displayName}</h3>
+      <p>{b.country||'—'} · {(b.productKeys||[]).join(', ')||'Product unresolved'}</p>
+      <div className="dw-buyer-metrics"><span>Intent <b>{b.buyingIntentScore}</b></span><span>Contact <b>{b.contactReadinessScore}</b></span><span>Signals <b>{b.signalCount}</b></span><span>Sources <b>{b.sourceCount}</b></span></div>
+     </div>
+     <div className="dw-buyer-contact">
+      <span>التواصل</span>
+      <b>{b.primaryContactName||'لم يُحل بعد'}</b>
+      {b.primaryEmail&&<a href={'mailto:'+b.primaryEmail}>{b.primaryEmail}</a>}
+      {b.primaryWhatsapp&&<a href={'https://wa.me/'+b.primaryWhatsapp.replace(/\D/g,'')} target="_blank" rel="noreferrer">{b.primaryWhatsapp} · WhatsApp ↗</a>}
+      {!b.primaryWhatsapp&&b.primaryPhone&&<a href={'tel:'+b.primaryPhone}>{b.primaryPhone}</a>}
+      {b.website&&<a href={b.website} target="_blank" rel="noreferrer">الموقع ↗</a>}
+     </div>
+     <div className="dw-buyer-time"><span>آخر إشارة شراء</span><b>{b.lastBuyingSignalAt?.slice(0,10)||'—'}</b></div>
+    </article>)}
+    {!data.buyers.length&&<div className="dw-empty">لا توجد ملفات مشترين محلولة بعد.</div>}
+   </div>
   </section>
 
   <section className="dw-alertbar shell">
