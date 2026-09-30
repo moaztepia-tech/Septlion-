@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
     .eq("id", operator.id);
 
   if (req.method === "GET") {
-    const [queue, signals, sources, patterns, runs, alerts, pushSubscriptions, supplierProfiles] = await Promise.all([
+    const [queue, signals, sources, patterns, runs, alerts, pushSubscriptions, supplierProfiles, buyers] = await Promise.all([
       db.from("DemandWorkbenchQueue")
         .select("*")
         .in("taskStatus", ["OPEN","IN_PROGRESS","BLOCKED"])
@@ -85,6 +85,11 @@ Deno.serve(async (req: Request) => {
       db.from("DemandSupplierProfile")
         .select("id", { count: "exact", head: false })
         .eq("active", true),
+      db.from("DemandBuyerWorkbench")
+        .select("*")
+        .order("executionScore", { ascending: false })
+        .order("lastBuyingSignalAt", { ascending: false, nullsFirst: false })
+        .limit(100),
     ]);
 
     const rows = signals.data || [];
@@ -100,6 +105,10 @@ Deno.serve(async (req: Request) => {
       unreadAlerts: (alerts.data || []).length,
       activePushSubscriptions: (pushSubscriptions.data || []).length,
       supplierProfiles: (supplierProfiles.data || []).length,
+      buyers: (buyers.data || []).length,
+      buyerVerified: (buyers.data || []).filter((x: any) => ["VERIFIED","SELF_SUBMITTED"].includes(x.verificationStatus)).length,
+      buyerExecutable: (buyers.data || []).filter((x: any) => x.executionScore >= 70).length,
+      buyerContactReady: (buyers.data || []).filter((x: any) => x.contactReadinessScore >= 60).length,
     };
 
     return json(req, {
@@ -110,6 +119,7 @@ Deno.serve(async (req: Request) => {
       patterns: patterns.data || [],
       recentRuns: runs.data || [],
       alerts: alerts.data || [],
+      buyers: buyers.data || [],
     });
   }
 
