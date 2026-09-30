@@ -1,33 +1,78 @@
-# Septlion Demand Intake
+# Septlion Demand Intelligence Engine
 
-The Demand Intelligence Engine now has a normalized intake endpoint:
+## Operating model
 
-`POST /api/demand-intelligence/intake`
+The engine is now implemented as:
 
-It accepts one signal or an array (maximum 100). The intake layer does **not** claim a buyer is verified. It normalizes the signal and assigns an operational state.
+**Detect → Resolve Buyer → Qualify → Build Offer → Intent Page → RFQ**
 
-Example:
+The public website shows only a sanitized demand projection. Buyer resolution, evidence, raw source payloads, qualification notes, task queues and collector telemetry remain private in Supabase.
 
-```json
-{
-  "type": "TENDER",
-  "market": "Kenya",
-  "product": "Wheat Flour 50kg",
-  "quantity": "1 x 20ft FCL",
-  "published": "2026-09-30",
-  "buyer": "Buyer name only when source states it",
-  "source": "Public procurement portal",
-  "sourceUrl": "https://source.example/tender",
-  "deadline": "2026-10-10",
-  "incoterm": "CIF Mombasa",
-  "packing": "50kg PP"
-}
-```
+## Zero-cost production architecture
 
-Output states:
-- QUALIFY_NOW: strong structured signal.
-- RESOLVE_BUYER: useful demand, buyer/evidence work still required.
-- WATCH: insufficient structure.
-- intentPageCandidate: only true when the signal has enough product-market structure.
+- **Frontend:** `septlion.com` on the existing Hostinger Premium static deployment.
+- **Database / execution layer:** Supabase Free.
+- **Collectors:** Supabase Edge Functions.
+- **Scheduler:** Supabase `pg_cron` + `pg_net`.
+- **No Render service is required for the current Demand Intelligence MVP.**
 
-Next production connector layer: scheduled collectors should transform permitted public-source records into this schema, retain source URLs/evidence, deduplicate, and send them to the intake endpoint. Authentication, persistence, source-specific rate limits/terms, and monitoring are required before exposing ingestion publicly.
+## Core tables
+
+- `DemandSignal` — canonical normalized signal.
+- `PublicDemandSignal` — safe public projection only.
+- `DemandBuyerResolution` — private buyer identity / confidence / evidence.
+- `DemandQualification` — private eligibility, documents, risks and next action.
+- `DemandTask` — private execution queue.
+- `DemandOpportunityEvent` — stage/event history.
+- `DemandSource` — collector source registry.
+- `DemandCollectorRun` — collector run telemetry.
+- `DemandCollectorState` — lightweight throttling and last-run state.
+
+## Public/private boundary
+
+Anonymous website users can read **only** `PublicDemandSignal`.
+
+The canonical `DemandSignal` table and all execution tables have RLS enabled and no anonymous read/write grants. A database trigger synchronizes the small safe public projection whenever a signal changes.
+
+The public projection intentionally excludes buyer names and contacts, evidence bundles, raw payloads, qualification notes, internal next actions and collector configuration.
+
+## Pipeline stages
+
+- `DETECTED`
+- `BUYER_RESOLUTION`
+- `QUALIFICATION`
+- `OFFER_BUILD`
+- `INTENT_PAGE`
+- `RFQ`
+- `ARCHIVED`
+
+Triage maps strong structured signals into `QUALIFY_NOW / QUALIFICATION`, partially resolved signals into `RESOLVE_BUYER / BUYER_RESOLUTION`, and weak signals into `WATCH / DETECTED`.
+
+## Execution queue
+
+Whenever a signal enters an actionable stage, the database creates or preserves an active task:
+
+- Buyer resolution → `RESOLVE_BUYER`
+- Qualification → `VERIFY_QUALIFICATION`
+- Offer build → `BUILD_OFFER`
+- Intent page → `PUBLISH_INTENT`
+
+Task priority follows the signal score and the source deadline is used as the due date when available.
+
+## Current production collector
+
+The first production collector is **World Bank Procurement Notices**.
+
+It runs every six hours and filters for flour-related demand terms. Each run is logged in the source registry / collector telemetry tables. Detection never equals verification; buyer identity and commercial eligibility remain separate execution stages.
+
+## Website
+
+`/demand-intelligence` reads from the safe `PublicDemandSignal` projection and displays active signal count, qualify-now count, buyer-resolution count, market count, nearest known deadline, live pipeline stage and score.
+
+## Next implementation milestones
+
+1. Add more high-value source adapters.
+2. Build the authenticated internal operator workbench.
+3. Add structured offer-building and supplier-fit records.
+4. Add intent-page generation rules.
+5. Connect qualified opportunities into the existing Septlion RFQ flow.
