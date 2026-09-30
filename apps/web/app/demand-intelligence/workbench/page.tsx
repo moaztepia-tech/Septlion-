@@ -12,17 +12,30 @@ type QueueItem={
  qualificationDecision?:string|null;localPartnerRequired?:boolean|null;nextAction?:string|null;
  offerStatus?:string|null;intentStatus?:string|null;intentSlug?:string|null;
  rfqReference?:string|null;rfqSubmissionStatus?:string|null;
+ supplierFit?:{status?:string;candidateCount?:number;refreshedAt?:string}|null;
+};
+type AlertItem={
+ id:string;type:string;severity:string;title:string;body:string;metadata?:Record<string,unknown>|null;createdAt:string;readAt?:string|null;
 };
 type Snapshot={
  operator:string;
- stats:{activeSignals:number;qualifyNow:number;buyerResolution:number;qualification:number;offerBuild:number;intentPage:number;rfq:number;markets:number};
+ stats:{activeSignals:number;qualifyNow:number;buyerResolution:number;qualification:number;offerBuild:number;intentPage:number;rfq:number;markets:number;unreadAlerts:number;activePushSubscriptions:number;supplierProfiles:number};
  queue:QueueItem[];
  sources:Array<{id:string;name:string;sourceType:string;active:boolean;priority:number;lastSuccessAt?:string|null;lastError?:string|null;collector?:string|null;cadenceMinutes?:number|null}>;
  patterns:Array<{productKey:string;market:string;signalCount:number;patternStatus:string;confidence:number;predictedWindowStart?:string|null;predictedWindowEnd?:string|null}>;
  recentRuns:Array<{sourceId:string;status:string;scanned:number;accepted:number;error?:string|null;startedAt:string;finishedAt?:string|null}>;
+ alerts:AlertItem[];
 };
 
 const endpoint='https://jfbmxowdmfdzyoauqgwn.supabase.co/functions/v1/demand-operator-workbench';
+const VAPID_PUBLIC='BH9wlH9Mz0dN8Fc1Nc9EvJG7AASDBHJqhF9guC2Qxoj8EPSf4v94D73i9KN393X6RL66e0RUnmIPHxKLUjmyrnU';
+
+function urlBase64ToUint8Array(base64String:string){
+ const padding='='.repeat((4-base64String.length%4)%4);
+ const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+ const raw=atob(base64);
+ return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
 
 const stageAr:Record<string,string>={
  DETECTED:'تم الرصد',
@@ -54,16 +67,17 @@ export default function DemandWorkbench(){
  const [data,setData]=useState<Snapshot|null>(null);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
+ const [pushState,setPushState]=useState<'idle'|'working'|'enabled'|'unsupported'|'denied'>('idle');
 
- async function load(k=key){
-  setBusy(true);setError('');
+ async function load(k=key,silent=false){
+  if(!silent)setBusy(true);setError('');
   try{
    const snap=await api(k);
    setData(snap);setKey(k);sessionStorage.setItem('septlion_operator_key',k);
   }catch(e){
    if(e instanceof Error&&e.message==='UNAUTHORIZED'){sessionStorage.removeItem('septlion_operator_key');setKey('');setData(null);setError('مفتاح المشغّل غير صحيح أو تم إلغاؤه.');}
    else setError('تعذر تحميل لوحة التشغيل الآن.');
-  }finally{setBusy(false)}
+  }finally{if(!silent)setBusy(false)}
  }
 
  useEffect(()=>{
@@ -72,9 +86,48 @@ export default function DemandWorkbench(){
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
 
+ useEffect(()=>{
+  if(!key)return;
+  const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void load(key,true)},15000);
+  return()=>window.clearInterval(timer);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[key]);
+
  async function login(e:FormEvent){
   e.preventDefault();
   if(draft.trim())await load(draft.trim());
+ }
+
+ async function enablePush(){
+  if(!key)return;
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){setPushState('unsupported');return}
+  setPushState('working');setError('');
+  try{
+   const permission=await Notification.requestPermission();
+   if(permission!=='granted'){setPushState('denied');return}
+   const registration=await navigator.serviceWorker.register('/demand-sw.js',{scope:'/'});
+   await navigator.serviceWorker.ready;
+   let subscription=await registration.pushManager.getSubscription();
+   if(!subscription){
+    subscription=await registration.pushManager.subscribe({
+     userVisibleOnly:true,
+     applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)
+    });
+   }
+   await api(key,{method:'POST',body:JSON.stringify({action:'register_push',subscription:subscription.toJSON()})});
+   setPushState('enabled');
+   await load(key,true);
+  }catch{setPushState('idle');setError('تعذر تفعيل إشعارات RFQ على هذا الجهاز.')}
+ }
+
+ async function markAlert(alertId:string){
+  await api(key,{method:'POST',body:JSON.stringify({action:'mark_alert_read',alertId})});
+  await load(key,true);
+ }
+
+ async function markAllAlerts(){
+  await api(key,{method:'POST',body:JSON.stringify({action:'mark_all_alerts_read'})});
+  await load(key,true);
  }
 
  async function act(item:QueueItem,action:'start'|'complete'|'block'|'reopen'|'advance'|'publish_intent'){
@@ -104,7 +157,7 @@ export default function DemandWorkbench(){
  return <main className="dw" dir="rtl">
   <header className="dw-top shell">
    <div><Link href="/demand-intelligence" className="dw-wordmark">SEPTLION · DEMAND INTELLIGENCE</Link><small>INTERNAL WORKBENCH</small></div>
-   <div className="dw-top-actions"><span>{data.operator}</span><button onClick={()=>{sessionStorage.removeItem('septlion_operator_key');setData(null);setKey('')}}>قفل اللوحة</button></div>
+   <div className="dw-top-actions"><span>{data.operator}</span><button onClick={enablePush} disabled={pushState==='working'}>{pushState==='enabled'?'التنبيهات مفعلة':pushState==='working'?'جارٍ التفعيل…':'تفعيل تنبيهات RFQ'}</button><button onClick={()=>{sessionStorage.removeItem('septlion_operator_key');setData(null);setKey('')}}>قفل اللوحة</button></div>
   </header>
 
   <section className="dw-hero shell">
@@ -122,6 +175,21 @@ export default function DemandWorkbench(){
    <article><span>الأسواق</span><b>{data.stats.markets}</b></article>
   </section>
 
+  <section className="dw-alertbar shell">
+   <div><span>RFQ ALERTS</span><b>{data.stats.unreadAlerts}</b><small>غير مقروء · Push {data.stats.activePushSubscriptions>0?'ACTIVE':'OFF'} · Suppliers {data.stats.supplierProfiles}</small></div>
+   <button onClick={enablePush} disabled={pushState==='working'}>{pushState==='enabled'?'Push مفعّل':pushState==='denied'?'الإذن مرفوض':pushState==='unsupported'?'غير مدعوم':'تفعيل التنبيه الفوري'}</button>
+  </section>
+
+  {data.alerts.length>0&&<section className="dw-section dw-alerts-section shell">
+   <div className="dw-head"><div><p className="kicker">INSTANT ALERTS</p><h2>تنبيهات RFQ الجديدة</h2></div><button className="dw-refresh" onClick={markAllAlerts}>تحديد الكل كمقروء</button></div>
+   <div className="dw-alerts">
+    {data.alerts.map(a=><article key={a.id} className={'dw-alert dw-alert-'+a.severity.toLowerCase()}>
+     <div><span>{a.severity} · {a.type}</span><h3>{a.title}</h3><p>{a.body}</p><small>{a.createdAt.slice(0,16).replace('T',' ')}</small></div>
+     <button onClick={()=>markAlert(a.id)}>تمت المراجعة</button>
+    </article>)}
+   </div>
+  </section>}
+
   <section className="dw-section shell">
    <div className="dw-head"><div><p className="kicker">EXECUTION QUEUE</p><h2>قائمة التنفيذ</h2></div><button className="dw-refresh" onClick={()=>load(key)} disabled={busy}>{busy?'يتم التحديث…':'تحديث'}</button></div>
    {error&&<div className="dw-error">{error}</div>}
@@ -136,7 +204,7 @@ export default function DemandWorkbench(){
       <div><span>المشتري</span><b>{item.buyerName||'غير محلول'}</b><small>{item.buyerContactName||item.buyerVerificationStatus||'UNRESOLVED'}{item.buyerEmail?' · '+item.buyerEmail:''}{item.buyerPhone?' · '+item.buyerPhone:''}{item.buyerConfidence!=null?' · '+item.buyerConfidence+'%':''}</small></div>
       <div><span>التأهيل</span><b>{item.qualificationDecision||'PENDING'}</b><small>{item.localPartnerRequired===true?'شريك محلي مطلوب':item.localPartnerRequired===false?'لا يحتاج شريكًا محليًا':'لم يُحسم'}</small></div>
       <div><span>الموعد</span><b>{item.deadlineAt?.slice(0,10)||'—'}</b><small>{item.source}</small></div>
-      <div><span>الخطوة التالية</span><b>{item.rfqReference?item.rfqReference:(item.nextAction||taskAr[item.taskType]||item.taskType)}</b><small>{item.rfqSubmissionStatus?'RFQ: '+item.rfqSubmissionStatus:''}{item.offerStatus?(item.rfqSubmissionStatus?' · ':'')+'Offer: '+item.offerStatus:''}{item.intentStatus?((item.rfqSubmissionStatus||item.offerStatus)?' · ':'')+'Intent: '+item.intentStatus:''}</small></div>
+      <div><span>الخطوة التالية</span><b>{item.rfqReference?item.rfqReference:(item.nextAction||taskAr[item.taskType]||item.taskType)}</b><small>{item.rfqSubmissionStatus?'RFQ: '+item.rfqSubmissionStatus:''}{item.offerStatus?(item.rfqSubmissionStatus?' · ':'')+'Offer: '+item.offerStatus:''}{item.intentStatus?((item.rfqSubmissionStatus||item.offerStatus)?' · ':'')+'Intent: '+item.intentStatus:''}{item.supplierFit?' · Supplier Fit: '+(item.supplierFit.status||'PENDING')+' ('+(item.supplierFit.candidateCount||0)+')':''}</small></div>
      </div>
      <div className="dw-actions">
       {item.taskStatus==='OPEN'&&<button onClick={()=>act(item,'start')}>بدء المهمة</button>}
