@@ -19,6 +19,7 @@ export class DemandIntelligenceController{
  @Get('signals') list(){return this.service.list()}
  @Get('opportunities') opportunities(){return this.service.opportunities()}
  @Get('opportunities/:id') opportunity(@Param('id') id:string){return this.service.opportunity(id)}
+ @Post('opportunities/:id/orchestrate') orchestrate(@Param('id') id:string){return this.service.orchestrate(id)}
  @Post('opportunities/:id/agents') queueAgent(@Param('id') id:string,@Body() body:{agentType:string;input?:unknown;runtime?:string}){return this.service.queueAgent(id,body.agentType,body.input??{},body.runtime)}
  @Post('signals') async ingest(@Body() body:DemandInput|DemandInput[]){
   const rows=Array.isArray(body)?body:[body];if(rows.length>100)return {accepted:0,error:'Maximum 100 signals per request'};
