@@ -24,6 +24,8 @@ type BuyerItem={
  primaryContactName?:string|null;primaryContactRole?:string|null;primaryEmail?:string|null;primaryPhone?:string|null;
  primaryWhatsapp?:string|null;contactVerification?:string|null;
  latestSource?:string|null;latestProduct?:string|null;latestQuantity?:string|null;latestSourceUrl?:string|null;latestIsPlatform?:boolean|null;sources?:string[]|null;
+ platformVerified?:boolean|null;platformTrustScore?:number|null;rfqQualityScore?:number|null;
+ platformContactAvailable?:boolean|null;recurrenceEvidenceCount?:number|null;priorityScore?:number|null;
 };
 type Snapshot={
  operator:string;
