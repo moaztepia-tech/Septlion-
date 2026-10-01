@@ -52,8 +52,19 @@ export class DemandIntelligenceService{
  async list(){return this.prisma.demandSignal.findMany({orderBy:[{score:'desc'},{lastSeenAt:'desc'}],take:100})}
  async opportunities(){return this.prisma.opportunity.findMany({include:{buyerProfile:true,requirement:true,sourceSignal:true},orderBy:{updatedAt:'desc'},take:100})}
  async opportunity(id:string){return this.prisma.opportunity.findUnique({where:{id},include:{buyerProfile:true,requirement:true,sourceSignal:true,agentRuns:{orderBy:{createdAt:'desc'}}}})}
- async queueAgent(opportunityId:string,agentType:string,input:unknown,runtime='OPEN_DOTS'){
+ async queueAgent(opportunityId:string,agentType:string,input:unknown,runtime='INTERNAL'){
+  await this.prisma.opportunity.findUniqueOrThrow({where:{id:opportunityId}});
   return this.prisma.agentRun.create({data:{opportunityId,agentType,runtime,status:'QUEUED',input:input as any}});
+ }
+
+ async orchestrate(opportunityId:string){
+  const o=await this.prisma.opportunity.findUniqueOrThrow({where:{id:opportunityId},include:{buyerProfile:true,requirement:true,supplyCandidates:true,dealDrafts:{orderBy:{version:'desc'},take:1}}});
+  const queued=[] as any[];
+  if(!o.buyerProfile||o.buyerProfile.verificationStatus==='UNVERIFIED') queued.push(await this.queueAgent(o.id,'BUYER_RESOLUTION',{buyerName:o.buyerProfile?.canonicalName,market:o.market,product:o.product},'EXTERNAL'));
+  if(o.requirement) queued.push(await this.queueAgent(o.id,'QUALIFICATION_GAP_ANALYSIS',{product:o.requirement.product,market:o.requirement.market,quantity:o.requirement.quantity,unit:o.requirement.unit,deliveryCountry:o.requirement.deliveryCountry,deliveryPort:o.requirement.deliveryPort,incoterm:o.requirement.incoterm,requiredDate:o.requirement.requiredDate,specifications:o.requirement.specifications},'INTERNAL'));
+  if(o.requirement?.status==='QUALIFIED'&&!o.supplyCandidates.length) queued.push(await this.queueAgent(o.id,'SUPPLIER_SCOUT',{product:o.product,market:o.market,requirementId:o.requirementId},'EXTERNAL'));
+  if(o.supplyCandidates.some(x=>x.verified)&&!o.dealDrafts.length) queued.push(await this.queueAgent(o.id,'DEAL_READINESS',{buyerVerified:o.buyerProfile?.verificationStatus!=='UNVERIFIED',requirementQualified:o.requirement?.status==='QUALIFIED',supplyVerified:true,economicsReady:false},'INTERNAL'));
+  return {opportunityId,queued};
  }
 
  async commandCenter(){
