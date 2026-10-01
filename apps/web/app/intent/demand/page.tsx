@@ -40,7 +40,7 @@ export default function DemandIntentPage(){
   <section className="di-hero shell">
    <p className="kicker">MARKET-SPECIFIC SUPPLY INTENT</p>
    <h1>{product}<br/><em>{page.market}</em></h1>
-   <p>This supply route was created from verified market demand structure. Submit your requirement to turn the route into a live Septlion RFQ.</p>
+   <p>This supply route was created from recent public B2B buying signals. Submit your requirement to turn the route into a live Septlion RFQ.</p>
    <div className="di-actions"><a href="#live-rfq">Create live RFQ ↗</a><Link href="/demand-intelligence">Demand Intelligence →</Link></div>
   </section>
 
