@@ -51,6 +51,23 @@ for(const p of pages){
  const latest=c.latestDemandAt||p.updatedAt;
  const quantities=qtyLabel(c);
  const score=c.demandScore||null;
+ const answerSummary='Septlion can evaluate '+product+' supply for buyers in '+p.market+'. Recent public B2B demand signals indicate active commercial interest; final price, packing, quantity and delivery terms are confirmed through a buyer RFQ.';
+ const aiFacts={
+  entity:'Septlion Supply',
+  service:'Demand-led product development and managed supply',
+  product,
+  market:p.market,
+  demandSignals:signals,
+  demandSources:sources,
+  latestObserved:displayDate(latest),
+  quantityContext:quantities,
+  deliveryTerms:c.incoterm||'FOB / CFR / CIF',
+  action:'Submit a buyer RFQ',
+  rfqUrl:intent,
+  canonicalUrl:canonical,
+  summary:answerSummary,
+  evidenceBasis:'Recent public B2B buying signals; buyer identities are excluded from the public route.'
+ };
 
  const schema={
   '@context':'https://schema.org',
@@ -61,6 +78,31 @@ for(const p of pages){
   provider:{'@type':'Organization',name:'Septlion LLC',url:'https://septlion.com/'},
   url:canonical,
   description
+ };
+ const webpageSchema={
+  '@context':'https://schema.org',
+  '@type':'WebPage',
+  name:title,
+  url:canonical,
+  description,
+  about:[
+   {'@type':'Product',name:product},
+   {'@type':'Place',name:p.market},
+   {'@type':'Organization',name:'Septlion LLC',url:'https://septlion.com/'}
+  ],
+  mainEntity:schema,
+  dateModified:p.updatedAt
+ };
+ const datasetSchema={
+  '@context':'https://schema.org',
+  '@type':'Dataset',
+  name:product+' demand signals — '+p.market,
+  description:'Aggregated public B2B demand signals used to create this market-specific supply route. Buyer identities are excluded.',
+  creator:{'@type':'Organization',name:'Septlion LLC',url:'https://septlion.com/'},
+  spatialCoverage:p.market,
+  temporalCoverage:displayDate(latest),
+  variableMeasured:['Product','Market','Quantity context','Demand recency','Source count'],
+  url:canonical
  };
  const faq={
   '@context':'https://schema.org',
@@ -76,9 +118,12 @@ for(const p of pages){
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${canonical}">
+<link rel="alternate" type="application/json" href="${canonical}ai.json" title="Machine-readable demand route">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <script type="application/ld+json">${json(schema)}</script>
+<script type="application/ld+json">${json(webpageSchema)}</script>
+<script type="application/ld+json">${json(datasetSchema)}</script>
 <script type="application/ld+json">${json(faq)}</script>
 <style>${shellCss}</style></head><body>
 <header class="nav shell"><a class="brand" href="/">SEPTLION</a><small>DEMAND-LED SUPPLY · ${esc(p.market)}</small></header>
@@ -89,6 +134,7 @@ for(const p of pages){
 <div class="card"><small>DEMAND PATTERN</small><b>${signals||'Recent'} public signals</b><p>${sources?esc(String(sources))+' source'+(sources>1?'s':''):'Public B2B buying signals'} · latest observed ${esc(displayDate(latest))}.</p></div>
 <div class="card"><small>VOLUME CONTEXT</small><b>${esc(quantities)}</b><p>Final volume, packing and shipment structure are confirmed from the buyer RFQ.</p></div>
 </div></section>
+<section class="section"><div class="shell"><p class="kicker">Answer-ready summary</p><h2>${esc(product)} supply for ${esc(p.market)}</h2><p class="copy">${esc(answerSummary)}</p><div class="grid"><div class="card"><small>ENTITY</small><b>Septlion Supply</b><p>Demand-led product development and managed supply.</p></div><div class="card"><small>BUYER INTENT</small><b>${esc(product)}</b><p>${esc(p.market)} · ${esc(quantities)}</p></div><div class="card"><small>NEXT ACTION</small><b>Submit RFQ</b><p>Destination, quantity, packing, specification, delivery window and Incoterm.</p></div></div></div></section>
 <section class="section soft"><div class="shell"><p class="kicker">Why this page exists</p><h2>Built from observed demand.</h2><p class="copy">Septlion creates market-specific supply routes from recent public B2B buying signals. Buyer identities are not published here. The demand pattern determines the product, market and commercial context; your submitted RFQ determines the final specification, quantity and delivery structure.</p>
 <div class="faq"><article><h3>What should I send?</h3><p>Destination, quantity, preferred packing, product specification, target delivery window and preferred Incoterm.</p></article><article><h3>What happens next?</h3><p>Your RFQ enters Septlion Demand Intelligence for qualification, supplier-route matching and commercial offer construction.</p></article><article><h3>Is this a fixed-price listing?</h3><p>No. This is a demand route. Pricing is built against the actual requirement and supply path.</p></article></div>
 <a class="cta" href="${intent}">Create RFQ for ${esc(p.market)} ↗</a></div></section>
@@ -98,7 +144,8 @@ for(const p of pages){
  const dir=path.join(demandRoot,p.slug);
  await mkdir(dir,{recursive:true});
  await writeFile(path.join(dir,'index.html'),html);
- generated.push({slug:p.slug,title:p.title,market:p.market,product,description,updatedAt:p.updatedAt});
+ await writeFile(path.join(dir,'ai.json'),JSON.stringify(aiFacts,null,2));
+ generated.push({slug:p.slug,title:p.title,market:p.market,product,description,updatedAt:p.updatedAt,answerSummary,aiUrl:canonical+'ai.json'});
 }
 
 const indexHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Market Demand Routes | Septlion Supply</title><meta name="description" content="Demand-led supply routes created from recent public B2B buying signals across markets."><link rel="canonical" href="https://septlion.com/demand/"><meta name="robots" content="index,follow"><style>${shellCss}</style></head><body>
@@ -108,8 +155,14 @@ const indexHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><met
 <footer class="footer shell">Septlion LLC · Demand Intelligence · ${generated.length} live demand routes</footer></body></html>`;
 await writeFile(path.join(demandRoot,'index.html'),indexHtml);
 await writeFile(path.join(demandRoot,'feed.json'),JSON.stringify({generatedAt:new Date().toISOString(),count:generated.length,pages:generated},null,2));
+await writeFile(path.join(demandRoot,'ai-index.json'),JSON.stringify({
+ entity:'Septlion Supply',
+ purpose:'Machine-readable index of current market-specific demand routes derived from recent public B2B buying signals.',
+ generatedAt:new Date().toISOString(),
+ routes:generated.map(p=>({product:p.product,market:p.market,url:'https://septlion.com/demand/'+p.slug+'/',ai:p.aiUrl,summary:p.answerSummary}))
+},null,2));
 
-const llmsLines=['# Septlion live demand routes','','These pages are generated from recent public B2B buying signals and connect directly to Septlion RFQ capture.','',...generated.map(p=>'- '+p.product+' — '+p.market+': https://septlion.com/demand/'+p.slug+'/')];
+const llmsLines=['# Septlion live demand routes','','These pages are generated from recent public B2B buying signals and connect directly to Septlion RFQ capture.','Machine-readable index: https://septlion.com/demand/ai-index.json','',...generated.map(p=>'- '+p.product+' — '+p.market+': https://septlion.com/demand/'+p.slug+'/ | AI JSON: '+p.aiUrl)];
 await writeFile(path.join(outRoot,'llms-demand.txt'),llmsLines.join('\n'));
 const llmsPath=path.join(outRoot,'llms.txt');
 if(existsSync(llmsPath)){
