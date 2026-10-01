@@ -4,6 +4,11 @@ import {DemandIntelligenceService,DemandInput} from './demand-intelligence.servi
 @Controller('demand-intelligence')
 export class DemandIntelligenceController{
  constructor(private readonly service:DemandIntelligenceService){}
+ @Get('command-center') commandCenter(){return this.service.commandCenter()}
+ @Get('approvals') approvals(){return this.service.approvals()}
+ @Post('approvals/:id/approve') approve(@Param('id') id:string,@Body() body:{decidedBy?:string}){return this.service.decideApproval(id,'APPROVED',body.decidedBy)}
+ @Post('approvals/:id/reject') reject(@Param('id') id:string,@Body() body:{decidedBy?:string}){return this.service.decideApproval(id,'REJECTED',body.decidedBy)}
+ @Post('opportunities/:id/approval') requestApproval(@Param('id') id:string,@Body() body:{action:any;title:string;summary?:string;payload?:unknown}){return this.service.requestApproval(id,body)}
  @Get('signals') list(){return this.service.list()}
  @Get('opportunities') opportunities(){return this.service.opportunities()}
  @Get('opportunities/:id') opportunity(@Param('id') id:string){return this.service.opportunity(id)}
