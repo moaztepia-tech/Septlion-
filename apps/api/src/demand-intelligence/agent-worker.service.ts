@@ -6,7 +6,7 @@ type AgentResult={status?:'SUCCEEDED'|'NEEDS_HUMAN';output?:unknown;evidence?:un
 @Injectable()
 export class AgentWorker implements OnModuleInit,OnModuleDestroy{
  private readonly log=new Logger(AgentWorker.name);
- private timer?:NodeJS.Timeout;
+ private timer?:ReturnType<typeof setInterval>;
  private running=false;
  constructor(private readonly prisma:PrismaService){}
 
