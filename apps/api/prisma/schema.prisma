@@ -157,6 +157,7 @@ model Organization {
   conversations        ConversationParticipant[]
   notifications        Notification[]
   buyerProfile         BuyerProfile?
+  supplyCandidates     SupplyCandidate[]
   createdAt            DateTime                  @default(now())
   updatedAt            DateTime                  @updatedAt
 
@@ -313,6 +314,7 @@ model RFQ {
   supplier           Organization? @relation("RFQSupplier", fields: [supplierOrgId], references: [id])
   items              RFQItem[]
   quotes             Quote[]
+  opportunities      Opportunity[]
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
@@ -690,7 +692,6 @@ model BuyerProfile {
   organization       Organization?                  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   requirements       QualifiedRequirement[]
   opportunities      Opportunity[]
-  supplyCandidates   SupplyCandidate[]
   createdAt          DateTime                       @default(now())
   updatedAt          DateTime                       @updatedAt
 
