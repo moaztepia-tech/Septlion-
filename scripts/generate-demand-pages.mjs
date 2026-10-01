@@ -44,8 +44,8 @@ for(const p of pages){
  const product=c.product||p.title||'Commercial Supply';
  const title=c.seoTitle||product+' Supplier for '+p.market+' | Septlion Supply';
  const description=c.seoDescription||('Demand-led '+product+' supply for buyers in '+p.market+'. Request volume, packing and delivery terms from Septlion.');
- const canonical='https://septlion.com/demand/'+p.slug+'/';
- const intent='https://septlion.com/intent/demand/?slug='+encodeURIComponent(p.slug)+'#live-rfq';
+ const canonical='https://www.septlion.com/demand/'+p.slug+'/';
+ const intent='https://www.septlion.com/intent/demand/?slug='+encodeURIComponent(p.slug)+'#live-rfq';
  const signals=Number(c.demandSignalCount||0);
  const sources=Number(c.sourceCount||0);
  const latest=c.latestDemandAt||p.updatedAt;
@@ -75,7 +75,7 @@ for(const p of pages){
   name:product+' supply to '+p.market,
   serviceType:'Demand-led B2B supply and managed sourcing',
   areaServed:{'@type':'Place',name:p.market},
-  provider:{'@type':'Organization',name:'Septlion LLC',url:'https://septlion.com/'},
+  provider:{'@type':'Organization',name:'Septlion LLC',url:'https://www.septlion.com/'},
   url:canonical,
   description
  };
@@ -88,7 +88,7 @@ for(const p of pages){
   about:[
    {'@type':'Product',name:product},
    {'@type':'Place',name:p.market},
-   {'@type':'Organization',name:'Septlion LLC',url:'https://septlion.com/'}
+   {'@type':'Organization',name:'Septlion LLC',url:'https://www.septlion.com/'}
   ],
   mainEntity:schema,
   dateModified:p.updatedAt
@@ -98,7 +98,7 @@ for(const p of pages){
   '@type':'Dataset',
   name:product+' demand signals — '+p.market,
   description:'Aggregated public B2B demand signals used to create this market-specific supply route. Buyer identities are excluded.',
-  creator:{'@type':'Organization',name:'Septlion LLC',url:'https://septlion.com/'},
+  creator:{'@type':'Organization',name:'Septlion LLC',url:'https://www.septlion.com/'},
   spatialCoverage:p.market,
   temporalCoverage:displayDate(latest),
   variableMeasured:['Product','Market','Quantity context','Demand recency','Source count'],
@@ -148,7 +148,7 @@ for(const p of pages){
  generated.push({slug:p.slug,title:p.title,market:p.market,product,description,updatedAt:p.updatedAt,answerSummary,aiUrl:canonical+'ai.json'});
 }
 
-const indexHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Market Demand Routes | Septlion Supply</title><meta name="description" content="Demand-led supply routes created from recent public B2B buying signals across markets."><link rel="canonical" href="https://septlion.com/demand/"><meta name="robots" content="index,follow"><style>${shellCss}</style></head><body>
+const indexHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Market Demand Routes | Septlion Supply</title><meta name="description" content="Demand-led supply routes created from recent public B2B buying signals across markets."><link rel="canonical" href="https://www.septlion.com/demand/"><meta name="robots" content="index,follow"><style>${shellCss}</style></head><body>
 <header class="nav shell"><a class="brand" href="/">SEPTLION</a><small>LIVE DEMAND ROUTES</small></header>
 <main class="shell"><section class="hero"><p class="kicker">Find demand → attract demand</p><h1>What buyers are<br><em>asking for now.</em></h1><p class="lead">Market-specific supply pages generated from recent public B2B buying signals. Choose a route and submit the exact requirement to Septlion.</p></section>
 <div class="index-grid">${generated.map(p=>`<a class="index-card" href="/demand/${p.slug}/"><small>${esc(p.market)}</small><h3>${esc(p.product)}</h3><p>${esc(p.description)}</p></a>`).join('')}</div></main>
@@ -159,23 +159,23 @@ await writeFile(path.join(demandRoot,'ai-index.json'),JSON.stringify({
  entity:'Septlion Supply',
  purpose:'Machine-readable index of current market-specific demand routes derived from recent public B2B buying signals.',
  generatedAt:new Date().toISOString(),
- routes:generated.map(p=>({product:p.product,market:p.market,url:'https://septlion.com/demand/'+p.slug+'/',ai:p.aiUrl,summary:p.answerSummary}))
+ routes:generated.map(p=>({product:p.product,market:p.market,url:'https://www.septlion.com/demand/'+p.slug+'/',ai:p.aiUrl,summary:p.answerSummary}))
 },null,2));
 
-const llmsLines=['# Septlion live demand routes','','These pages are generated from recent public B2B buying signals and connect directly to Septlion RFQ capture.','Machine-readable index: https://septlion.com/demand/ai-index.json','',...generated.map(p=>'- '+p.product+' — '+p.market+': https://septlion.com/demand/'+p.slug+'/ | AI JSON: '+p.aiUrl)];
+const llmsLines=['# Septlion live demand routes','','These pages are generated from recent public B2B buying signals and connect directly to Septlion RFQ capture.','Machine-readable index: https://www.septlion.com/demand/ai-index.json','',...generated.map(p=>'- '+p.product+' — '+p.market+': https://www.septlion.com/demand/'+p.slug+'/ | AI JSON: '+p.aiUrl)];
 await writeFile(path.join(outRoot,'llms-demand.txt'),llmsLines.join('\n'));
 const llmsPath=path.join(outRoot,'llms.txt');
 if(existsSync(llmsPath)){
  const base=await readFile(llmsPath,'utf8');
  const marker='\n\n## Live demand routes\n';
- const appendix=marker+generated.map(p=>'- '+p.product+' — '+p.market+': https://septlion.com/demand/'+p.slug+'/').join('\n')+'\n';
+ const appendix=marker+generated.map(p=>'- '+p.product+' — '+p.market+': https://www.septlion.com/demand/'+p.slug+'/').join('\n')+'\n';
  if(!base.includes('## Live demand routes'))await writeFile(llmsPath,base.trimEnd()+appendix);
 }
 
 const sitemapPath=path.join(outRoot,'sitemap.xml');
 if(existsSync(sitemapPath)){
  let sitemap=await readFile(sitemapPath,'utf8');
- const urls=['https://septlion.com/demand/',...generated.map(p=>'https://septlion.com/demand/'+p.slug+'/')];
+ const urls=['https://www.septlion.com/demand/',...generated.map(p=>'https://www.septlion.com/demand/'+p.slug+'/')];
  const blocks=urls.filter(u=>!sitemap.includes('<loc>'+u+'</loc>')).map(u=>'<url><loc>'+u+'</loc><changefreq>daily</changefreq><priority>0.8</priority></url>').join('');
  sitemap=sitemap.replace('</urlset>',blocks+'</urlset>');
  await writeFile(sitemapPath,sitemap);
