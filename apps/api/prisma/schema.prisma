@@ -660,6 +660,22 @@ enum AgentRunStatus {
   NEEDS_HUMAN
 }
 
+enum ApprovalDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalAction {
+  START_SUPPLY_MATCHING
+  BUILD_DEAL
+  SEND_RFQ
+  SEND_QUOTE
+  ACCEPT_COMMERCIAL_TERMS
+  CREATE_ORDER_INTENT
+  EXTERNAL_COMMITMENT
+}
+
 model BuyerProfile {
   id                 String                         @id @default(uuid())
   organizationId     String?                        @unique
@@ -738,6 +754,7 @@ model Opportunity {
   requirement        QualifiedRequirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
   rfq                RFQ?               @relation(fields: [rfqId], references: [id], onDelete: SetNull)
   agentRuns          AgentRun[]
+  approvals          HumanApproval[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -765,4 +782,23 @@ model AgentRun {
 
   @@index([status, createdAt])
   @@index([opportunityId, agentType])
+}
+
+
+model HumanApproval {
+  id             String           @id @default(uuid())
+  opportunityId  String
+  action         ApprovalAction
+  decision       ApprovalDecision @default(PENDING)
+  title          String
+  summary        String?
+  payload        Json?
+  decidedBy      String?
+  decidedAt      DateTime?
+  opportunity    Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([decision, createdAt])
+  @@index([opportunityId, action])
 }
