@@ -48,9 +48,14 @@ jobs:
           if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then
             cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html
           fi
-          if [ -f apps/web/.next/server/app/require.html ]; then
-            cp apps/web/.next/server/app/require.html deploy/require/index.html
+          REQUIRE_HTML="$(find apps/web/.next/server/app -type f \( -path '*/require.html' -o -path '*/require/index.html' \) | head -n 1)"
+          if [ -z "$REQUIRE_HTML" ]; then
+            echo "ERROR: Buyer Intelligence static HTML was not generated"
+            find apps/web/.next/server/app -maxdepth 3 -type f | sort
+            exit 1
           fi
+          cp "$REQUIRE_HTML" deploy/require/index.html
+          test -s deploy/require/index.html
           if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then
             cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html
           fi
@@ -78,4 +83,4 @@ jobs:
           server-dir: /domains/septlion.com/public_html/
           dangerous-clean-slate: true
 
-# deployment trigger: buyer-intelligence-v1
+# deployment trigger: buyer-intelligence-v1-fix
