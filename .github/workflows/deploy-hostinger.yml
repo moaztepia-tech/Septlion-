@@ -38,11 +38,27 @@ jobs:
 
       - name: Prepare static deployment
         run: |
-          test -f apps/web/out/index.html
-          test -f apps/web/out/require/index.html
           rm -rf deploy
-          mkdir -p deploy
-          cp -R apps/web/out/. deploy/
+          mkdir -p deploy/_next deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
+          cp apps/web/.next/server/app/index.html deploy/index.html
+          cp apps/web/.next/server/app/index.html deploy/404.html
+          cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
+          if [ -f apps/web/.next/server/app/demand-intelligence.html ]; then cp apps/web/.next/server/app/demand-intelligence.html deploy/demand-intelligence/index.html; fi
+          if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html; fi
+          REQUIRE_HTML="$(find apps/web/.next/server/app -type f -path '*/require.html' | head -n 1)"
+          test -n "$REQUIRE_HTML"
+          cp "$REQUIRE_HTML" deploy/require/index.html
+          test -s deploy/require/index.html
+          if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html; fi
+          if [ -f apps/web/.next/server/app/intent/demand.html ]; then cp apps/web/.next/server/app/intent/demand.html deploy/intent/demand/index.html; fi
+          cp -R apps/web/.next/static deploy/_next/static
+          if [ -d apps/web/public ]; then cp -R apps/web/public/. deploy/; fi
+          if [ -f apps/web/.next/server/app/robots.txt.body ]; then cp apps/web/.next/server/app/robots.txt.body deploy/robots.txt; fi
+          if [ -f apps/web/.next/server/app/sitemap.xml.body ]; then cp apps/web/.next/server/app/sitemap.xml.body deploy/sitemap.xml; fi
+          if [ -f apps/web/.next/server/app/llms.txt.body ]; then cp apps/web/.next/server/app/llms.txt.body deploy/llms.txt; fi
+          echo "Deployment files verified"
+          test -s deploy/index.html
+          test -s deploy/require/index.html
 
       - name: Generate live demand SEO pages
         run: node scripts/generate-demand-pages.mjs
@@ -59,4 +75,4 @@ jobs:
           server-dir: /domains/septlion.com/public_html/
           dangerous-clean-slate: true
 
-# deployment trigger: ai-interface-static-export
+# deployment trigger: restore-and-publish-ai-interface
