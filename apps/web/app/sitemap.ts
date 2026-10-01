@@ -1,11 +1,14 @@
-import {MetadataRoute} from 'next';
+import { MetadataRoute } from 'next';
 
-export default function sitemap():MetadataRoute.Sitemap{
- const now=new Date();
- return [
-  {url:'https://septlion.com',lastModified:now,changeFrequency:'weekly',priority:1},
-  {url:'https://septlion.com/demand-intelligence/',lastModified:now,changeFrequency:'daily',priority:.9},
-  {url:'https://septlion.com/demand/',lastModified:now,changeFrequency:'daily',priority:.9},
-  {url:'https://septlion.com/intent/wheat-flour/',lastModified:now,changeFrequency:'weekly',priority:.8},
- ];
+export default function sitemap(): MetadataRoute.Sitemap {
+  const now = new Date();
+  const base = 'https://www.septlion.com';
+
+  return [
+    { url: base, lastModified: now, changeFrequency: 'weekly', priority: 1 },
+    { url: `${base}/demand-intelligence/`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/intent/wheat-flour/`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${base}/maritime-rfq/`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${base}/rfq/`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+  ];
 }
