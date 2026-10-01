@@ -60,6 +60,9 @@ jobs:
           if [ -f apps/web/.next/server/app/sitemap.xml.body ]; then cp apps/web/.next/server/app/sitemap.xml.body deploy/sitemap.xml; fi
           if [ -f apps/web/.next/server/app/llms.txt.body ]; then cp apps/web/.next/server/app/llms.txt.body deploy/llms.txt; fi
 
+      - name: Generate live demand SEO pages
+        run: node scripts/generate-demand-pages.mjs
+
       - name: Upload to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
