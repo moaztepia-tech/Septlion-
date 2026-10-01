@@ -27,10 +27,22 @@ export class AgentWorker implements OnModuleInit,OnModuleDestroy{
    try{
     const result=await this.execute(job.runtime||'INTERNAL',job.agentType,job.input);
     await this.prisma.agentRun.update({where:{id:job.id},data:{status:result.status||'SUCCEEDED',output:(result.output??{}) as any,evidence:(result.evidence??{}) as any,finishedAt:new Date()}});
+    if(job.opportunityId)await this.applyResult(job.opportunityId,job.agentType,result);
    }catch(e){
     await this.prisma.agentRun.update({where:{id:job.id},data:{status:'FAILED',error:e instanceof Error?e.message:String(e),finishedAt:new Date()}});
    }
   }finally{this.running=false}
+ }
+
+ private async applyResult(opportunityId:string,agentType:string,result:AgentResult){
+  const out=(result.output??{}) as any;
+  if(agentType==='QUALIFICATION_GAP_ANALYSIS'){
+   const status=out.complete?'QUALIFIED':'NEEDS_CLARIFICATION';
+   const o=await this.prisma.opportunity.findUnique({where:{id:opportunityId}});
+   if(o?.requirementId)await this.prisma.qualifiedRequirement.update({where:{id:o.requirementId},data:{status,criticalMissing:{fields:out.missing||[]}}});
+   await this.prisma.opportunity.update({where:{id:opportunityId},data:{status:out.complete?'SUPPLY_MATCHING':'QUALIFICATION',nextAction:out.complete?'Run supplier matching':'Resolve critical requirement fields'}});
+  }
+  if(agentType==='DEAL_READINESS'&&out.ready)await this.prisma.opportunity.update({where:{id:opportunityId},data:{status:'DEAL_BUILDING',nextAction:'Build deal economics'}});
  }
 
  private async execute(runtime:string,agentType:string,input:unknown):Promise<AgentResult>{
