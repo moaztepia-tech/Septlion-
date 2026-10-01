@@ -2,9 +2,8 @@ import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 
-const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-if(!SUPABASE_URL||!SUPABASE_KEY)throw new Error('Missing Supabase public env');
+const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL||'https://jfbmxowdmfdzyoauqgwn.supabase.co';
+const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD';
 
 const headers={apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
 const url=SUPABASE_URL+'/rest/v1/PublicDemandIntentPage?select=slug,title,productKey,market,searchIntent,content,updatedAt&order=updatedAt.desc&limit=250';
