@@ -80,5 +80,24 @@ export class DemandIntelligenceService{
   return approval;
  }
 
+ async addSupplyCandidate(opportunityId:string,body:any){
+  await this.prisma.opportunity.findUniqueOrThrow({where:{id:opportunityId}});
+  const candidate=await this.prisma.supplyCandidate.create({data:{opportunityId,supplierOrgId:body.supplierOrgId||null,supplierName:body.supplierName,country:body.country||null,source:body.source||null,sourceUrl:body.sourceUrl||null,capability:body.capability||null,compliance:body.compliance||null,commercial:body.commercial||null,logistics:body.logistics||null,confidence:Number(body.confidence||0),verified:!!body.verified}});
+  await this.prisma.opportunity.update({where:{id:opportunityId},data:{status:'SUPPLY_MATCHING',nextAction:'Verify supply candidates and build deal economics'}});
+  return candidate;
+ }
+
+ async createDealDraft(opportunityId:string,body:any){
+  const last=await this.prisma.dealDraft.findFirst({where:{opportunityId},orderBy:{version:'desc'}});
+  const n=(v:any)=>v==null?undefined:String(v);
+  const ex=Number(body.exWorks||0),fr=Number(body.freight||0),qc=Number(body.qc||0),docs=Number(body.documents||0),duties=Number(body.duties||0),risk=Number(body.riskReserve||0);
+  const landed=ex+fr+qc+docs+duties+risk;
+  const margin=Number(body.grossMarginPct||0);
+  const offer=body.offerPrice!=null?Number(body.offerPrice):(margin>=100?landed:landed/(1-margin/100));
+  const deal=await this.prisma.dealDraft.create({data:{opportunityId,version:(last?.version??0)+1,currency:body.currency||'USD',exWorks:n(ex),freight:n(fr),qc:n(qc),documents:n(docs),duties:n(duties),riskReserve:n(risk),landedCost:n(landed),grossMarginPct:n(margin),offerPrice:n(offer),assumptions:body.assumptions||null}});
+  await this.prisma.opportunity.update({where:{id:opportunityId},data:{status:'DEAL_BUILDING',economics:{landedCost:landed,grossMarginPct:margin,offerPrice:offer,currency:body.currency||'USD'},nextAction:'Request human approval before external commercial commitment'}});
+  return deal;
+ }
+
  async approvals(){return this.prisma.humanApproval.findMany({where:{decision:'PENDING'},include:{opportunity:true},orderBy:{createdAt:'asc'}})}
 }
