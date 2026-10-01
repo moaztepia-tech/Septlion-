@@ -51,3 +51,25 @@ Agents may research, normalize, compare, enrich, calculate and draft. Sending a 
 ## Runtime principle
 
 Septlion owns the graph and commercial state. Agent runtimes are replaceable workers. Do not put the system of record inside OpenDots or any other agent vendor.
+
+## Production activation
+
+API production start should use `pnpm --filter @septlion/api start:prod`, which runs `prisma migrate deploy` before starting Nest.
+
+Required secrets:
+- `DATABASE_URL`
+- `JWT_ACCESS_SECRET`
+- `SEPTLION_ADMIN_EMAIL` and `SEPTLION_ADMIN_PASSWORD` only when intentionally provisioning the first admin through seed.
+
+Optional automation:
+- `DEMAND_COLLECTOR_ENABLED=true` enables the public procurement collector.
+- `AGENT_WORKER_ENABLED=true` enables queued agent execution.
+- `AGENT_RUNTIME_WEBHOOK_URL` + `AGENT_RUNTIME_TOKEN` connect OpenDots or another external runtime.
+
+External agents are never the system of record. Missing external credentials cause the job to fail safely rather than fabricate research.
+
+## Operational route
+
+Internal command center: `/demand-command`
+
+The route requires a valid Septlion JWT. Approval and rejection operations additionally require ADMIN authority.
