@@ -1,6 +1,6 @@
 'use client';
 
-import {useMemo,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import Link from 'next/link';
 
 type State='confirmed'|'suggested'|'missing';
@@ -37,6 +37,7 @@ const copy={
 export default function RequirePage(){
  const[lang,setLang]=useState<Lang>('ar'); const[input,setInput]=useState(''); const[data,setData]=useState<Record<string,string>>({});
  const[answer,setAnswer]=useState(''); const[history,setHistory]=useState<string[]>([]); const t=copy[lang];
+ useEffect(()=>{const seed=sessionStorage.getItem('septlion_requirement_seed');if(seed){sessionStorage.removeItem('septlion_requirement_seed');const parsed=extract(seed);setData(parsed);setHistory([seed]);}},[]);
  const schema=useMemo(()=>[
   ['product',true],['application',data.product==='Wheat Flour'],['quantity',true],['packing',true],['destination',true],['brand',false],['incoterm',false],['requiredDate',false]
  ] as [string,boolean][],[data.product]);
