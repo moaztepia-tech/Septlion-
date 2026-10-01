@@ -690,6 +690,7 @@ model BuyerProfile {
   organization       Organization?                  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   requirements       QualifiedRequirement[]
   opportunities      Opportunity[]
+  supplyCandidates   SupplyCandidate[]
   createdAt          DateTime                       @default(now())
   updatedAt          DateTime                       @updatedAt
 
@@ -755,6 +756,8 @@ model Opportunity {
   rfq                RFQ?               @relation(fields: [rfqId], references: [id], onDelete: SetNull)
   agentRuns          AgentRun[]
   approvals          HumanApproval[]
+  supplyCandidates   SupplyCandidate[]
+  dealDrafts         DealDraft[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -801,4 +804,52 @@ model HumanApproval {
 
   @@index([decision, createdAt])
   @@index([opportunityId, action])
+}
+
+
+model SupplyCandidate {
+  id              String      @id @default(uuid())
+  opportunityId   String
+  supplierOrgId   String?
+  supplierName    String
+  country         String?
+  source          String?
+  sourceUrl       String?
+  capability      Json?
+  compliance      Json?
+  commercial      Json?
+  logistics       Json?
+  confidence      Int         @default(0)
+  verified        Boolean     @default(false)
+  opportunity     Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  supplierOrg     Organization? @relation(fields: [supplierOrgId], references: [id], onDelete: SetNull)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([opportunityId, confidence])
+  @@index([supplierOrgId])
+}
+
+model DealDraft {
+  id              String      @id @default(uuid())
+  opportunityId   String
+  version         Int         @default(1)
+  currency        String      @default("USD")
+  exWorks         Decimal?    @db.Decimal(18, 2)
+  freight         Decimal?    @db.Decimal(18, 2)
+  qc              Decimal?    @db.Decimal(18, 2)
+  documents       Decimal?    @db.Decimal(18, 2)
+  duties          Decimal?    @db.Decimal(18, 2)
+  riskReserve     Decimal?    @db.Decimal(18, 2)
+  landedCost      Decimal?    @db.Decimal(18, 2)
+  grossMarginPct  Decimal?    @db.Decimal(8, 4)
+  offerPrice      Decimal?    @db.Decimal(18, 2)
+  assumptions     Json?
+  status          String      @default("DRAFT")
+  opportunity     Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([opportunityId, version])
+  @@index([opportunityId, createdAt])
 }
