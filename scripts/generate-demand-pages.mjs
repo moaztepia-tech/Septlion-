@@ -111,6 +111,13 @@ await writeFile(path.join(demandRoot,'feed.json'),JSON.stringify({generatedAt:ne
 
 const llmsLines=['# Septlion live demand routes','','These pages are generated from recent public B2B buying signals and connect directly to Septlion RFQ capture.','',...generated.map(p=>'- '+p.product+' — '+p.market+': https://septlion.com/demand/'+p.slug+'/')];
 await writeFile(path.join(outRoot,'llms-demand.txt'),llmsLines.join('\n'));
+const llmsPath=path.join(outRoot,'llms.txt');
+if(existsSync(llmsPath)){
+ const base=await readFile(llmsPath,'utf8');
+ const marker='\n\n## Live demand routes\n';
+ const appendix=marker+generated.map(p=>'- '+p.product+' — '+p.market+': https://septlion.com/demand/'+p.slug+'/').join('\n')+'\n';
+ if(!base.includes('## Live demand routes'))await writeFile(llmsPath,base.trimEnd()+appendix);
+}
 
 const sitemapPath=path.join(outRoot,'sitemap.xml');
 if(existsSync(sitemapPath)){
