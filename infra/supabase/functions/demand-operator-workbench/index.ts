@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
         .eq("active", true),
       db.from("DemandBuyerWorkbench")
         .select("*")
-        .order("executionScore", { ascending: false })
+        .order("priorityScore", { ascending: false })
         .order("lastBuyingSignalAt", { ascending: false, nullsFirst: false })
         .limit(100),
     ]);
