@@ -38,7 +38,7 @@ jobs:
 
       - name: Prepare static deployment
         run: |
-          mkdir -p deploy/_next deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand
+          mkdir -p deploy/_next deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
           cp apps/web/.next/server/app/index.html deploy/index.html
           cp apps/web/.next/server/app/index.html deploy/404.html
           cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
@@ -47,6 +47,9 @@ jobs:
           fi
           if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then
             cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html
+          fi
+          if [ -f apps/web/.next/server/app/require.html ]; then
+            cp apps/web/.next/server/app/require.html deploy/require/index.html
           fi
           if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then
             cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html
