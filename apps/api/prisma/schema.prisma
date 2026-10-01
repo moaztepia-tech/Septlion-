@@ -156,6 +156,7 @@ model Organization {
   documents            CommercialDocument[]
   conversations        ConversationParticipant[]
   notifications        Notification[]
+  buyerProfile         BuyerProfile?
   createdAt            DateTime                  @default(now())
   updatedAt            DateTime                  @updatedAt
 
@@ -616,5 +617,152 @@ model DemandSignal {
   @@index([status, score])
   @@index([market, product])
   @@index([publishedAt])
+  requirements        QualifiedRequirement[]
+  opportunities       Opportunity[]
+
   @@index([deadlineAt])
+}
+
+
+enum IntelligenceVerificationStatus {
+  UNVERIFIED
+  SOURCE_CONFIRMED
+  CROSS_VERIFIED
+  HUMAN_VERIFIED
+}
+
+enum RequirementStatus {
+  DRAFT
+  NEEDS_CLARIFICATION
+  QUALIFIED
+  SUPPLY_READY
+  ARCHIVED
+}
+
+enum OpportunityStatus {
+  DISCOVERED
+  BUYER_RESOLUTION
+  QUALIFICATION
+  SUPPLY_MATCHING
+  DEAL_BUILDING
+  AWAITING_APPROVAL
+  APPROVED
+  WON
+  LOST
+  ARCHIVED
+}
+
+enum AgentRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  NEEDS_HUMAN
+}
+
+model BuyerProfile {
+  id                 String                         @id @default(uuid())
+  organizationId     String?                        @unique
+  canonicalName      String
+  country            String?
+  website            String?
+  industry           String?
+  verificationStatus IntelligenceVerificationStatus @default(UNVERIFIED)
+  confidence         Int                            @default(0)
+  attributes         Json?
+  provenance         Json?
+  organization       Organization?                  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  requirements       QualifiedRequirement[]
+  opportunities      Opportunity[]
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
+
+  @@index([canonicalName])
+  @@index([country, industry])
+}
+
+model QualifiedRequirement {
+  id                 String            @id @default(uuid())
+  buyerProfileId     String?
+  sourceSignalId     String?
+  status             RequirementStatus @default(DRAFT)
+  product            String
+  market             String
+  quantity           Decimal?          @db.Decimal(18, 4)
+  unit               String?
+  deliveryCountry    String?
+  deliveryPort       String?
+  incoterm           String?
+  targetPrice        Decimal?          @db.Decimal(18, 4)
+  currency           String?
+  requiredDate       DateTime?
+  knownFacts         Json
+  inferredFacts      Json?
+  criticalMissing    Json?
+  specifications     Json?
+  packing            Json?
+  compliance         Json?
+  confidence         Int               @default(0)
+  buyerProfile       BuyerProfile?     @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
+  sourceSignal       DemandSignal?      @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
+  opportunities      Opportunity[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([status, market, product])
+  @@index([buyerProfileId])
+  @@index([sourceSignalId])
+}
+
+model Opportunity {
+  id                 String            @id @default(uuid())
+  reference          String            @unique
+  status             OpportunityStatus @default(DISCOVERED)
+  sourceSignalId     String?
+  buyerProfileId     String?
+  requirementId      String?
+  rfqId              String?
+  title              String
+  market             String
+  product            String
+  commercialValue    Decimal?          @db.Decimal(18, 2)
+  currency           String?
+  nextAction         String?
+  nextActionAt       DateTime?
+  evidence           Json?
+  risk               Json?
+  economics          Json?
+  humanApproval      Json?
+  sourceSignal       DemandSignal?      @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
+  buyerProfile       BuyerProfile?      @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
+  requirement        QualifiedRequirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
+  rfq                RFQ?               @relation(fields: [rfqId], references: [id], onDelete: SetNull)
+  agentRuns          AgentRun[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([status, updatedAt])
+  @@index([market, product])
+  @@index([sourceSignalId])
+  @@index([buyerProfileId])
+  @@index([requirementId])
+}
+
+model AgentRun {
+  id              String         @id @default(uuid())
+  opportunityId   String?
+  agentType       String
+  runtime         String?
+  status          AgentRunStatus @default(QUEUED)
+  input           Json
+  output          Json?
+  evidence        Json?
+  error           String?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  opportunity     Opportunity?   @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+
+  @@index([status, createdAt])
+  @@index([opportunityId, agentType])
 }
