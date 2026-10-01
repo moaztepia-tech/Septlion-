@@ -55,4 +55,30 @@ export class DemandIntelligenceService{
  async queueAgent(opportunityId:string,agentType:string,input:unknown,runtime='OPEN_DOTS'){
   return this.prisma.agentRun.create({data:{opportunityId,agentType,runtime,status:'QUEUED',input:input as any}});
  }
+
+ async commandCenter(){
+  const [signals,opportunities,pendingApprovals,agentRuns]=await Promise.all([
+   this.prisma.demandSignal.count(),
+   this.prisma.opportunity.groupBy({by:['status'],_count:{_all:true}}),
+   this.prisma.humanApproval.count({where:{decision:'PENDING'}}),
+   this.prisma.agentRun.groupBy({by:['status'],_count:{_all:true}})
+  ]);
+  return {signals,opportunities:Object.fromEntries(opportunities.map(x=>[x.status,x._count._all])),pendingApprovals,agents:Object.fromEntries(agentRuns.map(x=>[x.status,x._count._all]))};
+ }
+
+ async requestApproval(opportunityId:string,body:{action:any;title:string;summary?:string;payload?:unknown}){
+  await this.prisma.opportunity.findUniqueOrThrow({where:{id:opportunityId}});
+  const approval=await this.prisma.humanApproval.create({data:{opportunityId,action:body.action,title:body.title,summary:body.summary,payload:(body.payload??{}) as any}});
+  await this.prisma.opportunity.update({where:{id:opportunityId},data:{status:'AWAITING_APPROVAL',nextAction:'Human approval required'}});
+  return approval;
+ }
+
+ async decideApproval(id:string,decision:'APPROVED'|'REJECTED',decidedBy?:string){
+  const approval=await this.prisma.humanApproval.update({where:{id},data:{decision,decidedBy,decidedAt:new Date()}});
+  const nextStatus=decision==='APPROVED'?(approval.action==='START_SUPPLY_MATCHING'?'SUPPLY_MATCHING':approval.action==='BUILD_DEAL'?'DEAL_BUILDING':'APPROVED'):'QUALIFICATION';
+  await this.prisma.opportunity.update({where:{id:approval.opportunityId},data:{status:nextStatus as any,nextAction:decision==='APPROVED'?'Execute approved action':'Review rejected action'}});
+  return approval;
+ }
+
+ async approvals(){return this.prisma.humanApproval.findMany({where:{decision:'PENDING'},include:{opportunity:true},orderBy:{createdAt:'asc'}})}
 }
