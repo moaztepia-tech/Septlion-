@@ -7,7 +7,7 @@ const TERMS=['wheat flour','flour','milling','maize flour','fortified flour'];
 @Injectable()
 export class DemandCollectorScheduler implements OnModuleInit,OnModuleDestroy{
  private readonly log=new Logger(DemandCollectorScheduler.name);
- private timer?:NodeJS.Timeout;
+ private timer?:ReturnType<typeof setInterval>;
  constructor(private readonly demand:DemandIntelligenceService){}
  onModuleInit(){
   if(process.env.DEMAND_COLLECTOR_ENABLED!=='true'){this.log.log('Demand collector scheduler disabled');return}
