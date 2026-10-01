@@ -195,12 +195,12 @@ export default function DemandWorkbench(){
    <div className="dw-head"><div><p className="kicker">BUYER INTELLIGENCE</p><h2>المشترون أولًا</h2></div><p>Execution Score يجمع قوة نية الشراء مع جاهزية الوصول إلى المشتري. لا نعتبر الاسم وحده مشتريًا جاهزًا للتنفيذ.</p></div>
    <div className="dw-buyers">
     {data.buyers.map(b=><article className="dw-buyer" key={b.id}>
-     <div className="dw-buyer-score"><b>{b.executionScore}</b><span>EXEC</span></div>
+     <div className="dw-buyer-score"><b>{b.priorityScore??b.executionScore}</b><span>PRIORITY</span></div>
      <div className="dw-buyer-main">
-      <small>{b.latestIsPlatform?'PLATFORM BUY REQUEST · ':''}{b.verificationStatus} · {b.confidence}%</small>
+      <small>{b.latestIsPlatform?'PLATFORM BUY REQUEST · ':''}{b.platformVerified?'PLATFORM VERIFIED · ':''}{b.verificationStatus} · {b.confidence}%</small>
       <h3>{b.displayName}</h3>
       <p>{b.country||'—'} · {b.latestProduct||((b.productKeys||[]).join(', ')||'Product unresolved')}{b.latestQuantity?' · '+b.latestQuantity:''}</p>
-      <div className="dw-buyer-metrics"><span>Intent <b>{b.buyingIntentScore}</b></span><span>Contact <b>{b.contactReadinessScore}</b></span><span>Signals <b>{b.signalCount}</b></span><span>Sources <b>{b.sourceCount}</b></span></div>
+      <div className="dw-buyer-metrics"><span>Intent <b>{b.buyingIntentScore}</b></span><span>Contact <b>{b.contactReadinessScore}</b></span><span>Signals <b>{b.signalCount}</b></span><span>Sources <b>{b.sourceCount}</b></span>{(b.recurrenceEvidenceCount||0)>0&&<span>Repeat <b>{b.recurrenceEvidenceCount}</b></span>}{b.platformTrustScore!=null&&<span>Trust <b>{b.platformTrustScore}</b></span>}{b.rfqQualityScore!=null&&<span>RFQ <b>{b.rfqQualityScore}</b></span>}</div>
      </div>
      <div className="dw-buyer-contact">
       <span>التواصل</span>
@@ -208,7 +208,7 @@ export default function DemandWorkbench(){
       {b.primaryEmail&&<a href={'mailto:'+b.primaryEmail}>{b.primaryEmail}</a>}
       {b.primaryWhatsapp&&<a href={'https://wa.me/'+b.primaryWhatsapp.replace(/\D/g,'')} target="_blank" rel="noreferrer">{b.primaryWhatsapp} · WhatsApp ↗</a>}
       {!b.primaryWhatsapp&&b.primaryPhone&&<a href={'tel:'+b.primaryPhone}>{b.primaryPhone}</a>}
-      {b.latestSourceUrl&&<a href={b.latestSourceUrl} target="_blank" rel="noreferrer">{b.latestSource||'المصدر'} ↗</a>}
+      {b.latestSourceUrl&&<a href={b.latestSourceUrl} target="_blank" rel="noreferrer">{b.platformContactAvailable?'التواصل عبر '+(b.latestSource||'المنصة'):(b.latestSource||'المصدر')} ↗</a>}
       {b.website&&<a href={b.website} target="_blank" rel="noreferrer">الموقع ↗</a>}
      </div>
      <div className="dw-buyer-time"><span>آخر إشارة شراء</span><b>{b.lastBuyingSignalAt?.slice(0,10)||'—'}</b></div>
