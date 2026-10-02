@@ -761,6 +761,7 @@ model QualifiedRequirement {
   buyerProfileId       String?
   buyerContactId       String?
   sourceSignalId       String?
+  organizationId       String?
   source               RequirementSource @default(AI_COMPOSER)
   sourceContext        Json?
   status               RequirementStatus @default(DRAFT)
@@ -795,6 +796,7 @@ model QualifiedRequirement {
   updatedAt            DateTime          @updatedAt
 
   @@index([status, market, product])
+  @@index([organizationId, updatedAt])
   @@index([buyerProfileId])
   @@index([buyerContactId])
   @@index([sourceSignalId])
