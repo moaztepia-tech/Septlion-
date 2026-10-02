@@ -46,9 +46,9 @@ export class TradeCoreService{
    const existing=await tx.commercialLock.findUnique({where:{offerId},include:{transaction:true}});if(existing)return existing;
    const offer=await tx.septlionOffer.findFirst({where:{id:offerId,buyerOrgId:org},include:{revisions:{where:{status:'ACCEPTED'},orderBy:{revisionNo:'desc'},take:1}}});
    if(!offer)throw new NotFoundException('عرض Septlion غير موجود');if(offer.status!=='ACCEPTED')throw new BadRequestException('يجب قبول العرض قبل التثبيت');const revision=offer.revisions[0];if(!revision)throw new BadRequestException('لا توجد نسخة مقبولة');
-   const snapshot={schemaVersion:2,offerId:offer.id,offerRevisionId:revision.id,revisionNo:revision.revisionNo,requirementId:offer.requirementId,rfqId:offer.rfqId,buyerOrgId:offer.buyerOrgId,currency:offer.currency,validUntil:offer.validUntil?.toISOString()??null,commercial:revision.snapshot};
-   const lock=await tx.commercialLock.create({data:{offerId:offer.id,offerRevisionId:revision.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:org,snapshot:snapshot as Prisma.InputJsonValue,snapshotHash:hash(snapshot),lockedByUserId:this.tenant.userId}});
-   const transaction=await tx.tradeTransaction.create({data:{reference:ref(),commercialLockId:lock.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:org,status:TradeTransactionStatus.COMMITTED}});
+   const snapshot={schemaVersion:2,offerId:offer.id,offerRevisionId:revision.id,revisionNo:revision.revisionNo,requirementId:offer.requirementId,rfqId:offer.rfqId,buyerOrgId:offer.buyerOrgId,operatorOrgId:offer.operatorOrgId,currency:offer.currency,validUntil:offer.validUntil?.toISOString()??null,commercial:revision.snapshot};
+   const lock=await tx.commercialLock.create({data:{offerId:offer.id,offerRevisionId:revision.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:offer.operatorOrgId,snapshot:snapshot as Prisma.InputJsonValue,snapshotHash:hash(snapshot),lockedByUserId:this.tenant.userId}});
+   const transaction=await tx.tradeTransaction.create({data:{reference:ref(),commercialLockId:lock.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:offer.operatorOrgId,status:TradeTransactionStatus.COMMITTED}});
    await tx.tradeEvent.create({data:{transactionId:transaction.id,sequence:1,type:'TRANSACTION_COMMITTED',visibility:TradeEventVisibility.BUYER,actorOrgId:org,actorUserId:this.tenant.userId,occurredAt:new Date(),payload:{commercialLockId:lock.id,snapshotHash:lock.snapshotHash,offerId} as Prisma.InputJsonValue}});
    return{...lock,transaction};
   });
