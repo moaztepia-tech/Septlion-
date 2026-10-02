@@ -1,5 +1,6 @@
 'use client';
 import {ReactNode} from 'react';
+import type {UiRequest} from '../lib/buyer-ui-store';
 import {usePathname} from 'next/navigation';
 const items=[['/','الرئيسية'],['/discover','اكتشف'],['/requests','الطلبات'],['/notifications','التنبيهات'],['/account','الحساب']];
 export function BuyerShell({children,title,eyebrow='SEPTLION'}:{children:ReactNode;title?:string;eyebrow?:string}){
@@ -11,4 +12,4 @@ export function BuyerShell({children,title,eyebrow='SEPTLION'}:{children:ReactNo
  </main>
 }
 export function Stage({current}:{current:number}){const x=['الطلب','العرض','التأكيد','التنفيذ','الاستلام','إعادة الطلب'];return <div className="stagebar">{x.map((s,i)=><span key={s} className={i<=current?'on':''}><i>{i<current?'✓':i+1}</i><small>{s}</small></span>)}</div>}
-export function RequestSummary(){return <div className="request-summary"><div><small>RFQ · SEPTLION SUPPLY</small><h2>دقيق مخابز</h2><p>3 حاويات · CIF · Dar es Salaam · L/C</p></div><span className="status-pill">قيد المعالجة</span></div>}
+export function RequestSummary({request}:{request:UiRequest}){return <div className="request-summary"><div><small>{request.id} · SEPTLION SUPPLY</small><h2>{request.product}</h2><p>{request.containers} حاويات · {request.incoterm} · {request.destination} · {request.payment}</p></div><span className="status-pill">{request.status==='DRAFT'?'مسودة':'مسجل'}</span></div>}
