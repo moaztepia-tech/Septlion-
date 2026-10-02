@@ -983,6 +983,7 @@ model TradeTransaction {
   updatedAt        DateTime               @updatedAt
 
   @@index([buyerOrgId, status, updatedAt])
+  @@index([operatorOrgId, status, updatedAt])
   @@index([supplierOrgId, status, updatedAt])
 }
 
@@ -1035,6 +1036,7 @@ model SeptlionOffer {
   requirementId   String
   rfqId           String              @unique
   buyerOrgId      String
+  operatorOrgId   String
   status          SeptlionOfferStatus @default(DRAFT)
   currentRevision Int                 @default(0)
   currency        String              @default("USD")
