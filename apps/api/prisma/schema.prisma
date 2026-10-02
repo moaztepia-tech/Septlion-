@@ -578,7 +578,6 @@ model OutboxEvent {
   @@index([organizationId, createdAt])
 }
 
-
 enum DemandSignalType {
   TENDER
   RFQ
@@ -593,12 +592,12 @@ enum DemandSignalStatus {
 }
 
 model DemandSignal {
-  id                  String             @id @default(uuid())
+  id                  String                 @id @default(uuid())
   source              String
   sourceRecordId      String
   sourceUrl           String?
   type                DemandSignalType
-  status              DemandSignalStatus @default(WATCH)
+  status              DemandSignalStatus     @default(WATCH)
   market              String
   product             String
   quantity            String?
@@ -608,23 +607,21 @@ model DemandSignal {
   incoterm            String?
   packing             String?
   evidence            Json?
-  score               Int                @default(0)
-  verification        String              @default("SOURCE_SIGNAL")
-  intentPageCandidate Boolean             @default(false)
+  score               Int                    @default(0)
+  verification        String                 @default("SOURCE_SIGNAL")
+  intentPageCandidate Boolean                @default(false)
   raw                 Json?
-  firstSeenAt         DateTime            @default(now())
-  lastSeenAt          DateTime            @updatedAt
+  firstSeenAt         DateTime               @default(now())
+  lastSeenAt          DateTime               @updatedAt
+  requirements        QualifiedRequirement[]
+  opportunities       Opportunity[]
 
   @@unique([source, sourceRecordId])
   @@index([status, score])
   @@index([market, product])
   @@index([publishedAt])
-  requirements        QualifiedRequirement[]
-  opportunities       Opportunity[]
-
   @@index([deadlineAt])
 }
-
 
 enum IntelligenceVerificationStatus {
   UNVERIFIED
@@ -714,17 +711,17 @@ model BuyerProfile {
 }
 
 model BuyerContact {
-  id                   String               @id @default(uuid())
+  id                   String                 @id @default(uuid())
   buyerProfileId       String?
   name                 String
   company              String
   whatsapp             String
   email                String?
-  whatsappReachability WhatsAppReachability @default(UNCONFIRMED)
-  buyerProfile         BuyerProfile?        @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
+  whatsappReachability WhatsAppReachability   @default(UNCONFIRMED)
+  buyerProfile         BuyerProfile?          @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
   requirements         QualifiedRequirement[]
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
 
   @@index([whatsapp])
   @@index([email])
@@ -764,10 +761,10 @@ model QualifiedRequirement {
   confidence           Int               @default(0)
   buyerProfile         BuyerProfile?     @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
   buyerContact         BuyerContact?     @relation(fields: [buyerContactId], references: [id], onDelete: SetNull)
-  sourceSignal         DemandSignal?      @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
+  sourceSignal         DemandSignal?     @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
   opportunities        Opportunity[]
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   @@index([status, market, product])
   @@index([buyerProfileId])
@@ -777,34 +774,34 @@ model QualifiedRequirement {
 }
 
 model Opportunity {
-  id                 String            @id @default(uuid())
-  reference          String            @unique
-  status             OpportunityStatus @default(DISCOVERED)
-  sourceSignalId     String?
-  buyerProfileId     String?
-  requirementId      String?
-  rfqId              String?
-  title              String
-  market             String
-  product            String
-  commercialValue    Decimal?          @db.Decimal(18, 2)
-  currency           String?
-  nextAction         String?
-  nextActionAt       DateTime?
-  evidence           Json?
-  risk               Json?
-  economics          Json?
-  humanApproval      Json?
-  sourceSignal       DemandSignal?      @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
-  buyerProfile       BuyerProfile?      @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
-  requirement        QualifiedRequirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
-  rfq                RFQ?               @relation(fields: [rfqId], references: [id], onDelete: SetNull)
-  agentRuns          AgentRun[]
-  approvals          HumanApproval[]
-  supplyCandidates   SupplyCandidate[]
-  dealDrafts         DealDraft[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id               String                @id @default(uuid())
+  reference        String                @unique
+  status           OpportunityStatus     @default(DISCOVERED)
+  sourceSignalId   String?
+  buyerProfileId   String?
+  requirementId    String?
+  rfqId            String?
+  title            String
+  market           String
+  product          String
+  commercialValue  Decimal?              @db.Decimal(18, 2)
+  currency         String?
+  nextAction       String?
+  nextActionAt     DateTime?
+  evidence         Json?
+  risk             Json?
+  economics        Json?
+  humanApproval    Json?
+  sourceSignal     DemandSignal?         @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
+  buyerProfile     BuyerProfile?         @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
+  requirement      QualifiedRequirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
+  rfq              RFQ?                  @relation(fields: [rfqId], references: [id], onDelete: SetNull)
+  agentRuns        AgentRun[]
+  approvals        HumanApproval[]
+  supplyCandidates SupplyCandidate[]
+  dealDrafts       DealDraft[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
   @@index([status, updatedAt])
   @@index([market, product])
@@ -814,86 +811,84 @@ model Opportunity {
 }
 
 model AgentRun {
-  id              String         @id @default(uuid())
-  opportunityId   String?
-  agentType       String
-  runtime         String?
-  status          AgentRunStatus @default(QUEUED)
-  input           Json
-  output          Json?
-  evidence        Json?
-  error           String?
-  startedAt       DateTime?
-  finishedAt      DateTime?
-  opportunity     Opportunity?   @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  createdAt       DateTime       @default(now())
+  id            String         @id @default(uuid())
+  opportunityId String?
+  agentType     String
+  runtime       String?
+  status        AgentRunStatus @default(QUEUED)
+  input         Json
+  output        Json?
+  evidence      Json?
+  error         String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  opportunity   Opportunity?   @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
 
   @@index([status, createdAt])
   @@index([opportunityId, agentType])
 }
 
-
 model HumanApproval {
-  id             String           @id @default(uuid())
-  opportunityId  String
-  action         ApprovalAction
-  decision       ApprovalDecision @default(PENDING)
-  title          String
-  summary        String?
-  payload        Json?
-  decidedBy      String?
-  decidedAt      DateTime?
-  opportunity    Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id            String           @id @default(uuid())
+  opportunityId String
+  action        ApprovalAction
+  decision      ApprovalDecision @default(PENDING)
+  title         String
+  summary       String?
+  payload       Json?
+  decidedBy     String?
+  decidedAt     DateTime?
+  opportunity   Opportunity      @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@index([decision, createdAt])
   @@index([opportunityId, action])
 }
 
-
 model SupplyCandidate {
-  id              String      @id @default(uuid())
-  opportunityId   String
-  supplierOrgId   String?
-  supplierName    String
-  country         String?
-  source          String?
-  sourceUrl       String?
-  capability      Json?
-  compliance      Json?
-  commercial      Json?
-  logistics       Json?
-  confidence      Int         @default(0)
-  verified        Boolean     @default(false)
-  opportunity     Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  supplierOrg     Organization? @relation(fields: [supplierOrgId], references: [id], onDelete: SetNull)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id            String        @id @default(uuid())
+  opportunityId String
+  supplierOrgId String?
+  supplierName  String
+  country       String?
+  source        String?
+  sourceUrl     String?
+  capability    Json?
+  compliance    Json?
+  commercial    Json?
+  logistics     Json?
+  confidence    Int           @default(0)
+  verified      Boolean       @default(false)
+  opportunity   Opportunity   @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  supplierOrg   Organization? @relation(fields: [supplierOrgId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@index([opportunityId, confidence])
   @@index([supplierOrgId])
 }
 
 model DealDraft {
-  id              String      @id @default(uuid())
-  opportunityId   String
-  version         Int         @default(1)
-  currency        String      @default("USD")
-  exWorks         Decimal?    @db.Decimal(18, 2)
-  freight         Decimal?    @db.Decimal(18, 2)
-  qc              Decimal?    @db.Decimal(18, 2)
-  documents       Decimal?    @db.Decimal(18, 2)
-  duties          Decimal?    @db.Decimal(18, 2)
-  riskReserve     Decimal?    @db.Decimal(18, 2)
-  landedCost      Decimal?    @db.Decimal(18, 2)
-  grossMarginPct  Decimal?    @db.Decimal(8, 4)
-  offerPrice      Decimal?    @db.Decimal(18, 2)
-  assumptions     Json?
-  status          String      @default("DRAFT")
-  opportunity     Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id             String      @id @default(uuid())
+  opportunityId  String
+  version        Int         @default(1)
+  currency       String      @default("USD")
+  exWorks        Decimal?    @db.Decimal(18, 2)
+  freight        Decimal?    @db.Decimal(18, 2)
+  qc             Decimal?    @db.Decimal(18, 2)
+  documents      Decimal?    @db.Decimal(18, 2)
+  duties         Decimal?    @db.Decimal(18, 2)
+  riskReserve    Decimal?    @db.Decimal(18, 2)
+  landedCost     Decimal?    @db.Decimal(18, 2)
+  grossMarginPct Decimal?    @db.Decimal(8, 4)
+  offerPrice     Decimal?    @db.Decimal(18, 2)
+  assumptions    Json?
+  status         String      @default("DRAFT")
+  opportunity    Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   @@unique([opportunityId, version])
   @@index([opportunityId, createdAt])
