@@ -1,4 +1,5 @@
 import {BadRequestException,Injectable} from '@nestjs/common';
+import {Prisma} from '@prisma/client';
 import {PrismaService} from '../prisma/prisma.service';
 import {CreateFeedRequirementDto} from './feed-requirement.dto';
 
@@ -30,10 +31,10 @@ export class FeedRequirementService{
     product:dto.product.nameEn,market:dto.destination.country,quantity:dto.containerCount,unit:'FCL',
     containerCount:dto.containerCount,septlionScale:expectedScale,deliveryCountry:dto.destination.country,deliveryPort:dto.destination.port,destinationCode:dto.destination.code,
     incoterm:dto.incoterm,paymentPreference:dto.paymentPreference,
-    knownFacts:{product:dto.product,containerCount:dto.containerCount,septlionScale:expectedScale,incoterm:dto.incoterm,destination:dto.destination,paymentPreference:dto.paymentPreference},
+    knownFacts:{product:{id:dto.product.id,name:dto.product.name,nameEn:dto.product.nameEn,packing:dto.product.packing},containerCount:dto.containerCount,septlionScale:expectedScale,incoterm:dto.incoterm,destination:{port:dto.destination.port,country:dto.destination.country,code:dto.destination.code||null},paymentPreference:dto.paymentPreference},
     fieldStates:{product:'CONFIRMED',packing:'CONFIRMED',containerCount:'CONFIRMED',incoterm:'CONFIRMED',destination:'CONFIRMED',paymentPreference:'CONFIRMED',buyer:'CONFIRMED'},
     productConfiguration:{productId:dto.product.id,packing:dto.product.packing},
-    packing:{display:dto.product.packing},sourceContext:dto.sourceContext||{source:'product_feed'},confidence:85
+    packing:{display:dto.product.packing},sourceContext:(dto.sourceContext||{source:'product_feed'}) as Prisma.InputJsonValue,confidence:85
    }});
    return {requirementId:requirement.id,status:requirement.status,buyerContactId:contact.id,whatsappStatus:contact.whatsappReachability};
   });
