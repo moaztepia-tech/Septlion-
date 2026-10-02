@@ -1,0 +1,1 @@
+import {Module} from '@nestjs/common';import {PrismaModule} from '../prisma/prisma.module';import {TradeCoreController} from './trade-core.controller';import {TradeCoreService} from './trade-core.service';@Module({imports:[PrismaModule],controllers:[TradeCoreController],providers:[TradeCoreService],exports:[TradeCoreService]})export class TradeCoreModule{}
