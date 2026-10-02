@@ -11,6 +11,7 @@ export class DocumentsService {
     if (entityType === 'RFQ') entity = await tx.rFQ.findUnique({ where: { id: entityId }, select: { buyerOrgId: true, supplierOrgId: true } });
     if (entityType === 'QUOTE') entity = await tx.quote.findUnique({ where: { id: entityId }, select: { buyerOrgId: true, supplierOrgId: true } });
     if (entityType === 'ORDER_INTENT') entity = await tx.orderIntent.findUnique({ where: { id: entityId }, select: { buyerOrgId: true, supplierOrgId: true } });
+    if (entityType === 'TRANSACTION') entity = await tx.tradeTransaction.findUnique({ where: { id: entityId }, select: { buyerOrgId: true, supplierOrgId: true } });
     if (!entity) throw new NotFoundException('مساحة العمل غير موجودة أو غير متاحة');
     if (![entity.buyerOrgId, entity.supplierOrgId].filter(Boolean).includes(orgId)) throw new ForbiddenException();
   }
