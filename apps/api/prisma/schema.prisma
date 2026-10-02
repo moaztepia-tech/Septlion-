@@ -973,21 +973,21 @@ model DealDraft {
 
 /// Immutable commercial truth created only from an accepted quote revision.
 model CommercialLock {
-  id             String   @id @default(uuid())
-  quoteId        String?  @unique
-  quoteRevisionId String? @unique
-  offerId        String?  @unique
-  offerRevisionId String? @unique
-  orderIntentId  String?  @unique
-  buyerOrgId     String
-  supplierOrgId  String
-  version        Int      @default(1)
-  snapshot       Json
-  snapshotHash   String
-  lockedByUserId String?
-  lockedAt       DateTime @default(now())
-  transaction    TradeTransaction?
-  changeOrders   ChangeOrder[]
+  id              String            @id @default(uuid())
+  quoteId         String?           @unique
+  quoteRevisionId String?           @unique
+  offerId         String?           @unique
+  offerRevisionId String?           @unique
+  orderIntentId   String?           @unique
+  buyerOrgId      String
+  supplierOrgId   String
+  version         Int               @default(1)
+  snapshot        Json
+  snapshotHash    String
+  lockedByUserId  String?
+  lockedAt        DateTime          @default(now())
+  transaction     TradeTransaction?
+  changeOrders    ChangeOrder[]
 
   @@index([buyerOrgId, lockedAt])
   @@index([supplierOrgId, lockedAt])
@@ -1057,7 +1057,6 @@ model ChangeOrder {
   @@index([commercialLockId, status])
 }
 
-
 /// The single commercial offer Septlion issues to the buyer. Supplier quotes remain internal sourcing inputs.
 model SeptlionOffer {
   id              String              @id @default(uuid())
@@ -1095,7 +1094,6 @@ model SeptlionOfferRevision {
   @@unique([offerId, revisionNo])
   @@index([offerId, status])
 }
-
 
 model TradeMilestone {
   id            String          @id @default(uuid())
