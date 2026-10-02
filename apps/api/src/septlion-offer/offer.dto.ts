@@ -1,0 +1,3 @@
+import{IsArray,IsDateString,IsIn,IsNumber,IsObject,IsOptional,IsString,Min,ValidateNested}from'class-validator';import{Type}from'class-transformer';
+class OfferItemDto{@IsString()description!:string;@IsNumber()@Min(0)quantity!:number;@IsString()unit!:string;@IsNumber()@Min(0)unitPrice!:number}
+export class IssueOfferDto{@IsString()rfqId!:string;@IsString()requirementId!:string;@IsString()currency!:string;@IsOptional()@IsDateString()validUntil?:string;@ValidateNested({each:true})@Type(()=>OfferItemDto)@IsArray()items!:OfferItemDto[];@IsObject()terms!:Record<string,unknown>;@IsOptional()@IsObject()supplyEvidence?:Record<string,unknown>}

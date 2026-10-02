@@ -34,12 +34,28 @@ export class TradeCoreService{
    };
    const lock=await tx.commercialLock.create({data:{quoteId:quote.id,quoteRevisionId:revision.id,orderIntentId:orderIntent?.id,buyerOrgId:quote.buyerOrgId,supplierOrgId:quote.supplierOrgId,snapshot:snapshot as Prisma.InputJsonValue,snapshotHash:hash(snapshot),lockedByUserId:this.tenant.userId}});
    const transaction=await tx.tradeTransaction.create({data:{reference:ref(),commercialLockId:lock.id,buyerOrgId:quote.buyerOrgId,supplierOrgId:quote.supplierOrgId,status:TradeTransactionStatus.COMMITTED}});
+   await tx.tradeMilestone.createMany({data:[['CONFIRMED','تم التأكيد'],['SUPPLY','التوريد / الإنتاج'],['QUALITY','فحص الجودة'],['DOCUMENTATION','المستندات'],['READY','جاهز للشحن'],['SHIPPED','تم الشحن'],['IN_TRANSIT','في الطريق'],['DELIVERED','تم التسليم']].map((x,i)=>({transactionId:transaction.id,code:x[0],label:x[1],sequence:i+1,status:i===0?'COMPLETED':'PENDING',completedAt:i===0?new Date():null})) as any});
    await tx.tradeEvent.create({data:{transactionId:transaction.id,sequence:1,type:'TRANSACTION_COMMITTED',visibility:TradeEventVisibility.BUYER,actorOrgId:org,actorUserId:this.tenant.userId,occurredAt:new Date(),payload:{commercialLockId:lock.id,snapshotHash:lock.snapshotHash} as Prisma.InputJsonValue}});
    await tx.outboxEvent.create({data:{organizationId:org,type:'TRANSACTION_COMMITTED',aggregateType:'TRADE_TRANSACTION',aggregateId:transaction.id,payload:{reference:transaction.reference} as Prisma.InputJsonValue}});
    return {...lock,transaction};
   });
  }
 
+ async commitAcceptedOffer(offerId:string){
+  const org=this.tenant.organizationId;
+  return this.prisma.tenantTransaction(org,async tx=>{
+   const existing=await tx.commercialLock.findUnique({where:{offerId},include:{transaction:true}});if(existing)return existing;
+   const offer=await tx.septlionOffer.findFirst({where:{id:offerId,buyerOrgId:org},include:{revisions:{where:{status:'ACCEPTED'},orderBy:{revisionNo:'desc'},take:1}}});
+   if(!offer)throw new NotFoundException('عرض Septlion غير موجود');if(offer.status!=='ACCEPTED')throw new BadRequestException('يجب قبول العرض قبل التثبيت');const revision=offer.revisions[0];if(!revision)throw new BadRequestException('لا توجد نسخة مقبولة');
+   const snapshot={schemaVersion:2,offerId:offer.id,offerRevisionId:revision.id,revisionNo:revision.revisionNo,requirementId:offer.requirementId,rfqId:offer.rfqId,buyerOrgId:offer.buyerOrgId,operatorOrgId:offer.operatorOrgId,currency:offer.currency,validUntil:offer.validUntil?.toISOString()??null,commercial:revision.snapshot};
+   const lock=await tx.commercialLock.create({data:{offerId:offer.id,offerRevisionId:revision.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:offer.operatorOrgId,snapshot:snapshot as Prisma.InputJsonValue,snapshotHash:hash(snapshot),lockedByUserId:this.tenant.userId}});
+   const transaction=await tx.tradeTransaction.create({data:{reference:ref(),commercialLockId:lock.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:offer.operatorOrgId,status:TradeTransactionStatus.COMMITTED}});
+   await tx.tradeMilestone.createMany({data:[['CONFIRMED','تم التأكيد'],['SUPPLY','التوريد / الإنتاج'],['QUALITY','فحص الجودة'],['DOCUMENTATION','المستندات'],['READY','جاهز للشحن'],['SHIPPED','تم الشحن'],['IN_TRANSIT','في الطريق'],['DELIVERED','تم التسليم']].map((x,i)=>({transactionId:transaction.id,code:x[0],label:x[1],sequence:i+1,status:i===0?'COMPLETED':'PENDING',completedAt:i===0?new Date():null})) as any});
+   await tx.tradeEvent.create({data:{transactionId:transaction.id,sequence:1,type:'TRANSACTION_COMMITTED',visibility:TradeEventVisibility.BUYER,actorOrgId:org,actorUserId:this.tenant.userId,occurredAt:new Date(),payload:{commercialLockId:lock.id,snapshotHash:lock.snapshotHash,offerId} as Prisma.InputJsonValue}});
+   await tx.outboxEvent.create({data:{organizationId:offer.operatorOrgId,type:'TRANSACTION_COMMITTED',aggregateType:'TRADE_TRANSACTION',aggregateId:transaction.id,payload:{reference:transaction.reference,offerId} as Prisma.InputJsonValue}});
+   return{...lock,transaction};
+  });
+ }
  async getTransaction(id:string){
   const org=this.tenant.organizationId;
   return this.prisma.tenantTransaction(org,async tx=>{

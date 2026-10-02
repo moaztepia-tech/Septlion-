@@ -1,0 +1,17 @@
+CREATE TYPE "SeptlionOfferStatus" AS ENUM ('DRAFT','INTERNAL_REVIEW','ISSUED','REVISION_REQUESTED','REVISED','ACCEPTED','EXPIRED','REJECTED','WITHDRAWN');
+CREATE TYPE "SeptlionOfferRevisionStatus" AS ENUM ('DRAFT','ISSUED','ACCEPTED','SUPERSEDED');
+ALTER TABLE "CommercialLock" ALTER COLUMN "quoteId" DROP NOT NULL;
+ALTER TABLE "CommercialLock" ALTER COLUMN "quoteRevisionId" DROP NOT NULL;
+ALTER TABLE "CommercialLock" ADD COLUMN "offerId" TEXT;
+ALTER TABLE "CommercialLock" ADD COLUMN "offerRevisionId" TEXT;
+CREATE UNIQUE INDEX "CommercialLock_offerId_key" ON "CommercialLock"("offerId");
+CREATE UNIQUE INDEX "CommercialLock_offerRevisionId_key" ON "CommercialLock"("offerRevisionId");
+CREATE TABLE "SeptlionOffer" ("id" TEXT NOT NULL,"requirementId" TEXT NOT NULL,"rfqId" TEXT NOT NULL,"buyerOrgId" TEXT NOT NULL,"operatorOrgId" TEXT NOT NULL,"status" "SeptlionOfferStatus" NOT NULL DEFAULT 'DRAFT',"currentRevision" INTEGER NOT NULL DEFAULT 0,"currency" TEXT NOT NULL DEFAULT 'USD',"validUntil" TIMESTAMP(3),"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,CONSTRAINT "SeptlionOffer_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "SeptlionOffer_rfqId_key" ON "SeptlionOffer"("rfqId");
+CREATE INDEX "SeptlionOffer_operatorOrgId_status_updatedAt_idx" ON "SeptlionOffer"("operatorOrgId","status","updatedAt");
+CREATE INDEX "SeptlionOffer_buyerOrgId_status_updatedAt_idx" ON "SeptlionOffer"("buyerOrgId","status","updatedAt");
+CREATE INDEX "SeptlionOffer_requirementId_idx" ON "SeptlionOffer"("requirementId");
+CREATE TABLE "SeptlionOfferRevision" ("id" TEXT NOT NULL,"offerId" TEXT NOT NULL,"revisionNo" INTEGER NOT NULL,"status" "SeptlionOfferRevisionStatus" NOT NULL DEFAULT 'DRAFT',"snapshot" JSONB NOT NULL,"snapshotHash" TEXT NOT NULL,"issuedById" TEXT,"issuedAt" TIMESTAMP(3),"acceptedById" TEXT,"acceptedAt" TIMESTAMP(3),"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "SeptlionOfferRevision_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "SeptlionOfferRevision_offerId_revisionNo_key" ON "SeptlionOfferRevision"("offerId","revisionNo");
+CREATE INDEX "SeptlionOfferRevision_offerId_status_idx" ON "SeptlionOfferRevision"("offerId","status");
+ALTER TABLE "SeptlionOfferRevision" ADD CONSTRAINT "SeptlionOfferRevision_offerId_fkey" FOREIGN KEY ("offerId") REFERENCES "SeptlionOffer"("id") ON DELETE CASCADE ON UPDATE CASCADE;

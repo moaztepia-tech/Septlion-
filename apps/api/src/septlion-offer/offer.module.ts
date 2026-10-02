@@ -1,0 +1,1 @@
+import{Module}from'@nestjs/common';import{PrismaModule}from'../prisma/prisma.module';import{SeptlionOfferController}from'./offer.controller';import{SeptlionOfferService}from'./offer.service';@Module({imports:[PrismaModule],controllers:[SeptlionOfferController],providers:[SeptlionOfferService],exports:[SeptlionOfferService]})export class SeptlionOfferModule{}
