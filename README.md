@@ -40,3 +40,15 @@ and a separate restricted DB role for migrations. Do not run the app with a supe
 
 ## V1 End-to-End Transaction Workspace
 The RFQ and Quote detail screens now include a contextual Transaction Workspace for messages and shared document metadata. See `docs/E2E-V1.md` for the golden path, security invariants, failure scenarios, and remaining production gates.
+
+
+## Global Demand Engine
+
+Septlion now includes an internal demand operating system under `/demand-command`.
+
+Production flow:
+`Demand Signal → Buyer → Qualified Requirement → Opportunity → Agents → Supply → Deal → Human Approval → RFQ → Quote → Order Intent`
+
+See `docs/GLOBAL-DEMAND-ENGINE.md` for architecture and activation instructions.
+
+No paid infrastructure is created automatically. External agent runtimes and additional demand feeds are adapters; Septlion remains the system of record.
