@@ -46,6 +46,56 @@ jobs:
           test -n "$DISCOVER_HTML"
           cp "$DISCOVER_HTML" deploy/discover/index.html
           test -s deploy/discover/index.html
+          mkdir -p deploy/requests
+          REQUESTS_HTML="$(find apps/web/.next/server/app -type f -path '*/requests.html' | head -n 1)"
+          test -n "$REQUESTS_HTML"
+          cp "$REQUESTS_HTML" deploy/requests/index.html
+          test -s deploy/requests/index.html
+          mkdir -p deploy/request
+          REQUEST_HTML="$(find apps/web/.next/server/app -type f -path '*/request.html' | head -n 1)"
+          test -n "$REQUEST_HTML"
+          cp "$REQUEST_HTML" deploy/request/index.html
+          test -s deploy/request/index.html
+          mkdir -p deploy/offer
+          OFFER_HTML="$(find apps/web/.next/server/app -type f -path '*/offer.html' | head -n 1)"
+          test -n "$OFFER_HTML"
+          cp "$OFFER_HTML" deploy/offer/index.html
+          test -s deploy/offer/index.html
+          mkdir -p deploy/commit
+          COMMIT_HTML="$(find apps/web/.next/server/app -type f -path '*/commit.html' | head -n 1)"
+          test -n "$COMMIT_HTML"
+          cp "$COMMIT_HTML" deploy/commit/index.html
+          test -s deploy/commit/index.html
+          mkdir -p deploy/execution
+          EXECUTION_HTML="$(find apps/web/.next/server/app -type f -path '*/execution.html' | head -n 1)"
+          test -n "$EXECUTION_HTML"
+          cp "$EXECUTION_HTML" deploy/execution/index.html
+          test -s deploy/execution/index.html
+          mkdir -p deploy/receive
+          RECEIVE_HTML="$(find apps/web/.next/server/app -type f -path '*/receive.html' | head -n 1)"
+          test -n "$RECEIVE_HTML"
+          cp "$RECEIVE_HTML" deploy/receive/index.html
+          test -s deploy/receive/index.html
+          mkdir -p deploy/reorder
+          REORDER_HTML="$(find apps/web/.next/server/app -type f -path '*/reorder.html' | head -n 1)"
+          test -n "$REORDER_HTML"
+          cp "$REORDER_HTML" deploy/reorder/index.html
+          test -s deploy/reorder/index.html
+          mkdir -p deploy/notifications
+          NOTIFICATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/notifications.html' | head -n 1)"
+          test -n "$NOTIFICATIONS_HTML"
+          cp "$NOTIFICATIONS_HTML" deploy/notifications/index.html
+          test -s deploy/notifications/index.html
+          mkdir -p deploy/account
+          ACCOUNT_HTML="$(find apps/web/.next/server/app -type f -path '*/account.html' | head -n 1)"
+          test -n "$ACCOUNT_HTML"
+          cp "$ACCOUNT_HTML" deploy/account/index.html
+          test -s deploy/account/index.html
+          mkdir -p deploy/documents
+          DOCUMENTS_HTML="$(find apps/web/.next/server/app -type f -path '*/documents.html' | head -n 1)"
+          test -n "$DOCUMENTS_HTML"
+          cp "$DOCUMENTS_HTML" deploy/documents/index.html
+          test -s deploy/documents/index.html
           cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
           if [ -f apps/web/.next/server/app/demand-intelligence.html ]; then cp apps/web/.next/server/app/demand-intelligence.html deploy/demand-intelligence/index.html; fi
           if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html; fi
