@@ -327,6 +327,7 @@ model Media {
 
 model RFQ {
   id                 String        @id @default(uuid())
+  requirementId      String?       @unique
   buyerOrgId         String
   supplierOrgId      String?
   sectorId           String
@@ -347,6 +348,7 @@ model RFQ {
   updatedAt          DateTime      @updatedAt
 
   @@index([buyerOrgId])
+  @@index([requirementId])
   @@index([supplierOrgId])
   @@index([sectorId])
   @@index([status])
