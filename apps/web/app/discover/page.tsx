@@ -63,7 +63,7 @@ export default function DiscoverPage(){
   router.push('/require?source=feed');
  }
  return <main className="v1-app" dir="rtl">
-  <header className="v1-topbar"><a href="/" className="v1-wordmark" aria-label="Septlion"><span className="v1-hept">⬡</span><b>سبتليون</b></a><a className="v1-home-ai" href="/require">ماذا تحتاج؟</a></header>
+  <header className="v1-topbar"><a href="/" className="v1-wordmark" aria-label="Septlion"><img src="/brand/septlion-wordmark-navy.png" alt="Septlion"/></a><a className="v1-home-ai" href="/require">ماذا تحتاج؟</a></header>
   <div className="v1-tabs" role="tablist"><button className="active">لأجلك</button><button>الأغذية</button><button>التغليف</button><button>المواد الخام</button><button>الصناعة</button></div>
   <section className="v1-feed">
    <div className="v1-section-head"><div><small>DISCOVER</small><h1>اكتشف المنتجات</h1></div><span>منتجات جاهزة لبدء طلب توريد</span></div>
