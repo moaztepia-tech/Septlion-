@@ -39,9 +39,13 @@ jobs:
       - name: Prepare static deployment
         run: |
           rm -rf deploy
-          mkdir -p deploy/_next deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
+          mkdir -p deploy/_next deploy/discover deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
           cp apps/web/.next/server/app/index.html deploy/index.html
           cp apps/web/.next/server/app/index.html deploy/404.html
+          DISCOVER_HTML="$(find apps/web/.next/server/app -type f -path '*/discover.html' | head -n 1)"
+          test -n "$DISCOVER_HTML"
+          cp "$DISCOVER_HTML" deploy/discover/index.html
+          test -s deploy/discover/index.html
           cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
           if [ -f apps/web/.next/server/app/demand-intelligence.html ]; then cp apps/web/.next/server/app/demand-intelligence.html deploy/demand-intelligence/index.html; fi
           if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html; fi
