@@ -34,7 +34,7 @@ return <main className="chat-ai" dir={lang==='ar'?'rtl':'ltr'}>
 <header className="chat-top"><Link href="/" className="chat-logo"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link><div><button onClick={reset}>＋ {t.new}</button><button onClick={()=>setLang(lang==='ar'?'en':'ar')}>{lang==='ar'?'EN':'ع'}</button></div></header>
 <section className={'chat-stage '+(messages.length?'has-chat':'')}>
 <div className="chat-thread">
-{!messages.length&&!feedContext&&<div className="chat-welcome"><div className="chat-mark">S</div><h1>{t.hello}</h1><p>{t.sub}</p></div>}
+{!messages.length&&!feedContext&&<div className="chat-welcome"><img className="chat-welcome-logo" src="/brand/septlion-primary-navy.png" alt="Septlion"/><h1>{t.hello}</h1><p>{t.sub}</p></div>}
 {feedContext&&<div className="feed-context-card"><div><small>طلبك الحالي · {feedContext.buyer.company}</small><b>{feedContext.product.name} · {feedContext.containerCount} حاويات</b></div><span>{feedContext.incoterm} · {feedContext.destination.port} · {feedContext.paymentPreference}</span></div>}
 {feedContext&&!messages.length&&<div className="chat-msg assistant"><span className="chat-avatar">S</span><div>طلبك جاهز هنا. يمكنك تعديل أي تفصيل، إضافة ملاحظة أو إرفاق مواصفة، وسأكمل من المعلومات التي أدخلتها بالفعل.</div></div>}
 {messages.map((m,i)=><div key={i} className={'chat-msg '+m.role}>{m.role==='assistant'&&<span className="chat-avatar">S</span>}<div>{m.text}</div></div>)}
