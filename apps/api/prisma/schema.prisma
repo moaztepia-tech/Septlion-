@@ -167,6 +167,7 @@ enum WorkspaceEntityType {
   RFQ
   QUOTE
   ORDER_INTENT
+  TRANSACTION
 }
 
 enum DocumentStatus {
@@ -189,6 +190,8 @@ enum NotificationType {
   DOCUMENT
   MESSAGE
   ORDER_INTENT
+  TRANSACTION
+  CLAIM
   SYSTEM
 }
 
