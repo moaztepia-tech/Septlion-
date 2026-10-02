@@ -62,6 +62,25 @@ enum QuoteStatus {
   WITHDRAWN
 }
 
+enum SeptlionOfferStatus {
+  DRAFT
+  INTERNAL_REVIEW
+  ISSUED
+  REVISION_REQUESTED
+  REVISED
+  ACCEPTED
+  EXPIRED
+  REJECTED
+  WITHDRAWN
+}
+
+enum SeptlionOfferRevisionStatus {
+  DRAFT
+  ISSUED
+  ACCEPTED
+  SUPERSEDED
+}
+
 enum QuoteRevisionStatus {
   PROPOSED
   ACCEPTED
@@ -930,8 +949,10 @@ model DealDraft {
 /// Immutable commercial truth created only from an accepted quote revision.
 model CommercialLock {
   id             String   @id @default(uuid())
-  quoteId        String   @unique
-  quoteRevisionId String  @unique
+  quoteId        String?  @unique
+  quoteRevisionId String? @unique
+  offerId        String?  @unique
+  offerRevisionId String? @unique
   orderIntentId  String?  @unique
   buyerOrgId     String
   supplierOrgId  String
@@ -1005,4 +1026,41 @@ model ChangeOrder {
 
   @@unique([commercialLockId, number])
   @@index([commercialLockId, status])
+}
+
+
+/// The single commercial offer Septlion issues to the buyer. Supplier quotes remain internal sourcing inputs.
+model SeptlionOffer {
+  id              String              @id @default(uuid())
+  requirementId   String
+  rfqId           String              @unique
+  buyerOrgId      String
+  status          SeptlionOfferStatus @default(DRAFT)
+  currentRevision Int                 @default(0)
+  currency        String              @default("USD")
+  validUntil      DateTime?
+  revisions       SeptlionOfferRevision[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([buyerOrgId, status, updatedAt])
+  @@index([requirementId])
+}
+
+model SeptlionOfferRevision {
+  id           String                      @id @default(uuid())
+  offerId      String
+  revisionNo   Int
+  status       SeptlionOfferRevisionStatus @default(DRAFT)
+  snapshot     Json
+  snapshotHash String
+  issuedById   String?
+  issuedAt     DateTime?
+  acceptedById String?
+  acceptedAt   DateTime?
+  offer        SeptlionOffer               @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime                    @default(now())
+
+  @@unique([offerId, revisionNo])
+  @@index([offerId, status])
 }
