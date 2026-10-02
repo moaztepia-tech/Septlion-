@@ -27,7 +27,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Prisma format check
         working-directory: apps/api
-        run: pnpm exec prisma format --check
+        run: pnpm exec prisma format --check || (pnpm exec prisma format && git diff -- prisma/schema.prisma && exit 1)
         env:
           DATABASE_URL: postgresql://septlion:septlion@localhost:5432/septlion
       - name: Prisma validate
