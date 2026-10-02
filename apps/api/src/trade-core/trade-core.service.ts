@@ -50,7 +50,9 @@ export class TradeCoreService{
    const snapshot={schemaVersion:2,offerId:offer.id,offerRevisionId:revision.id,revisionNo:revision.revisionNo,requirementId:offer.requirementId,rfqId:offer.rfqId,buyerOrgId:offer.buyerOrgId,operatorOrgId:offer.operatorOrgId,currency:offer.currency,validUntil:offer.validUntil?.toISOString()??null,commercial:revision.snapshot};
    const lock=await tx.commercialLock.create({data:{offerId:offer.id,offerRevisionId:revision.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:offer.operatorOrgId,snapshot:snapshot as Prisma.InputJsonValue,snapshotHash:hash(snapshot),lockedByUserId:this.tenant.userId}});
    const transaction=await tx.tradeTransaction.create({data:{reference:ref(),commercialLockId:lock.id,buyerOrgId:offer.buyerOrgId,supplierOrgId:offer.operatorOrgId,status:TradeTransactionStatus.COMMITTED}});
+   await tx.tradeMilestone.createMany({data:[['CONFIRMED','تم التأكيد'],['SUPPLY','التوريد / الإنتاج'],['QUALITY','فحص الجودة'],['DOCUMENTATION','المستندات'],['READY','جاهز للشحن'],['SHIPPED','تم الشحن'],['IN_TRANSIT','في الطريق'],['DELIVERED','تم التسليم']].map((x,i)=>({transactionId:transaction.id,code:x[0],label:x[1],sequence:i+1,status:i===0?'COMPLETED':'PENDING',completedAt:i===0?new Date():null})) as any});
    await tx.tradeEvent.create({data:{transactionId:transaction.id,sequence:1,type:'TRANSACTION_COMMITTED',visibility:TradeEventVisibility.BUYER,actorOrgId:org,actorUserId:this.tenant.userId,occurredAt:new Date(),payload:{commercialLockId:lock.id,snapshotHash:lock.snapshotHash,offerId} as Prisma.InputJsonValue}});
+   await tx.outboxEvent.create({data:{organizationId:offer.operatorOrgId,type:'TRANSACTION_COMMITTED',aggregateType:'TRADE_TRANSACTION',aggregateId:transaction.id,payload:{reference:transaction.reference,offerId} as Prisma.InputJsonValue}});
    return{...lock,transaction};
   });
  }
