@@ -75,6 +75,34 @@ enum OrderIntentStatus {
   CANCELLED
 }
 
+enum TradeTransactionStatus {
+  PENDING_COMMIT
+  COMMITTED
+  IN_EXECUTION
+  READY_TO_SHIP
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  RECEIPT_REVIEW
+  COMPLETED
+  ON_HOLD
+  CLAIM_OPEN
+  CANCELLED
+}
+
+enum ChangeOrderStatus {
+  PROPOSED
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
+enum TradeEventVisibility {
+  INTERNAL
+  BUYER
+  COUNTERPARTY
+}
+
 enum AuditAction {
   CREATE
   UPDATE
@@ -892,4 +920,85 @@ model DealDraft {
 
   @@unique([opportunityId, version])
   @@index([opportunityId, createdAt])
+}
+
+
+/// Immutable commercial truth created only from an accepted quote revision.
+model CommercialLock {
+  id             String   @id @default(uuid())
+  quoteId        String   @unique
+  quoteRevisionId String  @unique
+  orderIntentId  String?  @unique
+  buyerOrgId     String
+  supplierOrgId  String
+  version        Int      @default(1)
+  snapshot       Json
+  snapshotHash   String
+  lockedByUserId String?
+  lockedAt       DateTime @default(now())
+  transaction    TradeTransaction?
+  changeOrders   ChangeOrder[]
+
+  @@index([buyerOrgId, lockedAt])
+  @@index([supplierOrgId, lockedAt])
+}
+
+/// Durable execution aggregate. Buyer-visible state is projected from TradeEvent facts.
+model TradeTransaction {
+  id               String                 @id @default(uuid())
+  reference        String                 @unique
+  commercialLockId String                 @unique
+  buyerOrgId       String
+  supplierOrgId    String
+  status           TradeTransactionStatus @default(PENDING_COMMIT)
+  version          Int                    @default(1)
+  commercialLock   CommercialLock         @relation(fields: [commercialLockId], references: [id], onDelete: Restrict)
+  events           TradeEvent[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@index([buyerOrgId, status, updatedAt])
+  @@index([supplierOrgId, status, updatedAt])
+}
+
+/// Append-only execution fact. Existing events must never be updated to rewrite history.
+model TradeEvent {
+  id            String               @id @default(uuid())
+  transactionId String
+  sequence      Int
+  type          String
+  visibility    TradeEventVisibility @default(INTERNAL)
+  actorOrgId    String?
+  actorUserId   String?
+  occurredAt    DateTime
+  payload       Json
+  evidence      Json?
+  idempotencyKey String?             @unique
+  transaction   TradeTransaction     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime             @default(now())
+
+  @@unique([transactionId, sequence])
+  @@index([transactionId, occurredAt])
+  @@index([type, occurredAt])
+}
+
+/// Explicit post-lock commercial change; approved changes never mutate the original lock.
+model ChangeOrder {
+  id               String            @id @default(uuid())
+  commercialLockId String
+  number           Int
+  status           ChangeOrderStatus @default(PROPOSED)
+  requestedByOrgId String
+  requestedByUserId String?
+  reason           String
+  patch            Json
+  impact           Json?
+  approvedByUserId String?
+  approvedAt       DateTime?
+  commercialLock   CommercialLock    @relation(fields: [commercialLockId], references: [id], onDelete: Restrict)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([commercialLockId, number])
+  @@index([commercialLockId, status])
 }
