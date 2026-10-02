@@ -63,15 +63,15 @@ export default function DiscoverPage(){
   router.push('/require?source=feed');
  }
  return <main className="v1-app" dir="rtl">
-  <header className="v1-topbar"><a href="/" className="v1-wordmark" aria-label="Septlion"><img src="/brand/septlion-wordmark-navy.png" alt="Septlion"/></a><a className="v1-home-ai" href="/require">ماذا تحتاج؟</a></header>
+  <header className="v1-topbar"><a href="/" className="v1-wordmark" aria-label="Septlion"><img src="/brand/septlion-wordmark-navy.png" alt="Septlion"/></a><div className="v2-top-actions"><span>SUPPLY OS</span><a className="v1-home-ai" href="/require">ابدأ بالذكاء الاصطناعي <b>↗</b></a></div></header>
   <div className="v1-tabs" role="tablist"><button className="active">لأجلك</button><button>الأغذية</button><button>التغليف</button><button>المواد الخام</button><button>الصناعة</button></div>
   <section className="v1-feed">
-   <div className="v1-section-head"><div><small>DISCOVER</small><h1>اكتشف المنتجات</h1></div><span>منتجات جاهزة لبدء طلب توريد</span></div>
+   <div className="v1-section-head"><div><small>SEPTLION DISCOVER</small><h1>منتجات جاهزة<br/>لبدء التوريد.</h1></div><span>اختر المنتج، حدّد هيكل الصفقة، واترك التنفيذ لنا.</span></div>
    <article className="v1-product">
-    <div className="v1-product-visual"><div className="v1-bag"><span>ZOLLANA</span><b>{product.name}</b><small>{product.en}</small></div><div className="v1-pager">{products.map((_,i)=><button key={i} aria-label={'product '+(i+1)} className={i===active?'active':''} onClick={()=>{setActive(i);setCount(1)}}/> )}</div></div>
+    <div className="v1-product-visual"><div className="v2-visual-meta"><span>01</span><small>FOOD / FLOUR</small></div><div className="v1-bag"><span>ZOLLANA</span><b>{product.name}</b><small>{product.en}</small><em>25 / 50 KG</em></div><div className="v1-pager">{products.map((_,i)=><button key={i} aria-label={'product '+(i+1)} className={i===active?'active':''} onClick={()=>{setActive(i);setCount(1)}}/> )}</div></div>
     <div className="v1-product-copy"><small>{product.eyebrow}</small><h2>{product.name}</h2><p>{product.en}</p><dl><div><dt>التعبئة</dt><dd>{product.pack}</dd></div><div><dt>التوريد</dt><dd>{product.note}</dd></div></dl></div>
 
-    <div className="v1-config">
+    <div className="v2-config-head"><small>TRADE CONFIGURATION</small><b>كوّن طلبك</b><span>تغييران أو ثلاثة تكفي لبدء RFQ</span></div><div className="v1-config">
      <div className="v1-label-row"><b>كم تحتاج؟</b><span>الحد الأدنى حاوية واحدة</span></div>
      <div className="v1-counter"><button onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}<small> حاوية</small></strong><button onClick={()=>setCount(count+1)}>+</button></div>
      <div className="v1-scale-current">{scale}</div>
@@ -86,7 +86,7 @@ export default function DiscoverPage(){
 
      <fieldset className="v1-choice"><legend>طريقة الدفع</legend><div>{([['L/C','L/C'],['T/T','T/T'],['OTHER','أخرى']] as [Payment,string][]).map(([v,l])=><button key={v} className={payment===v?'selected':''} onClick={()=>setPayment(v)}>{l}</button>)}</div></fieldset>
 
-     <button className="v1-primary" onClick={startIdentity}>متابعة الطلب</button>
+     <button className="v1-primary" onClick={startIdentity}><span>ابدأ طلب التوريد</span><b>↗</b></button><p className="v2-assurance">طلب واحد · عرض واحد · Septlion مسؤولة عن التنفيذ</p>
     </div>
    </article>
   </section>
