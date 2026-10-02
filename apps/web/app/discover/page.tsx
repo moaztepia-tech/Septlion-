@@ -30,7 +30,7 @@ function validPhone(v:string){const d=normalizePhone(v).replace('+','');return d
 
 export default function DiscoverPage(){
  const router=useRouter();
- const[active,setActive]=useState(0),[count,setCount]=useState(1),[incoterm,setIncoterm]=useState<Incoterm>('CIF'),[payment,setPayment]=useState<Payment>('L/C');
+ const[active,setActive]=useState(0),[count,setCount]=useState(1),[incoterm,setIncoterm]=useState<Incoterm>('CIF'),[payment,setPayment]=useState<Payment|null>(null);
  const[destination,setDestination]=useState<Destination|null>(null),[sheet,setSheet]=useState(false),[query,setQuery]=useState('');
  const[identity,setIdentity]=useState(false),[name,setName]=useState(''),[company,setCompany]=useState(''),[email,setEmail]=useState(''),[phone,setPhone]=useState(''),[error,setError]=useState('');
  const product=products[active],scale=getSeptlionScale(count),progress=scaleProgress(count);
@@ -47,7 +47,7 @@ export default function DiscoverPage(){
    version:1,source:'product_feed',createdAt:new Date().toISOString(),
    product:{id:product.id,name:product.name,nameEn:product.en,packing:product.pack},
    containerCount:count,septlionScale:scale,incoterm,
-   destination,paymentPreference:payment,
+   destination,paymentPreference:payment||'UNSPECIFIED',
    buyer:{name:name.trim(),company:company.trim(),whatsapp:normalizePhone(phone),email:email.trim()||null,whatsappStatus:'UNCONFIRMED'},
    sourceContext:{path:'discover',campaignId:new URLSearchParams(window.location.search).get('campaign_id'),utmSource:new URLSearchParams(window.location.search).get('utm_source')}
   };
@@ -91,7 +91,7 @@ export default function DiscoverPage(){
    </article>
   </section>
 
-  <nav className="v1-bottom-nav"><a href="/" >الرئيسية</a><a className="active" href="/discover">اكتشف</a><a href="/require">الطلبات</a><span>التنبيهات</span><span>الحساب</span></nav>
+  <nav className="v1-bottom-nav"><a href="/" >الرئيسية</a><a className="active" href="/discover">اكتشف</a><a href="/requests">التجارة</a><a href="/notifications">التنبيهات</a><a href="/account">الحساب</a></nav>
 
   {sheet&&<div className="v1-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setSheet(false)}}><section className="v1-sheet" role="dialog" aria-modal="true"><div className="v1-grab"/><div className="v1-sheet-head"><div><small>{incoterm}</small><h3>{incoterm==='FOB'?'حدد الميناء':'حدد وجهة الشحن'}</h3></div><button onClick={()=>setSheet(false)}>×</button></div><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث عن دولة أو ميناء"/><div className="v1-destinations">{filtered.map(d=><button key={d.code} onClick={()=>{setDestination(d);setSheet(false);setQuery('')}}><span><b>{d.port}</b><small>{d.country}</small></span><em>{d.code}</em></button>)}</div></section></div>}
 
