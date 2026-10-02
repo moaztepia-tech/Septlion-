@@ -109,6 +109,28 @@ enum TradeTransactionStatus {
   CANCELLED
 }
 
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+  CANCELLED
+}
+
+enum ReceiptStatus {
+  PENDING
+  ACCEPTED
+  ISSUE_REPORTED
+}
+
+enum ClaimStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+  CLOSED
+}
+
 enum ChangeOrderStatus {
   PROPOSED
   APPROVED
@@ -979,6 +1001,10 @@ model TradeTransaction {
   version          Int                    @default(1)
   commercialLock   CommercialLock         @relation(fields: [commercialLockId], references: [id], onDelete: Restrict)
   events           TradeEvent[]
+  milestones       TradeMilestone[]
+  receipt          TradeReceipt?
+  claims           TradeClaim[]
+  tradeMemory      TradeMemory?
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
 
@@ -1065,4 +1091,71 @@ model SeptlionOfferRevision {
 
   @@unique([offerId, revisionNo])
   @@index([offerId, status])
+}
+
+
+model TradeMilestone {
+  id            String          @id @default(uuid())
+  transactionId String
+  code          String
+  label         String
+  sequence      Int
+  status        MilestoneStatus @default(PENDING)
+  buyerVisible  Boolean         @default(true)
+  targetAt      DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  evidence      Json?
+  transaction   TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Cascade)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  @@unique([transactionId,code])
+  @@unique([transactionId,sequence])
+}
+
+model TradeReceipt {
+  id            String        @id @default(uuid())
+  transactionId String        @unique
+  status        ReceiptStatus @default(PENDING)
+  confirmedById String?
+  confirmedAt   DateTime?
+  notes         String?
+  evidence      Json?
+  transaction   TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Restrict)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model TradeClaim {
+  id            String      @id @default(uuid())
+  transactionId String
+  reference     String      @unique
+  status        ClaimStatus @default(OPEN)
+  category      String
+  description   String
+  requestedResolution String?
+  evidence      Json?
+  resolution    Json?
+  openedById    String?
+  resolvedById  String?
+  resolvedAt    DateTime?
+  transaction   TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Restrict)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([transactionId,status])
+}
+
+model TradeMemory {
+  id              String   @id @default(uuid())
+  transactionId   String   @unique
+  buyerOrgId      String
+  productKey      String
+  approvedConfig  Json
+  commercialHistory Json
+  executionHistory Json
+  sourceHash      String
+  transaction     TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Restrict)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([buyerOrgId,productKey,updatedAt])
 }
