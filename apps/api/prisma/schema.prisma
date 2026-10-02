@@ -633,6 +633,19 @@ enum IntelligenceVerificationStatus {
   HUMAN_VERIFIED
 }
 
+enum RequirementSource {
+  AI_COMPOSER
+  PRODUCT_FEED
+  REORDER
+  INTERNAL
+}
+
+enum WhatsAppReachability {
+  UNCONFIRMED
+  CONFIRMED
+  UNREACHABLE
+}
+
 enum RequirementStatus {
   DRAFT
   NEEDS_CLARIFICATION
@@ -691,6 +704,7 @@ model BuyerProfile {
   provenance         Json?
   organization       Organization?                  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   requirements       QualifiedRequirement[]
+  contacts           BuyerContact[]
   opportunities      Opportunity[]
   createdAt          DateTime                       @default(now())
   updatedAt          DateTime                       @updatedAt
@@ -699,37 +713,67 @@ model BuyerProfile {
   @@index([country, industry])
 }
 
+model BuyerContact {
+  id                  String               @id @default(uuid())
+  buyerProfileId      String?
+  name                String
+  company             String
+  whatsapp            String
+  email               String?
+  whatsappReachability WhatsAppReachability @default(UNCONFIRMED)
+  buyerProfile        BuyerProfile?        @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
+  requirements        QualifiedRequirement[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([whatsapp])
+  @@index([email])
+  @@index([buyerProfileId])
+}
+
 model QualifiedRequirement {
-  id                 String            @id @default(uuid())
-  buyerProfileId     String?
-  sourceSignalId     String?
-  status             RequirementStatus @default(DRAFT)
-  product            String
-  market             String
-  quantity           Decimal?          @db.Decimal(18, 4)
-  unit               String?
-  deliveryCountry    String?
-  deliveryPort       String?
-  incoterm           String?
-  targetPrice        Decimal?          @db.Decimal(18, 4)
-  currency           String?
-  requiredDate       DateTime?
-  knownFacts         Json
-  inferredFacts      Json?
-  criticalMissing    Json?
-  specifications     Json?
-  packing            Json?
-  compliance         Json?
-  confidence         Int               @default(0)
-  buyerProfile       BuyerProfile?     @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
-  sourceSignal       DemandSignal?      @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
-  opportunities      Opportunity[]
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                   String            @id @default(uuid())
+  buyerProfileId       String?
+  buyerContactId       String?
+  sourceSignalId       String?
+  source               RequirementSource @default(AI_COMPOSER)
+  sourceContext        Json?
+  status               RequirementStatus @default(DRAFT)
+  product              String
+  market               String
+  quantity             Decimal?          @db.Decimal(18, 4)
+  unit                 String?
+  containerCount       Int?
+  septlionScale        String?
+  deliveryCountry      String?
+  deliveryPort         String?
+  destinationCode      String?
+  incoterm             String?
+  paymentPreference    String?
+  targetPrice          Decimal?          @db.Decimal(18, 4)
+  currency             String?
+  requiredDate         DateTime?
+  knownFacts           Json
+  inferredFacts        Json?
+  fieldStates          Json?
+  criticalMissing      Json?
+  productConfiguration Json?
+  specifications       Json?
+  packing              Json?
+  compliance           Json?
+  confidence           Int               @default(0)
+  buyerProfile         BuyerProfile?     @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
+  buyerContact         BuyerContact?     @relation(fields: [buyerContactId], references: [id], onDelete: SetNull)
+  sourceSignal         DemandSignal?      @relation(fields: [sourceSignalId], references: [id], onDelete: SetNull)
+  opportunities        Opportunity[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   @@index([status, market, product])
   @@index([buyerProfileId])
+  @@index([buyerContactId])
   @@index([sourceSignalId])
+  @@index([source, createdAt])
 }
 
 model Opportunity {

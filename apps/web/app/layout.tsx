@@ -1,4 +1,5 @@
 import './globals.css';
+import './platform-v1.css';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
