@@ -6,4 +6,6 @@ export function browserRequests():UiRequest[]{
   return rows.map((x:any,i:number)=>({id:x.requirementId?String(x.requirementId).slice(0,8).toUpperCase():'DRAFT-'+(i+1),product:x.product?.name||'طلب توريد',packing:x.product?.packing||'تُحدد في الطلب',containers:x.containerCount||1,scale:x.septlionScale||'Micro',incoterm:x.incoterm||'—',destination:x.destination?.port||x.destination?.country||'—',payment:x.paymentPreference||'—',status:x.requirementId?'IDENTIFIED':'DRAFT',createdAt:x.createdAt||new Date().toISOString()}));
  }catch{return []}
 }
-export function activeRequest(){return browserRequests()[0]||null}
+export function activeRequest(id?:string|null){const rows=browserRequests();if(!id)return rows[0]||null;return rows.find(r=>r.id===id)||null}
+export function rememberActiveRequest(id:string){if(typeof window!=='undefined')sessionStorage.setItem('septlion_active_request',id)}
+export function activeRequestId(){return typeof window==='undefined'?null:sessionStorage.getItem('septlion_active_request')}
