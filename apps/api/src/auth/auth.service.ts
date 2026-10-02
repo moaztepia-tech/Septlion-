@@ -27,6 +27,14 @@ export class AuthService {
     return { accessToken, refreshToken, expiresAt };
   }
 
+  async internalLogin(email:string,password:string){
+    const user=await this.prisma.user.findUnique({where:{email:email.toLowerCase()},include:{memberships:true}});
+    if(!user||!user.isActive||!(await bcrypt.compare(password,user.passwordHash)))throw new UnauthorizedException('بيانات الدخول غير صحيحة');
+    const staff=user.memberships.find(m=>m.role==='ADMIN'||m.role==='SALES');
+    if(!staff)throw new UnauthorizedException('هذا الحساب غير مخول للدخول الداخلي');
+    return this.issue(user.id,staff.organizationId,staff.role,user.sessionVersion);
+  }
+
   async refresh(refreshToken: string) {
     const tokenHash = this.hashRefresh(refreshToken);
     const session = await this.prisma.refreshSession.findUnique({ where: { tokenHash } });
