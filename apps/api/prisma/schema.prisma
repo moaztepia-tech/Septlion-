@@ -714,17 +714,17 @@ model BuyerProfile {
 }
 
 model BuyerContact {
-  id                  String               @id @default(uuid())
-  buyerProfileId      String?
-  name                String
-  company             String
-  whatsapp            String
-  email               String?
+  id                   String               @id @default(uuid())
+  buyerProfileId       String?
+  name                 String
+  company              String
+  whatsapp             String
+  email                String?
   whatsappReachability WhatsAppReachability @default(UNCONFIRMED)
-  buyerProfile        BuyerProfile?        @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
-  requirements        QualifiedRequirement[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  buyerProfile         BuyerProfile?        @relation(fields: [buyerProfileId], references: [id], onDelete: SetNull)
+  requirements         QualifiedRequirement[]
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   @@index([whatsapp])
   @@index([email])
