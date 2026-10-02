@@ -970,7 +970,6 @@ model DealDraft {
   @@index([opportunityId, createdAt])
 }
 
-
 /// Immutable commercial truth created only from an accepted quote revision.
 model CommercialLock {
   id              String            @id @default(uuid())
@@ -1017,41 +1016,40 @@ model TradeTransaction {
 
 /// Append-only execution fact. Existing events must never be updated to rewrite history.
 model TradeEvent {
-  id            String               @id @default(uuid())
-  transactionId String
-  sequence      Int
-  type          String
-  visibility    TradeEventVisibility @default(INTERNAL)
-  actorOrgId    String?
-  actorUserId   String?
-  occurredAt    DateTime
-  payload       Json
-  evidence      Json?
-  idempotencyKey String?             @unique
-  transaction   TradeTransaction     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  createdAt     DateTime             @default(now())
+  id             String               @id @default(uuid())
+  transactionId  String
+  sequence       Int
+  type           String
+  visibility     TradeEventVisibility @default(INTERNAL)
+  actorOrgId     String?
+  actorUserId    String?
+  occurredAt     DateTime
+  payload        Json
+  evidence       Json?
+  idempotencyKey String?              @unique
+  transaction    TradeTransaction     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime             @default(now())
 
   @@unique([transactionId, sequence])
   @@index([transactionId, occurredAt])
-  @@index([type, occurredAt])
 }
 
 /// Explicit post-lock commercial change; approved changes never mutate the original lock.
 model ChangeOrder {
-  id               String            @id @default(uuid())
-  commercialLockId String
-  number           Int
-  status           ChangeOrderStatus @default(PROPOSED)
-  requestedByOrgId String
+  id                String            @id @default(uuid())
+  commercialLockId  String
+  number            Int
+  status            ChangeOrderStatus @default(PROPOSED)
+  requestedByOrgId  String
   requestedByUserId String?
-  reason           String
-  patch            Json
-  impact           Json?
-  approvedByUserId String?
-  approvedAt       DateTime?
-  commercialLock   CommercialLock    @relation(fields: [commercialLockId], references: [id], onDelete: Restrict)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  reason            String
+  patch             Json
+  impact            Json?
+  approvedByUserId  String?
+  approvedAt        DateTime?
+  commercialLock    CommercialLock    @relation(fields: [commercialLockId], references: [id], onDelete: Restrict)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@unique([commercialLockId, number])
   @@index([commercialLockId, status])
@@ -1059,18 +1057,18 @@ model ChangeOrder {
 
 /// The single commercial offer Septlion issues to the buyer. Supplier quotes remain internal sourcing inputs.
 model SeptlionOffer {
-  id              String              @id @default(uuid())
+  id              String                  @id @default(uuid())
   requirementId   String
-  rfqId           String              @unique
+  rfqId           String                  @unique
   buyerOrgId      String
   operatorOrgId   String
-  status          SeptlionOfferStatus @default(DRAFT)
-  currentRevision Int                 @default(0)
-  currency        String              @default("USD")
+  status          SeptlionOfferStatus     @default(DRAFT)
+  currentRevision Int                     @default(0)
+  currency        String                  @default("USD")
   validUntil      DateTime?
   revisions       SeptlionOfferRevision[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
 
   @@index([buyerOrgId, status, updatedAt])
   @@index([operatorOrgId, status, updatedAt])
@@ -1096,67 +1094,70 @@ model SeptlionOfferRevision {
 }
 
 model TradeMilestone {
-  id            String          @id @default(uuid())
+  id            String           @id @default(uuid())
   transactionId String
   code          String
   label         String
   sequence      Int
-  status        MilestoneStatus @default(PENDING)
-  buyerVisible  Boolean         @default(true)
+  status        MilestoneStatus  @default(PENDING)
+  buyerVisible  Boolean          @default(true)
   targetAt      DateTime?
   startedAt     DateTime?
   completedAt   DateTime?
   evidence      Json?
-  transaction   TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Cascade)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  @@unique([transactionId,code])
-  @@unique([transactionId,sequence])
+  transaction   TradeTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([transactionId, code])
+  @@unique([transactionId, sequence])
 }
 
 model TradeReceipt {
-  id            String        @id @default(uuid())
-  transactionId String        @unique
-  status        ReceiptStatus @default(PENDING)
+  id            String           @id @default(uuid())
+  transactionId String           @unique
+  status        ReceiptStatus    @default(PENDING)
   confirmedById String?
   confirmedAt   DateTime?
   notes         String?
   evidence      Json?
-  transaction   TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Restrict)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  transaction   TradeTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 }
 
 model TradeClaim {
-  id            String      @id @default(uuid())
-  transactionId String
-  reference     String      @unique
-  status        ClaimStatus @default(OPEN)
-  category      String
-  description   String
+  id                  String           @id @default(uuid())
+  transactionId       String
+  reference           String           @unique
+  status              ClaimStatus      @default(OPEN)
+  category            String
+  description         String
   requestedResolution String?
-  evidence      Json?
-  resolution    Json?
-  openedById    String?
-  resolvedById  String?
-  resolvedAt    DateTime?
-  transaction   TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Restrict)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  @@index([transactionId,status])
+  evidence            Json?
+  resolution          Json?
+  openedById          String?
+  resolvedById        String?
+  resolvedAt          DateTime?
+  transaction         TradeTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([transactionId, status])
 }
 
 model TradeMemory {
-  id              String   @id @default(uuid())
-  transactionId   String   @unique
-  buyerOrgId      String
-  productKey      String
-  approvedConfig  Json
+  id                String           @id @default(uuid())
+  transactionId     String           @unique
+  buyerOrgId        String
+  productKey        String
+  approvedConfig    Json
   commercialHistory Json
-  executionHistory Json
-  sourceHash      String
-  transaction     TradeTransaction @relation(fields:[transactionId],references:[id],onDelete:Restrict)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  @@index([buyerOrgId,productKey,updatedAt])
+  executionHistory  Json
+  sourceHash        String
+  transaction       TradeTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([buyerOrgId, productKey, updatedAt])
 }
