@@ -1,0 +1,1 @@
+import type{Metadata}from'next';export const metadata:Metadata={title:'Discover Products | Septlion Supply',description:'ابدأ من منتج، ثم حوّل احتياجك إلى طلب توريد مُدار مع Septlion.',alternates:{canonical:'https://www.septlion.com/discover/'},robots:{index:true,follow:true}};export default function Layout({children}:{children:React.ReactNode}){return children}

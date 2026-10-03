@@ -1,0 +1,1 @@
+import type{Metadata}from'next';export const metadata:Metadata={title:'What Do You Need? | Septlion Supply',description:'صف احتياجك بطريقتك، وستحوّله Septlion إلى متطلبات توريد واضحة.',alternates:{canonical:'https://www.septlion.com/require/'},robots:{index:true,follow:true}};export default function Layout({children}:{children:React.ReactNode}){return children}
