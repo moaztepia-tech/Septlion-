@@ -49,6 +49,13 @@ jobs:
           test "$(psql "postgresql://septlion:septlion@localhost:5432/septlion" -Atc "select count(*) from information_schema.tables where table_schema='core' and table_type='BASE TABLE'")" -gt 0
         env:
           DATABASE_URL: postgresql://septlion:septlion@localhost:5432/septlion?schema=core
+      - name: Generate production baseline SQL
+        working-directory: apps/api
+        run: |
+          pnpm exec prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > /tmp/septlion-core-baseline.sql
+          echo "SEPTLION_BASELINE_BEGIN"
+          cat /tmp/septlion-core-baseline.sql
+          echo "SEPTLION_BASELINE_END"
       - name: Prisma generate
         working-directory: apps/api
         run: pnpm exec prisma generate
