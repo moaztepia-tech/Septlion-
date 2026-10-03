@@ -46,7 +46,7 @@ jobs:
         working-directory: apps/api
         run: |
           pnpm exec prisma db push --skip-generate
-          test "$(psql "$DATABASE_URL" -Atc "select count(*) from information_schema.tables where table_schema='core' and table_type='BASE TABLE'")" -gt 0
+          test "$(psql "postgresql://septlion:septlion@localhost:5432/septlion" -Atc "select count(*) from information_schema.tables where table_schema='core' and table_type='BASE TABLE'")" -gt 0
         env:
           DATABASE_URL: postgresql://septlion:septlion@localhost:5432/septlion?schema=core
       - name: Prisma generate
