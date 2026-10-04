@@ -41,5 +41,5 @@ return <main className="chat-ai" dir={lang==='ar'?'rtl':'ltr'}>
 {messages.length>0&&Object.keys(data).length>0&&<div className="intent-context">{Object.entries(data).filter(([k])=>['product','application','quantity','packing','destination'].includes(k)).map(([k,v])=><span key={k}>{v}</span>)}</div>}{messages.length>0&&missing.length===0&&<div className="qualified-card"><span>✓</span><div><small>QUALIFIED REQUIREMENT</small><b>طلبك جاهز للتسعير</b><p>المعلومات الأساسية مكتملة. يمكن الآن إرسال الطلب إلى Septlion لإعداد العرض.</p></div><a href="/requests">حفظ ومتابعة الطلب</a></div>}</div></div>
 <div className="chat-composer-wrap"><div className="chat-composer"><textarea ref={box} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit()}}} placeholder={feedContext?'اكتب ملاحظتك أو التعديل المطلوب…':t.ph}/><div className="chat-tools"><div><span className="trade-capability">اكتب احتياجك أو التعديل المطلوب</span></div><button className="chat-send" onClick={()=>submit()} aria-label="Send">↑</button></div></div>{!messages.length&&!feedContext&&<p className="chat-hint">{t.hint}</p>}</div>
 </section>
-<footer className="chat-foot">Septlion Supply</footer>
+<footer className="chat-foot">SEPTLION · From real demand to executed trade.</footer>
 </main>}
