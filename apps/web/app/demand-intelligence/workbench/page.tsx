@@ -1,6 +1,7 @@
 'use client';
 
-import {FormEvent,useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
+import {accessToken} from '../../../lib/api';
 import Link from 'next/link';
 
 type QueueItem={
@@ -65,52 +66,45 @@ const taskAr:Record<string,string>={
  FOLLOW_UP:'متابعة'
 };
 
-async function api(key:string,init?:RequestInit){
- const r=await fetch(endpoint,{...init,headers:{'Content-Type':'application/json','x-operator-key':key,...(init?.headers||{})}});
+async function api(init?:RequestInit){
+ const token=accessToken();if(!token)throw new Error('UNAUTHORIZED');
+ const r=await fetch(endpoint,{...init,headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`,...(init?.headers||{})}});
  if(r.status===401)throw new Error('UNAUTHORIZED');
  if(!r.ok)throw new Error('REQUEST_FAILED');
  return r.json();
 }
 
 export default function DemandWorkbench(){
- const [key,setKey]=useState('');
- const [draft,setDraft]=useState('');
  const [data,setData]=useState<Snapshot|null>(null);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
  const [pushState,setPushState]=useState<'idle'|'working'|'enabled'|'unsupported'|'denied'>('idle');
 
- async function load(k=key,silent=false){
+ async function load(silent=false){
   if(!silent)setBusy(true);setError('');
   try{
-   const snap=await api(k);
-   setData(snap);setKey(k);sessionStorage.setItem('septlion_operator_key',k);
+   const snap=await api();
+   setData(snap);
   }catch(e){
-   if(e instanceof Error&&e.message==='UNAUTHORIZED'){sessionStorage.removeItem('septlion_operator_key');setKey('');setData(null);setError('مفتاح المشغّل غير صحيح أو تم إلغاؤه.');}
+   if(e instanceof Error&&e.message==='UNAUTHORIZED'){setData(null);setError('يلزم تسجيل الدخول بحساب SEPTLION التشغيلي.');}
    else setError('تعذر تحميل لوحة التشغيل الآن.');
   }finally{if(!silent)setBusy(false)}
  }
 
  useEffect(()=>{
-  const saved=sessionStorage.getItem('septlion_operator_key')||'';
-  if(saved){setKey(saved);void load(saved)}
+  if(accessToken())void load();else setError('يلزم تسجيل الدخول بحساب SEPTLION التشغيلي.')
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
 
  useEffect(()=>{
-  if(!key)return;
-  const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void load(key,true)},15000);
+  if(!accessToken())return;
+  const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void load(true)},15000);
   return()=>window.clearInterval(timer);
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[key]);
-
- async function login(e:FormEvent){
-  e.preventDefault();
-  if(draft.trim())await load(draft.trim());
- }
+ },[]);
 
  async function enablePush(){
-  if(!key)return;
+  if(!accessToken())return;
   if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){setPushState('unsupported');return}
   setPushState('working');setError('');
   try{
@@ -125,50 +119,38 @@ export default function DemandWorkbench(){
      applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)
     });
    }
-   await api(key,{method:'POST',body:JSON.stringify({action:'register_push',subscription:subscription.toJSON()})});
+   await api({method:'POST',body:JSON.stringify({action:'register_push',subscription:subscription.toJSON()})});
    setPushState('enabled');
-   await load(key,true);
+   await load(true);
   }catch{setPushState('idle');setError('تعذر تفعيل إشعارات RFQ على هذا الجهاز.')}
  }
 
  async function markAlert(alertId:string){
-  await api(key,{method:'POST',body:JSON.stringify({action:'mark_alert_read',alertId})});
-  await load(key,true);
+  await api({method:'POST',body:JSON.stringify({action:'mark_alert_read',alertId})});
+  await load(true);
  }
 
  async function markAllAlerts(){
-  await api(key,{method:'POST',body:JSON.stringify({action:'mark_all_alerts_read'})});
-  await load(key,true);
+  await api({method:'POST',body:JSON.stringify({action:'mark_all_alerts_read'})});
+  await load(true);
  }
 
  async function act(item:QueueItem,action:'start'|'complete'|'block'|'reopen'|'advance'|'publish_intent'){
   setBusy(true);setError('');
   try{
-   await api(key,{method:'POST',body:JSON.stringify({taskId:item.taskId,action})});
-   await load(key);
+   await api({method:'POST',body:JSON.stringify({taskId:item.taskId,action})});
+   await load();
   }catch{setError('تعذر تنفيذ الإجراء. أعد المحاولة.');setBusy(false)}
  }
 
  const sorted=useMemo(()=>[...(data?.queue||[])].sort((a,b)=>(b.priority-a.priority)||((a.dueAt||'9999').localeCompare(b.dueAt||'9999'))),[data]);
 
- if(!data)return <main className="dw-login" dir="rtl">
-  <div className="dw-login-card">
-   <Link href="/demand-intelligence" className="dw-wordmark">SEPTLION · DEMAND INTELLIGENCE</Link>
-   <p className="kicker">INTERNAL OPERATOR WORKBENCH</p>
-   <h1>لوحة تشغيل محرك الطلب</h1>
-   <p>هذه المنطقة لا تعرض بياناتها إلا بعد إدخال مفتاح المشغّل الداخلي. المفتاح لا يُحفظ على الخادم ولا في ملفات الموقع.</p>
-   <form onSubmit={login}>
-    <input type="password" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Operator Key" autoComplete="off"/>
-    <button disabled={busy||!draft.trim()}>{busy?'جارٍ التحقق…':'دخول لوحة التشغيل'}</button>
-   </form>
-   {error&&<div className="dw-error">{error}</div>}
-  </div>
- </main>;
+ if(!data)return <main className="dw-login" dir="rtl"><div className="dw-login-card"><Link href="/demand-intelligence" className="dw-wordmark">SEPTLION · DEMAND INTELLIGENCE</Link><p className="kicker">INTERNAL OPERATOR WORKBENCH</p><h1>لوحة تشغيل محرك الطلب</h1><p>{error||'جارٍ التحقق من صلاحية حساب SEPTLION…'}</p><Link href="/account?next=/demand-intelligence/workbench"><button>تسجيل الدخول</button></Link></div></main>;
 
  return <main className="dw" dir="rtl">
   <header className="dw-top shell">
    <div><Link href="/demand-intelligence" className="dw-wordmark">SEPTLION · DEMAND INTELLIGENCE</Link><small>INTERNAL WORKBENCH</small></div>
-   <div className="dw-top-actions"><span>{data.operator}</span><button onClick={enablePush} disabled={pushState==='working'}>{pushState==='enabled'?'التنبيهات مفعلة':pushState==='working'?'جارٍ التفعيل…':'تفعيل تنبيهات RFQ'}</button><button onClick={()=>{sessionStorage.removeItem('septlion_operator_key');setData(null);setKey('')}}>قفل اللوحة</button></div>
+   <div className="dw-top-actions"><span>{data.operator}</span><button onClick={enablePush} disabled={pushState==='working'}>{pushState==='enabled'?'التنبيهات مفعلة':pushState==='working'?'جارٍ التفعيل…':'تفعيل تنبيهات RFQ'}</button><Link href="/account">الحساب</Link></div>
   </header>
 
   <section className="dw-hero shell">
@@ -235,7 +217,7 @@ export default function DemandWorkbench(){
   </section>}
 
   <section className="dw-section shell">
-   <div className="dw-head"><div><p className="kicker">EXECUTION QUEUE</p><h2>قائمة التنفيذ</h2></div><button className="dw-refresh" onClick={()=>load(key)} disabled={busy}>{busy?'يتم التحديث…':'تحديث'}</button></div>
+   <div className="dw-head"><div><p className="kicker">EXECUTION QUEUE</p><h2>قائمة التنفيذ</h2></div><button className="dw-refresh" onClick={()=>load()} disabled={busy}>{busy?'يتم التحديث…':'تحديث'}</button></div>
    {error&&<div className="dw-error">{error}</div>}
    <div className="dw-queue">
     {sorted.map(item=><article className="dw-task" key={item.taskId}>
