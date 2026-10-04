@@ -2,6 +2,8 @@
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {persistFeedRequirement} from '../../lib/platform-store';
+import {accessToken} from '../../lib/api';
+import {createTradeRequirement} from '../../lib/trade-data';
 
 type Lang='ar'|'en';
 type FeedContext={source:'product_feed';product:{id:string;name:string;nameEn:string;packing:string};containerCount:number;septlionScale:string;incoterm:string;destination:{port:string;country:string;code:string};paymentPreference:string;buyer:{name:string;company:string;whatsapp:string;email:string|null;whatsappStatus:string}};
@@ -12,6 +14,7 @@ const ar={hello:'ماذا تحتاج؟',sub:'صف احتياجك بطريقتك.
 const en={hello:'What do you need?',sub:'Describe it naturally. You do not need to know the technical specification.',ph:'Describe your requirement…',hint:'Start simply: I need 5 containers of bakery flour in Tanzania',thinking:'Got it. I only need one more detail to complete your requirement.',ready:'Great. I now have the core information needed to prepare your requirement for pricing.',new:'New chat'};
 export default function RequirePage(){const[lang,setLang]=useState<Lang>('ar'),[input,setInput]=useState(''),[data,setData]=useState<Record<string,string>>({}),[messages,setMessages]=useState<{role:'user'|'assistant',text:string}[]>([]),[feedContext,setFeedContext]=useState<FeedContext|null>(null),[saving,setSaving]=useState(false),[saveError,setSaveError]=useState('');const box=useRef<HTMLTextAreaElement>(null),t=lang==='ar'?ar:en;
 useEffect(()=>{
+ const pending=sessionStorage.getItem('septlion_pending_requirement');if(pending&&accessToken()){try{const p=JSON.parse(pending);if(p?.source==='product_feed'){setFeedContext(p);setData({product:p.product.nameEn,quantity:p.containerCount+' FCL',packing:p.product.packing,destination:p.destination.port,incoterm:p.incoterm,payment:p.paymentPreference});return}else if(p&&typeof p==='object'){setData(p);return}}catch{}}
  const raw=sessionStorage.getItem('septlion_feed_context');
  if(raw){
   try{
@@ -31,7 +34,13 @@ const q:Record<string,string>=lang==='ar'?{product:'ما المنتج الذي �
 function normalize(k:string,v:string){if(k==='application'&&/مخابز|bakery/i.test(v))return'Bakery';if(k==='quantity'&&/حاوي|fcl|container/i.test(v))return(v.match(/\d+/)?.[0]||'1')+' FCL';if(k==='packing'&&/لا اعرف|لا أعرف|غير متأكد|not sure/i.test(v))return data.product==='Wheat Flour'?'50kg (suggested)':'Septlion-assisted';return v}
 function submit(raw?:string){const text=(raw??input).trim();if(!text)return;let parsed=extract(text);let nextData={...data,...parsed};const currentRequired=['product',...(nextData.product==='Wheat Flour'?['application']:[]),'quantity','packing','destination'];const currentMissing=currentRequired.filter(k=>!nextData[k]);if(messages.length&&next&&!parsed[next])nextData[next]=normalize(next,text);const afterMissing=currentRequired.filter(k=>!nextData[k]);setData(nextData);setMessages(m=>[...m,{role:'user',text},{role:'assistant',text:afterMissing.length?(lang==='ar'?'فهمت. '+(q[afterMissing[0]]||t.thinking):'Got it. '+(q[afterMissing[0]]||t.thinking)):t.ready}]);setInput('');setTimeout(()=>box.current?.focus(),50)}
 function reset(){setData({});setMessages([]);setInput('');setSaveError('')}
-async function saveRequirement(){if(!feedContext)return;setSaving(true);setSaveError('');try{const id=await persistFeedRequirement(feedContext as unknown as Record<string,unknown>);sessionStorage.setItem('septlion_active_request',id);window.location.href='/request?id='+encodeURIComponent(id)}catch(e:any){setSaveError(e?.message||'تعذر حفظ الطلب الآن. حاول مرة أخرى.')}finally{setSaving(false)}}
+async function saveRequirement(){setSaving(true);setSaveError('');try{
+ if(!accessToken()){sessionStorage.setItem('septlion_pending_requirement',JSON.stringify(feedContext||data));window.location.href='/account?next=/require';return}
+ let id:string;
+ if(feedContext){const r=await createTradeRequirement({product:feedContext.product.nameEn,quantity:feedContext.containerCount+' FCL',containerCount:feedContext.containerCount,packing:feedContext.product.packing,destination:feedContext.destination.port,deliveryCountry:feedContext.destination.country,destinationCode:feedContext.destination.code,incoterm:feedContext.incoterm,paymentPreference:feedContext.paymentPreference,source:'PRODUCT_FEED',sourceContext:feedContext});id=r.item.id}
+ else{const r=await createTradeRequirement({...data,source:'AI_COMPOSER'});id=r.item.id}
+ sessionStorage.setItem('septlion_active_request',id);sessionStorage.removeItem('septlion_pending_requirement');window.location.href='/request?id='+encodeURIComponent(id)
+ }catch(e:any){setSaveError(e?.message||'تعذر حفظ الطلب الآن. حاول مرة أخرى.')}finally{setSaving(false)}}
 return <main className="chat-ai" dir={lang==='ar'?'rtl':'ltr'}>
 <header className="chat-top trade-top"><Link href="/" className="chat-logo"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link><div><button onClick={reset}>＋ {t.new}</button><button onClick={()=>setLang(lang==='ar'?'en':'ar')}>{lang==='ar'?'EN':'ع'}</button></div></header>
 <section className={'chat-stage '+(messages.length?'has-chat':'')}>
