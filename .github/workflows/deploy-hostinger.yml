@@ -91,6 +91,16 @@ jobs:
           test -n "$ACCOUNT_HTML"
           cp "$ACCOUNT_HTML" deploy/account/index.html
           test -s deploy/account/index.html
+          mkdir -p deploy/operations
+          OPERATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/operations.html' | head -n 1)"
+          test -n "$OPERATIONS_HTML"
+          cp "$OPERATIONS_HTML" deploy/operations/index.html
+          test -s deploy/operations/index.html
+          mkdir -p deploy/analytics
+          ANALYTICS_HTML="$(find apps/web/.next/server/app -type f -path '*/analytics.html' | head -n 1)"
+          test -n "$ANALYTICS_HTML"
+          cp "$ANALYTICS_HTML" deploy/analytics/index.html
+          test -s deploy/analytics/index.html
           mkdir -p deploy/documents
           DOCUMENTS_HTML="$(find apps/web/.next/server/app -type f -path '*/documents.html' | head -n 1)"
           test -n "$DOCUMENTS_HTML"
@@ -103,6 +113,8 @@ jobs:
           test -n "$REQUIRE_HTML"
           cp "$REQUIRE_HTML" deploy/require/index.html
           test -s deploy/require/index.html
+          test -s deploy/operations/index.html
+          test -s deploy/analytics/index.html
           if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html; fi
           if [ -f apps/web/.next/server/app/intent/demand.html ]; then cp apps/web/.next/server/app/intent/demand.html deploy/intent/demand/index.html; fi
           cp -R apps/web/.next/static deploy/_next/static
