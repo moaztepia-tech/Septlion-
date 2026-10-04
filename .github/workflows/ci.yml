@@ -64,8 +64,7 @@ jobs:
         run: pnpm exec prisma generate
         env:
           DATABASE_URL: postgresql://septlion:septlion@localhost:5432/septlion
-      - run: pnpm typecheck
-      - run: pnpm build
-        env:
-          DATABASE_URL: postgresql://septlion:septlion@localhost:5432/septlion
-          NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      - name: Web typecheck
+        run: pnpm --filter @septlion/web typecheck
+      - name: Web production build
+        run: pnpm --filter @septlion/web build
