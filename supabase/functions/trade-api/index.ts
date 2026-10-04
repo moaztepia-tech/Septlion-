@@ -5,7 +5,9 @@ const corsFor=(req:Request)=>{const origin=req.headers.get("Origin")||"";return{
 let cors:Record<string,string>={};
 const out=(b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers:cors});
 const numberFrom=(v:unknown)=>{const m=String(v||"").match(/\d+(?:[.,]\d+)?/);return m?Number(m[0].replace(",",".")):null};
-Deno.serve(async(req)=>{\n cors=corsFor(req);\n if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
+Deno.serve(async(req)=>{
+ cors=corsFor(req);
+ if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  const url=Deno.env.get("SUPABASE_URL")!,keys=JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS")||"{}"),secret=keys.default||Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");if(!secret)return out({error:"Server configuration unavailable"},500);
  const admin=createClient(url,secret,{auth:{persistSession:false}}),db=admin.schema("core"),token=(req.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
  if(!token)return out({error:"Authentication required"},401);const {data:{user},error:ae}=await admin.auth.getUser(token);if(ae||!user)return out({error:"Invalid session"},401);
