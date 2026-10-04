@@ -217,7 +217,7 @@ export default function DemandWorkbench(){
   </section>}
 
   <section className="dw-section shell">
-   <div className="dw-head"><div><p className="kicker">EXECUTION QUEUE</p><h2>قائمة التنفيذ</h2></div><button className="dw-refresh" onClick={()=>load(key)} disabled={busy}>{busy?'يتم التحديث…':'تحديث'}</button></div>
+   <div className="dw-head"><div><p className="kicker">EXECUTION QUEUE</p><h2>قائمة التنفيذ</h2></div><button className="dw-refresh" onClick={()=>load()} disabled={busy}>{busy?'يتم التحديث…':'تحديث'}</button></div>
    {error&&<div className="dw-error">{error}</div>}
    <div className="dw-queue">
     {sorted.map(item=><article className="dw-task" key={item.taskId}>
