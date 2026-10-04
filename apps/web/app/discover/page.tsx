@@ -63,7 +63,7 @@ export default function DiscoverPage(){
   router.push('/require?source=feed');
  }
  return <main className="v1-app" dir="rtl">
-  <header className="product-top discover-top"><a href="/" className="product-brand" aria-label="Septlion"><img src="/brand/septlion-wordmark-navy.png" alt="Septlion"/></a><nav><a href="/">الرئيسية</a><a className="active" href="/discover">اكتشف</a><a href="/requests">التجارة</a></nav><div><a className="product-muted" href="/notifications">التنبيهات</a><a className="v1-home-ai" href="/require">ماذا تحتاج؟ <b>↗</b></a></div></header>
+  <header className="product-top discover-top"><a href="/" className="product-brand" aria-label="Septlion"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></a><nav><a href="/">الرئيسية</a><a className="active" href="/discover">اكتشف</a><a href="/requests">التجارة</a></nav><div><a className="product-muted" href="/notifications">التنبيهات</a><a className="v1-home-ai" href="/require">ماذا تحتاج؟ <b>↗</b></a></div></header>
   <div className="v1-tabs" role="tablist"><button className="active">لأجلك</button><button>الأغذية</button><button>التغليف</button><button>المواد الخام</button><button>الصناعة</button></div>
   <section className="v1-feed">
    <div className="v1-section-head"><div><small>DISCOVER</small><h1>ابدأ من منتج.</h1></div><span>اختر نقطة البداية، ثم نكمل تفاصيل التوريد معك.</span></div>
