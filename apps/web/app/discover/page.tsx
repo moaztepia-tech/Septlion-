@@ -2,7 +2,6 @@
 import {useMemo,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {SCALE_RANGES,getSeptlionScale,scaleProgress} from '../../lib/septlion-scale';
-import {persistFeedRequirement} from '../../lib/platform-store';
 
 type Incoterm='CIF'|'CFR'|'FOB';
 type Payment='L/C'|'T/T'|'OTHER';
@@ -51,12 +50,6 @@ export default function DiscoverPage(){
    buyer:{name:name.trim(),company:company.trim(),whatsapp:normalizePhone(phone),email:email.trim()||null,whatsappStatus:'UNCONFIRMED'},
    sourceContext:{path:'discover',campaignId:new URLSearchParams(window.location.search).get('campaign_id'),utmSource:new URLSearchParams(window.location.search).get('utm_source')}
   };
-  try{
-   const requirementId=await persistFeedRequirement(context as unknown as Record<string,unknown>);
-   (context as typeof context & {requirementId?:string}).requirementId=requirementId;
-  }catch{
-   // Keep the buyer moving; the local draft is retained and can be retried by the app.
-  }
   sessionStorage.setItem('septlion_feed_context',JSON.stringify(context));
   const previous=JSON.parse(localStorage.getItem('septlion_draft_requests')||'[]');
   localStorage.setItem('septlion_draft_requests',JSON.stringify([context,...previous].slice(0,20)));
