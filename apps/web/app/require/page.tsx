@@ -14,6 +14,7 @@ const ar={hello:'ماذا تحتاج؟',sub:'صف احتياجك بطريقتك.
 const en={hello:'What do you need?',sub:'Describe it naturally. You do not need to know the technical specification.',ph:'Describe your requirement…',hint:'Start simply: I need 5 containers of bakery flour in Tanzania',thinking:'Got it. I only need one more detail to complete your requirement.',ready:'Great. I now have the core information needed to prepare your requirement for pricing.',new:'New chat'};
 export default function RequirePage(){const[lang,setLang]=useState<Lang>('ar'),[input,setInput]=useState(''),[data,setData]=useState<Record<string,string>>({}),[messages,setMessages]=useState<{role:'user'|'assistant',text:string}[]>([]),[feedContext,setFeedContext]=useState<FeedContext|null>(null),[saving,setSaving]=useState(false),[saveError,setSaveError]=useState('');const box=useRef<HTMLTextAreaElement>(null),t=lang==='ar'?ar:en;
 useEffect(()=>{
+ const pending=sessionStorage.getItem('septlion_pending_requirement');if(pending&&accessToken()){try{const p=JSON.parse(pending);if(p?.source==='product_feed'){setFeedContext(p);setData({product:p.product.nameEn,quantity:p.containerCount+' FCL',packing:p.product.packing,destination:p.destination.port,incoterm:p.incoterm,payment:p.paymentPreference});return}else if(p&&typeof p==='object'){setData(p);return}}catch{}}
  const raw=sessionStorage.getItem('septlion_feed_context');
  if(raw){
   try{
