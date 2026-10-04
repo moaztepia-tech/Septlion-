@@ -3,15 +3,18 @@ import './platform-v1.css';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
-  title: 'Septlion Supply — Demand-Led Product Development & Managed Supply',
-  description: 'Septlion turns buyer requirements into production-ready products and managed supply programs across MENA and Africa.',
-  keywords: ['B2B supply', 'private label', 'product development', 'MENA', 'Africa', 'managed supply'],
+  title: {
+    default: 'SEPTLION — Demand-Led Global Trade',
+    template: '%s | SEPTLION',
+  },
+  description: 'SEPTLION is the operating system for demand-led global trade — turning real demand into executable trade from discovery to execution.',
+  keywords: ['B2B trade', 'global trade', 'demand intelligence', 'managed supply', 'trade execution', 'MENA', 'Africa'],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Septlion Supply',
-    description: 'You define the need. Septlion builds the supply.',
+    title: 'SEPTLION — Demand-Led Global Trade',
+    description: 'From real demand to executed trade.',
     url: 'https://www.septlion.com',
-    siteName: 'Septlion Supply',
+    siteName: 'SEPTLION',
     type: 'website',
   },
   robots: { index: true, follow: true },
