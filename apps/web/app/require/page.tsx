@@ -1,7 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
-import {persistFeedRequirement} from '../../lib/platform-store';
 import {accessToken} from '../../lib/api';
 import {createTradeRequirement} from '../../lib/trade-data';
 
