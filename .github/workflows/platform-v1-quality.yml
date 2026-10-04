@@ -16,6 +16,10 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Enforce Edge-only production runtime
+        run: |
+          ! grep -R -n -E "NEXT_PUBLIC_API_URL|localhost:4000|from ['\"]\.\.?/.*/api['\"].*\bapi\b" apps/web --include='*.ts' --include='*.tsx'
+          test ! -d apps/web/app/api/demand-intelligence
       - name: Typecheck web
         run: pnpm --filter @septlion/web typecheck
       - name: Build web
