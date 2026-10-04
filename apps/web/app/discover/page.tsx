@@ -59,7 +59,7 @@ export default function DiscoverPage(){
   <header className="product-top discover-top"><a href="/" className="product-brand" aria-label="Septlion"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></a><nav><a href="/">الرئيسية</a><a className="active" href="/discover">اكتشف</a><a href="/requests">التجارة</a></nav><div><a className="product-muted" href="/notifications">التنبيهات</a><a className="v1-home-ai" href="/require">ماذا تحتاج؟ <b>↗</b></a></div></header>
   <div className="v1-tabs" role="tablist"><button className="active">لأجلك</button><button>الأغذية</button><button>التغليف</button><button>المواد الخام</button><button>الصناعة</button></div>
   <section className="v1-feed">
-   <div className="v1-section-head"><div><small>DISCOVER</small><h1>ابدأ من منتج.</h1></div><span>اختر نقطة البداية، ثم نكمل تفاصيل التوريد معك.</span></div>
+   <div className="v1-section-head"><div><small>DISCOVER</small><h1>اكتشف ما يتحرك في السوق.</h1></div><span>ابدأ من إشارة طلب أو منتج مناسب، ثم حوّله مباشرة إلى احتياج تجاري قابل للتنفيذ.</span></div>
    <article className="v1-product">
     <div className="v1-product-visual"><div className="v2-visual-meta"><span>01</span><small>FOOD / FLOUR</small></div><div className="v1-bag"><span>ZOLLANA</span><b>{product.name}</b><small>{product.en}</small><em>25 / 50 KG</em></div><div className="v1-pager">{products.map((_,i)=><button key={i} aria-label={'product '+(i+1)} className={i===active?'active':''} onClick={()=>{setActive(i);setCount(1)}}/> )}</div></div>
     <div className="v1-product-copy"><small>{product.eyebrow}</small><h2>{product.name}</h2><p>{product.en}</p><dl><div><dt>التعبئة</dt><dd>{product.pack}</dd></div><div><dt>التوريد</dt><dd>{product.note}</dd></div></dl></div>
