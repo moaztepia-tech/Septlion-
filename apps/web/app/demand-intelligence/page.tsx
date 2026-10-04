@@ -7,7 +7,7 @@ export const metadata={title:'Septlion Demand Intelligence — Tenders, RFQs & A
 
 export default function DemandIntelligence(){
  return <main className="di">
-  <header className="di-nav shell"><Link href="/" className="brand"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link><div><span>DEMAND INTELLIGENCE</span><Link href="/#contact">Submit requirement ↗</Link></div></header>
+  <header className="di-nav shell"><Link href="/" className="brand"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link><div><span>DEMAND INTELLIGENCE</span><Link href="/require">ابدأ طلبًا ↗</Link></div></header>
   <section className="di-hero shell"><p className="kicker">SEPTLION DEMAND INTELLIGENCE ENGINE</p><h1>Find demand.<br/>Predict demand.<br/><em>Attract demand.</em></h1><p>Public buying requests become demand clusters, market-specific search pages and live RFQ routes — so matching buyers can discover Septlion from the requirement itself.</p><div className="di-actions"><Link href="/demand/">Open live demand routes ↗</Link><a href="#radar">Open demand radar ↓</a></div></section>
   <section className="di-strip"><div className="shell">{pipeline.map((x,i)=><div key={x}><span>0{i+1}</span><b>{x}</b></div>)}</div></section>
   <section id="radar" className="di-section shell"><div className="di-head"><div><p className="kicker">LIVE OPERATING VIEW</p><h2>Demand Radar</h2></div><p>The first implementation is focused on wheat flour. Signals are treated as leads until independently verified; the engine separates detection from verification.</p></div>
@@ -23,6 +23,6 @@ export default function DemandIntelligence(){
    <article><small>TENDER INTENT</small><h3>Institutional Flour Supply</h3><p>Eligibility · deadline · documents · delivery schedule</p><b>Tender → qualification → bid brief</b></article>
    <article><small>GEO / SEO / ADS</small><h3>Make buyers find Septlion</h3><p>Demand signals determine what pages and campaigns deserve to exist.</p><b>Signal → exact page → RFQ</b></article>
   </div></section>
-  <section className="di-close"><div className="shell"><p className="kicker">START WITH DEMAND</p><h2>The market tells us what to build.</h2><Link href="/#contact">Send a requirement ↗</Link></div></section>
+  <section className="di-close"><div className="shell"><p className="kicker">START WITH DEMAND</p><h2>The market tells us what to build.</h2><Link href="/require">ابدأ طلبًا ↗</Link></div></section>
  </main>
 }
