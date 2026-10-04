@@ -7,7 +7,7 @@ export default function Home(){
  function start(seed:string){sessionStorage.setItem('septlion_requirement_seed',seed);router.push('/require')}
  useEffect(()=>{try{setRecent(JSON.parse(localStorage.getItem('septlion_draft_requests')||'[]').slice(0,3))}catch{}},[]);
  return <main className="product-home" dir="rtl">
-  <header className="product-top"><a href="/" className="product-brand"><img src="/brand/septlion-wordmark-navy.png" alt="Septlion"/></a><nav><a className="active" href="/">الرئيسية</a><a href="/discover">اكتشف</a><a href="/requests">التجارة</a></nav><div><a className="product-muted" href="/notifications">التنبيهات</a><a className="product-account" href="/account">الحساب</a></div></header>
+  <header className="product-top"><a href="/" className="product-brand"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></a><nav><a className="active" href="/">الرئيسية</a><a href="/discover">اكتشف</a><a href="/requests">التجارة</a></nav><div><a className="product-muted" href="/notifications">التنبيهات</a><a className="product-account" href="/account">الحساب</a></div></header>
   <section className="product-hero">
    <div className="product-hero-copy"><small>SEPTLION</small><h1>ماذا تحتاج؟</h1><p>صف احتياجك التجاري بطريقتك. SEPTLION تحوّله إلى مسار قابل للتنفيذ.</p></div>
    <button className="home-composer" onClick={()=>router.push('/require')}><span>اكتب ما تحتاجه…</span><div><em>ابدأ بطريقتك</em><b>↑</b></div></button>
