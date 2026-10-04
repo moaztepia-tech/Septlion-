@@ -3,7 +3,7 @@ import {Prisma} from '@prisma/client';
 import {PrismaService} from '../prisma/prisma.service';
 import {CreateFeedRequirementDto} from './feed-requirement.dto';
 
-const scale=(n:number)=>n<=7?'Micro':n<=19?'Nano':n<=49?'Zepto':n<=99?'Yocto':n<=299?'Ronto':n<=999?'Quecto':'Septlion';
+const scale=(n:number)=>n<=7?'S-1':n<=19?'S-2':n<=49?'S-3':n<=99?'S-4':n<=299?'S-5':n<=999?'S-6':'S-7';
 function phone(raw:string){
  const value=raw.trim().replace(/[^\d+]/g,'').replace(/(?!^)\+/g,'');
  const digits=value.replace('+','');
