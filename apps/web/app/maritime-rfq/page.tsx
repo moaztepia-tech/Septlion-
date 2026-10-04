@@ -6,13 +6,13 @@ import styles from './rfq.module.css';
 
 type Level={code:string;name:string;term:string;min:number;max:number|null;description:string};
 const levels:Level[]=[
- {code:'S-1',name:'Micro',term:'Spot FCL',min:1,max:7,description:'حجز فوري للشحنات المحدودة'},
- {code:'S-2',name:'Nano',term:'Scheduled FCL',min:8,max:19,description:'شحن مجدول لتجار الجملة'},
- {code:'S-3',name:'Zepto',term:'Space Allocation',min:20,max:49,description:'تخصيص منتظم للمساحة'},
- {code:'S-4',name:'Yocto',term:'Block Space',min:50,max:99,description:'حجز كتلة مساحية'},
- {code:'S-5',name:'Ronto',term:'Coastal Charter',min:100,max:299,description:'تأجير ساحلي مخصص'},
- {code:'S-6',name:'Quecto',term:'Feeder Charter',min:300,max:999,description:'تأجير سفينة تغذية'},
- {code:'S-7',name:'Septlion',term:'Full Charter & Bulk',min:1000,max:null,description:'تأجير كامل أو شحن سائب'}
+ {code:'S-1',name:'S-1',term:'Spot FCL',min:1,max:7,description:'حجز فوري للشحنات المحدودة'},
+ {code:'S-2',name:'S-2',term:'Scheduled FCL',min:8,max:19,description:'شحن مجدول لتجار الجملة'},
+ {code:'S-3',name:'S-3',term:'Space Allocation',min:20,max:49,description:'تخصيص منتظم للمساحة'},
+ {code:'S-4',name:'S-4',term:'Block Space',min:50,max:99,description:'حجز كتلة مساحية'},
+ {code:'S-5',name:'S-5',term:'Coastal Charter',min:100,max:299,description:'تأجير ساحلي مخصص'},
+ {code:'S-6',name:'S-6',term:'Feeder Charter',min:300,max:999,description:'تأجير سفينة تغذية'},
+ {code:'S-7',name:'S-7',term:'Full Charter & Bulk',min:1000,max:null,description:'تأجير كامل أو شحن سائب'}
 ];
 const ports=['Alexandria, Egypt','Port Said, Egypt','Jeddah, Saudi Arabia','Dammam, Saudi Arabia','Jebel Ali, UAE','Sohar, Oman','Mombasa, Kenya','Dar es Salaam, Tanzania','Djibouti, Djibouti','Mogadishu, Somalia','Shanghai, China','Ningbo, China','Shenzhen, China','Mersin, Türkiye','Rotterdam, Netherlands'];
 const baseByType:Record<string,number>={'20FT':1650,'40FT':2600,'REEFER':4300,'OPEN_TOP':3350,'FLAT_RACK':3900,'BULK':5200};
