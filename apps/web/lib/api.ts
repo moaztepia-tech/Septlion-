@@ -21,3 +21,11 @@ export function saveSession(s:Session){localStorage.setItem('septlion_access',s.
 export function accessToken(){return typeof window==='undefined'?null:localStorage.getItem('septlion_access')}
 export function clearSession(){if(typeof window==='undefined')return;localStorage.removeItem('septlion_access');localStorage.removeItem('septlion_refresh')}
 export function hasSession(){return Boolean(accessToken())}
+
+/** Compatibility adapter for legacy operator screens while their endpoints move to Edge Functions. */
+export async function api<T>(path:string,init:RequestInit={},token?:string):Promise<T>{
+ const legacy=process.env.NEXT_PUBLIC_API_URL;
+ if(!legacy)throw new Error('هذه الشاشة قيد النقل إلى SEPTLION Edge Runtime.');
+ const r=await fetch(`${legacy}${path}`,{...init,headers:{'Content-Type':'application/json',...(init.headers||{}),...(token?{Authorization:`Bearer ${token}`}:{})},cache:'no-store'});
+ const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b?.message||'Request failed');return b as T;
+}
