@@ -141,4 +141,4 @@ jobs:
           server-dir: /domains/septlion.com/public_html/
           dangerous-clean-slate: true
 
-# deployment trigger: republish-ai-interface-ftps
+# deployment trigger: production-route-republish-2026-10-04
