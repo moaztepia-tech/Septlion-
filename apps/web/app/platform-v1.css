@@ -174,3 +174,16 @@
 @media(prefers-color-scheme:dark){
  .sl-dark-auto{--sl-canvas:#060B16;--sl-white:#0C1424;--sl-ink:#F5F7FA;--sl-muted:#AAB3C2;--sl-line:#253047}
 }
+
+/* Master logo header correction */
+.product-brand img,.chat-logo img{
+ width:auto!important;
+ height:46px!important;
+ max-width:190px!important;
+ object-fit:contain!important;
+ object-position:left center!important;
+ display:block!important;
+}
+@media(max-width:760px){
+ .product-brand img,.chat-logo img{height:38px!important;max-width:156px!important}
+}
