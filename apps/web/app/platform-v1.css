@@ -105,3 +105,72 @@
 
 /* Review fixes */
 .home-composer{width:100%;text-align:inherit;font:inherit;cursor:pointer}.home-starts button{border:0;background:transparent;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline;text-decoration-color:#d0d5dd;text-underline-offset:4px}.qualified-card a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#061a38;color:#fff;border-radius:9px;padding:10px 14px;font-size:10px;font-weight:700}.chat-msg.assistant>div{margin-inline-start:0}
+
+
+/* =========================================================
+   SEPTLION DESIGN SYSTEM v1 — canonical production override
+   One master brand • Neutral-first • Quiet authority
+   ========================================================= */
+:root{
+ --sl-navy:#0A1C4A;--sl-deep:#06112E;--sl-navy-800:#10295F;--sl-navy-600:#27467A;
+ --sl-navy-300:#91A5C8;--sl-navy-100:#E8EDF5;--sl-navy-50:#F5F7FB;
+ --sl-ink:#111318;--sl-muted:#5D6470;--sl-line:#E1E4E9;--sl-canvas:#F7F8FA;--sl-white:#FFFFFF;
+ --sl-success:#16845B;--sl-warning:#B66A0A;--sl-critical:#C43D3D;--sl-info:#2864B4;
+ --sl-radius-sm:8px;--sl-radius-md:12px;--sl-radius-lg:16px;
+ --sl-shadow:0 12px 32px rgba(6,17,46,.055);
+ --v1-navy:var(--sl-navy);--v1-ink:var(--sl-ink);--v1-muted:var(--sl-muted);--v1-line:var(--sl-line);--v1-bg:var(--sl-canvas);
+ --s3-navy:var(--sl-navy);--s3-ink:var(--sl-ink);--s3-muted:var(--sl-muted);--s3-line:var(--sl-line);--s3-canvas:var(--sl-canvas);
+}
+.v1-app,.buyer-app,.v3-app,.product-home,.chat-ai,.dw,.dw-login{
+ font-family:"Noto Sans Arabic",Inter,Arial,sans-serif!important;
+ background:var(--sl-canvas)!important;color:var(--sl-ink)!important;
+}
+[dir="ltr"] .v1-app,[dir="ltr"] .buyer-app,[dir="ltr"] .v3-app,[dir="ltr"] .product-home{
+ font-family:Inter,"Noto Sans Arabic",Arial,sans-serif!important;
+}
+.v1-topbar,.buyer-top,.v3-top,.product-top,.trade-top{
+ background:rgba(255,255,255,.94)!important;border-color:var(--sl-line)!important;
+ box-shadow:none!important;backdrop-filter:blur(20px);
+}
+.v1-tabs,.trade-subnav{background:var(--sl-white)!important;border-color:var(--sl-line)!important}
+.v1-tabs button.active,.v1-bottom-nav .active,.buyer-nav a.active,.v3-mobile-nav a.active,
+.product-top nav a.active,.trade-subnav a.active{color:var(--sl-navy)!important;border-color:var(--sl-navy)!important}
+.v1-primary,.primary-link,.home-empty>a,.home-composer b,.qualified-card a,.qualified-card button,
+.chat-send,.v3-ask,.stagebar span.on i,.status-pill.on{
+ background:var(--sl-navy)!important;border-color:var(--sl-navy)!important;color:#fff!important;
+}
+.v1-product,.request-list,.notice-list,.settings-list,.document-list,.request-summary,.offer-hero,
+.action-card,.receive-card,.memory-card,.execution-head,.profile-card,.timeline,.lock-card,
+.execution-track,.document-card,.home-empty,.home-recents>a,.home-categories>a,.chat-composer,
+.qualified-card,.feed-context-card{
+ background:var(--sl-white)!important;border-color:var(--sl-line)!important;
+ box-shadow:var(--sl-shadow)!important;
+}
+.v1-product,.request-list,.notice-list,.settings-list,.document-list,.request-summary,.offer-hero,
+.action-card,.receive-card,.memory-card,.execution-head,.profile-card,.timeline,.lock-card,
+.execution-track,.document-card,.home-empty,.home-recents>a,.home-categories>a,.qualified-card,.feed-context-card{
+ border-radius:var(--sl-radius-lg)!important;
+}
+.v1-choice button,.v1-counter,.v1-destination,.v1-sheet>input,.v1-identity label input,
+.primary-link,.secondary-link,.home-empty>a,.qualified-card a,.qualified-card button,.chat-send{
+ border-radius:var(--sl-radius-md)!important;
+}
+.v1-product-copy>small,.v1-section-head small,.section-intro>small,.offer-hero>small,
+.execution-head>small,.receive-card>small,.memory-card>small,.action-card>small,
+.product-hero-copy>small,.home-section-title small{color:var(--sl-navy-600)!important}
+.v1-product-copy p,.section-intro p,.offer-hero p,.execution-head p,.receive-card>p,
+.action-card>p,.product-hero-copy p,.home-empty p,.home-recents p,.home-categories small{
+ color:var(--sl-muted)!important;
+}
+.status-pill{background:var(--sl-navy-100)!important;color:var(--sl-navy)!important}
+.v1-error,.dw-error{color:var(--sl-critical)!important}
+.home-composer{box-shadow:0 14px 40px rgba(6,17,46,.06)!important}
+.home-composer:focus-visible,.chat-composer:focus-within{border-color:var(--sl-navy-300)!important;box-shadow:0 0 0 3px var(--sl-navy-100)!important}
+.product-hero h1,.chat-welcome h1,.section-intro h1,.offer-hero h1,.execution-head h1,.action-card h1{
+ color:var(--sl-ink)!important;font-weight:700!important;
+}
+.product-footer{color:var(--sl-muted)!important}
+.product-footer p{font-family:Inter,"Noto Sans Arabic",Arial,sans-serif}
+@media(prefers-color-scheme:dark){
+ .sl-dark-auto{--sl-canvas:#060B16;--sl-white:#0C1424;--sl-ink:#F5F7FA;--sl-muted:#AAB3C2;--sl-line:#253047}
+}
