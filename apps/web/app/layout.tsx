@@ -18,6 +18,12 @@ export const metadata = {
     type: 'website',
   },
   robots: { index: true, follow: true },
+  icons: {
+    icon: '/brand/app-icon-rounded.svg',
+    shortcut: '/brand/app-icon-rounded.svg',
+    apple: '/brand/app-icon-rounded.svg',
+  },
+  themeColor: '#051945',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
