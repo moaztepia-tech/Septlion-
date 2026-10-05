@@ -45,130 +45,111 @@
 .dc-auth{display:flex;gap:8px;margin:14px 0}.dc-auth input{flex:1;min-width:0;border:1px solid var(--line);background:#fff;padding:11px 13px;font:600 11px Manrope,sans-serif}.dc-auth button{border:0;background:var(--navy);color:#fff;padding:0 18px;font:800 10px Manrope,sans-serif}@media(max-width:600px){.dc-auth{flex-direction:column}.dc-auth button{padding:12px}}
 .dc-run{margin-top:8px;border:1px solid var(--line);background:#f4f6f8;color:var(--navy);padding:7px 9px;font:800 9px Manrope,sans-serif;cursor:pointer}
 
-
-/* SEPTLION Brand System v1 — canonical compatibility foundation */
-html[dir="rtl"] body{font-family:"Noto Sans Arabic",Inter,Arial,sans-serif}
-html[dir="ltr"] body{font-family:Inter,"Noto Sans Arabic",Arial,sans-serif}
-body{background:var(--canvas);color:var(--ink)}
-:focus-visible{outline:2px solid var(--brand-600);outline-offset:3px}
-::selection{background:var(--brand-100);color:var(--brand-deep)}
-.kicker,.closing small,.steps span,.steps b,.caps span,.programs small,.programs>article>span,.arch-grid span,.di-hero h1 em,.di-row strong,.di-grid span,.di-cards small{color:var(--brand-600)!important}
-.actions .primary,.site-header .nav-actions>a,.ai-tools .ai-send,.di-actions a:first-child{background:var(--brand-primary)!important;border-color:var(--brand-primary)!important;color:#fff!important}
-.hero-identity,.closing,.di-close{background:var(--brand-100)!important}
-.site-header{background:rgba(6,17,46,.97)!important}
-.site-header nav{color:#fff}
-.site-header nav a:after{background:#fff!important}
-
-
-/* SEPTLION Brand System — production identity lock */
+/* SEPTLION MASTER BRAND SYSTEM v1 — single canonical platform layer
+   Approved Brand Kit source of truth: Navy #051945 / White #FFFFFF /
+   Mist #E9EDF5 / Steel #3D5185 / Sky #8FA6D6.
+   Logo artwork is rendered as supplied: no filters, recoloring or transforms. */
 :root{
- --sl-navy:#051945;
- --sl-navy-deep:#06112E;
- --sl-navy-800:#10295F;
- --sl-navy-600:#27467A;
- --sl-navy-300:#91A5C8;
- --sl-navy-100:#E8EDF5;
- --sl-navy-50:#F5F7FB;
- --sl-white:#FFFFFF;
- --sl-canvas:#F7F8FA;
- --sl-ink:#111318;
- --sl-muted:#5D6470;
- --sl-line:#E1E4E9;
- --sl-success:#16845B;
- --sl-warning:#B66A0A;
- --sl-critical:#C43D3D;
- --sl-info:#2864B4;
- --sl-radius-sm:10px;
- --sl-radius-md:16px;
- --sl-radius-lg:24px;
- --sl-shadow-sm:0 8px 24px rgba(6,17,46,.06);
- --sl-shadow-md:0 18px 48px rgba(6,17,46,.10);
- --sl-shadow-lg:0 28px 72px rgba(6,17,46,.14);
- --navy:var(--sl-navy);
- --navy2:var(--sl-navy-deep);
- --gold:var(--sl-navy);
- --ivory:var(--sl-canvas);
- --paper:var(--sl-white);
- --ink:var(--sl-ink);
- --muted:var(--sl-muted);
- --line:var(--sl-line);
- --brand-primary:var(--sl-navy);
- --brand-deep:var(--sl-navy-deep);
- --canvas:var(--sl-canvas);
+  --sl-navy:#051945;--sl-white:#FFFFFF;--sl-mist:#E9EDF5;--sl-steel:#3D5185;--sl-sky:#8FA6D6;
+  --sl-ink:#101828;--sl-muted:#667085;--sl-line:#D9DFEA;--sl-canvas:#F7F9FC;
+  --sl-deep:#030F2B;--sl-success:#16845B;--sl-warning:#B66A0A;--sl-critical:#C43D3D;--sl-info:#2864B4;
+  --navy:var(--sl-navy);--navy2:var(--sl-deep);--gold:var(--sl-navy);--ivory:var(--sl-canvas);
+  --paper:var(--sl-white);--ink:var(--sl-ink);--muted:var(--sl-muted);--line:var(--sl-line);
+  --brand-primary:var(--sl-navy);--brand-deep:var(--sl-deep);--brand-800:var(--sl-navy);
+  --brand-600:var(--sl-steel);--brand-300:var(--sl-sky);--brand-100:var(--sl-mist);
+  --brand-50:var(--sl-canvas);--canvas:var(--sl-canvas);
+  --sl-shadow:0 18px 50px rgba(5,25,69,.08);--sl-shadow-strong:0 28px 72px rgba(5,25,69,.13)
 }
-html[lang="ar"] body,body:has([dir="rtl"]){font-family:'Noto Sans Arabic',Inter,Tahoma,Arial,sans-serif}
+html[dir="rtl"] body,html[lang="ar"] body,body:has([dir="rtl"]){font-family:'Noto Sans Arabic',Inter,Tahoma,Arial,sans-serif}
+html[dir="ltr"] body{font-family:Inter,'Noto Sans Arabic',Arial,sans-serif}
+body{background:var(--sl-canvas);color:var(--sl-ink)}
 button,input,textarea,select{font-family:inherit}
-:focus-visible{outline:3px solid rgba(39,70,122,.32);outline-offset:3px}
+:focus-visible{outline:3px solid rgba(61,81,133,.32);outline-offset:3px}
 ::selection{background:var(--sl-navy);color:#fff}
-.site-header,.buyer-top,.chat-top{background:rgba(6,17,46,.98);border-color:rgba(255,255,255,.12)}
-.site-header .brand img,.buyer-brand img,.chat-logo img,.di-nav .brand img{height:auto;object-fit:contain}
-.primary-link,.nav-actions>a,.chat-send{background:var(--sl-navy)!important;color:#fff!important}
-.secondary-link{background:#fff;color:var(--sl-navy);border:1px solid var(--sl-line)}
-.action-card,.profile-card,.empty-state,.document-list,.terms-grid,.qualified-card,.feed-context-card{border-color:var(--sl-line);box-shadow:var(--sl-shadow-sm)}
-.kicker,.section-intro small,.profile-card small,.action-card small,.di-grid span,.di-cards small{color:var(--sl-navy-600)}
-.di{font-family:Inter,'Noto Sans Arabic',Arial,sans-serif}
-.di-nav{background:#fff;position:sticky;top:0;z-index:15}
-.di-hero h1 em{color:var(--sl-navy-600)}
-.di-strip,.di-dark{background:var(--sl-navy-deep)}
-.di-strip span,.di-grid span,.di-cards small{color:var(--sl-navy-300)}
-.di-close{background:var(--sl-navy-50);border-top:1px solid var(--sl-line)}
-.di-close .kicker{color:var(--sl-navy-600)}
-.di-close a{background:var(--sl-navy);color:#fff}
-.chat-ai{background:var(--sl-canvas)}
-.chat-composer,.qualified-card,.feed-context-card{border-radius:var(--sl-radius-md)}
-.chat-composer{box-shadow:var(--sl-shadow-md)}
-@media(max-width:640px){
- .shell{width:calc(100% - 28px)}
- .di-hero h1{font-size:clamp(44px,14vw,60px)}
- .di-nav{height:72px}
- .di-nav .brand img{width:132px}
- .di-nav>div{gap:10px}
- .di-nav a:last-child{padding:10px 12px}
+
+/* Never alter master logo artwork in UI. */
+.brand img,.product-brand img,.v3-brand img,.buyer-brand img,.chat-logo img,.di-nav .brand img,.footer-brand img{
+  filter:none!important;transform:none!important;mix-blend-mode:normal!important;object-fit:contain;height:auto
 }
 
+/* Global chrome — quiet white canvas, unmistakable SEPTLION navy actions. */
+.site-header,.product-top,.discover-top,.v3-top,.buyer-top,.chat-top,.di-nav{
+  background:rgba(255,255,255,.97)!important;color:var(--sl-navy)!important;
+  border-bottom:1px solid var(--sl-line)!important;box-shadow:none!important;backdrop-filter:blur(14px)
+}
+.product-top,.discover-top,.v3-top{min-height:80px;padding:0 max(24px,calc((100vw - 1180px)/2))}
+.site-header nav,.site-header .nav-actions button,.product-top nav a,.v3-top nav a,.product-muted,.product-account,.v3-actions>a{color:var(--sl-navy)!important}
+.site-header nav a:after,.product-top nav a.active:after,.v3-top nav a.active:after{background:var(--sl-navy)!important}
+.product-brand img,.v3-brand img{width:164px}
+.chat-logo img{width:148px!important}
+.v3-ask,.v1-home-ai,.primary-link,.nav-actions>a,.chat-send,.home-composer b,.v1-primary,.v1-choice button.selected{
+  background:var(--sl-navy)!important;color:#fff!important;border-color:var(--sl-navy)!important;border-radius:0!important
+}
 
-/* SEPTLION Identity Application — Master Brand Kit canonical application */
-.product-home,.v1-app,.buyer-app,.chat-ai{background:#F7F8FA;color:#111318;font-family:'Noto Sans Arabic',Inter,Tahoma,Arial,sans-serif}
-.product-top,.discover-top,.v3-top{min-height:80px;padding:0 max(24px,calc((100vw - 1180px)/2));background:#fff!important;color:#051945!important;border-bottom:1px solid #E1E4E9!important;box-shadow:none!important}
-.product-brand img,.v3-brand img{width:164px;height:auto;display:block}
-.product-top nav a,.v3-top nav a,.product-muted,.product-account,.v3-actions>a{color:#051945!important;opacity:.62}
-.product-top nav a.active,.product-top nav a:hover,.v3-top nav a.active,.v3-top nav a:hover{opacity:1}
-.product-top nav a.active:after,.v3-top nav a.active:after{background:#051945!important}
-.v3-ask,.v1-home-ai{background:#051945!important;color:#fff!important;border-radius:0!important;font-weight:800}
-.product-hero{width:min(1180px,calc(100% - 48px));margin:auto;padding:96px 0 64px}
-.product-hero-copy{max-width:790px}
-.product-hero-copy small,.home-section-title small,.v1-section-head small,.v2-config-head small{color:#27467A!important;font-weight:800;letter-spacing:.16em}
-.product-hero h1{color:#06112E;font-size:clamp(58px,8vw,104px);line-height:.95;letter-spacing:-.055em;margin:16px 0 22px}
-.product-hero-copy p{max-width:680px;font-size:17px;line-height:1.9;color:#5D6470}
-.home-composer{margin-top:36px!important;background:#fff!important;border:1px solid #E1E4E9!important;border-radius:0!important;box-shadow:0 18px 48px rgba(6,17,46,.10)!important;min-height:112px!important}
-.home-composer b{background:#051945!important;color:#fff!important}
-.home-starts button{border-color:#E1E4E9!important;background:#fff!important;color:#051945!important}
-.home-work,.home-discover{width:min(1180px,calc(100% - 48px));margin:auto;padding:72px 0!important}
-.home-work{border-top:1px solid #E1E4E9}
-.home-section-title h2,.v1-section-head h1,.section-intro h1{color:#06112E}
-.home-empty,.home-recents>a,.home-categories>a{background:#fff!important;border:1px solid #E1E4E9!important;border-radius:0!important;box-shadow:none!important}
-.home-empty>a,.home-recents span,.home-categories>a span{color:#051945!important}
-.product-footer{background:#06112E!important;color:#fff!important;border:0!important}
-.product-footer p{color:#91A5C8!important}
-.v1-tabs{background:#fff!important;border-bottom:1px solid #E1E4E9!important}
-.v1-tabs button.active{color:#051945!important;border-color:#051945!important}
-.v1-feed{width:min(1180px,calc(100% - 48px));margin:auto}
-.v1-section-head{padding:68px 0 34px!important}
-.v1-product{background:#fff!important;border:1px solid #E1E4E9!important;box-shadow:none!important}
-.v1-product-visual{background:#06112E!important;color:#fff!important}
-.v1-bag{background:#051945!important;color:#fff!important;border-color:rgba(255,255,255,.22)!important}
-.v1-bag span,.v1-bag small,.v1-bag em{color:#E8EDF5!important}
-.v1-primary,.v1-choice button.selected{background:#051945!important;color:#fff!important;border-color:#051945!important}
-.v1-scale-line,.v1-scale i{background:#051945!important}.v1-scale-current{color:#051945!important}
-.v1-sheet{border-radius:0!important;box-shadow:0 28px 72px rgba(6,17,46,.14)!important}
-.v3-context{background:#fff!important;border-bottom:1px solid #E1E4E9!important}.v3-context small{color:#27467A!important}
-.v3-body{width:min(1180px,calc(100% - 48px));margin:auto}.buyer-section{padding-top:64px!important;padding-bottom:80px!important}
-.profile-card,.action-card,.settings-list,.empty-state,.document-list,.terms-grid{border-radius:0!important;box-shadow:none!important}
-.profile-card{background:#fff!important;color:#111318!important;border-top:4px solid #051945!important}.profile-card p{color:#5D6470!important}.avatar{background:#051945!important;color:#fff!important}
-.action-card{background:#fff!important}.action-card input{border-radius:0!important;background:#F5F7FB!important}.terms-grid>div{background:#fff!important}.terms-grid b{color:#051945!important}
-.chat-top{background:#fff!important;color:#051945!important;min-height:72px;border-bottom:1px solid #E1E4E9!important}
-.chat-logo img{width:148px!important;height:auto}.chat-top button{background:#fff!important;color:#051945!important;border-color:#E1E4E9!important}
-.chat-welcome-logo{width:190px!important;margin-bottom:30px}.chat-welcome h1{color:#06112E!important;font-size:clamp(44px,7vw,68px)!important}
-.chat-composer{border-radius:0!important;border-color:#E1E4E9!important;box-shadow:0 18px 48px rgba(6,17,46,.10)!important}
-.chat-msg.user>div{background:#E8EDF5!important;color:#06112E!important}.qualified-card{border-radius:0!important;border-right:4px solid #051945!important}
-@media(max-width:700px){.product-top,.discover-top,.v3-top{min-height:68px;padding:0 14px}.product-brand img,.v3-brand img{width:138px}.product-hero,.v1-feed,.v3-body,.home-work,.home-discover{width:calc(100% - 28px)}.product-hero{padding:64px 0 44px}.product-hero h1{font-size:54px}.home-composer{min-height:96px!important}.v1-section-head{padding-top:46px!important}.buyer-section{padding-top:42px!important}}
+/* Home — editorial B2B hierarchy instead of generic app styling. */
+.product-home,.v1-app,.buyer-app,.chat-ai{background:var(--sl-canvas);color:var(--sl-ink)}
+.product-hero{width:min(1180px,calc(100% - 48px));margin:auto;padding:104px 0 72px}
+.product-hero-copy{max-width:820px}
+.product-hero h1{color:var(--sl-deep);font-size:clamp(58px,8vw,106px);line-height:.94;letter-spacing:-.058em;margin:16px 0 24px}
+.product-hero-copy p{max-width:700px;font-size:17px;line-height:1.9;color:var(--sl-muted)}
+.product-hero-copy small,.home-section-title small,.v1-section-head small,.v2-config-head small,.v3-context small{
+  color:var(--sl-steel)!important;font-weight:800;letter-spacing:.16em
+}
+.home-composer{margin-top:38px!important;background:#fff!important;border:1px solid var(--sl-line)!important;border-top:4px solid var(--sl-navy)!important;border-radius:0!important;box-shadow:var(--sl-shadow)!important;min-height:116px!important}
+.home-starts button{border-color:var(--sl-line)!important;background:#fff!important;color:var(--sl-navy)!important;border-radius:0!important}
+.home-work,.home-discover{width:min(1180px,calc(100% - 48px));margin:auto;padding:76px 0!important}
+.home-work{border-top:1px solid var(--sl-line)}
+.home-section-title h2,.v1-section-head h1,.section-intro h1{color:var(--sl-deep)}
+.home-empty,.home-recents>a,.home-categories>a{background:#fff!important;border:1px solid var(--sl-line)!important;border-radius:0!important;box-shadow:none!important}
+.home-empty>a,.home-recents span,.home-categories>a span{color:var(--sl-navy)!important}
+.product-footer{background:var(--sl-deep)!important;color:#fff!important;border:0!important}.product-footer p{color:var(--sl-sky)!important}
+
+/* Discover / product feed. */
+.v1-tabs{background:#fff!important;border-bottom:1px solid var(--sl-line)!important}
+.v1-tabs button.active{color:var(--sl-navy)!important;border-color:var(--sl-navy)!important}
+.v1-feed,.v3-body{width:min(1180px,calc(100% - 48px));margin:auto}
+.v1-section-head{padding:72px 0 36px!important}
+.v1-product{background:#fff!important;border:1px solid var(--sl-line)!important;border-radius:0!important;box-shadow:none!important}
+.v1-product-visual{background:var(--sl-deep)!important;color:#fff!important}
+.v1-bag{background:var(--sl-navy)!important;color:#fff!important;border-color:rgba(255,255,255,.22)!important}
+.v1-bag span,.v1-bag small,.v1-bag em{color:var(--sl-mist)!important}
+.v1-scale-line,.v1-scale i{background:var(--sl-navy)!important}.v1-scale-current{color:var(--sl-navy)!important}
+.v1-sheet{border-radius:0!important;box-shadow:var(--sl-shadow-strong)!important}
+
+/* Buyer trade journey — one visual language across Request → Reorder. */
+.v3-context{background:#fff!important;border-bottom:1px solid var(--sl-line)!important}
+.buyer-section{padding-top:68px!important;padding-bottom:84px!important}
+.profile-card,.action-card,.settings-list,.empty-state,.document-list,.terms-grid,.qualified-card,.feed-context-card{
+  border-radius:0!important;box-shadow:none!important;border-color:var(--sl-line)!important
+}
+.profile-card,.action-card,.terms-grid>div{background:#fff!important}
+.profile-card{color:var(--sl-ink)!important;border-top:4px solid var(--sl-navy)!important}
+.profile-card p{color:var(--sl-muted)!important}.avatar{background:var(--sl-navy)!important;color:#fff!important}
+.action-card input{border-radius:0!important;background:var(--sl-canvas)!important}.terms-grid b{color:var(--sl-navy)!important}
+
+/* AI Composer — branded but deliberately restrained. */
+.chat-ai{background:var(--sl-canvas)!important}
+.chat-top{min-height:72px}
+.chat-top button{background:#fff!important;color:var(--sl-navy)!important;border-color:var(--sl-line)!important}
+.chat-welcome-logo{width:190px!important;margin-bottom:30px;filter:none!important}
+.chat-welcome h1{color:var(--sl-deep)!important;font-size:clamp(44px,7vw,68px)!important}
+.chat-mark,.chat-avatar{background:var(--sl-navy)!important;border-radius:0!important}
+.chat-composer{border-radius:0!important;border:1px solid var(--sl-line)!important;border-top:3px solid var(--sl-navy)!important;box-shadow:var(--sl-shadow)!important}
+.chat-msg.user>div{background:var(--sl-mist)!important;color:var(--sl-deep)!important;border-radius:0!important}
+.qualified-card{border-right:4px solid var(--sl-navy)!important}
+
+/* Intelligence and operator surfaces use brand palette, semantic colors remain functional only. */
+.di{background:#fff;color:var(--sl-ink)}
+.di-hero h1 em,.di-row strong,.di-grid span,.di-cards small{color:var(--sl-steel)!important}
+.di-strip,.di-dark,.dw-dark,.dc-dark,.dc-top{background:var(--sl-deep)!important}
+.di-strip span{color:var(--sl-sky)!important}
+.di-close{background:var(--sl-mist)!important;border-top:1px solid var(--sl-line)}
+.dw-priority,.dc-approvals .primary{background:var(--sl-navy)!important;color:#fff!important}
+
+@media(max-width:700px){
+  .product-top,.discover-top,.v3-top{min-height:68px;padding:0 14px}
+  .product-brand img,.v3-brand img{width:138px}
+  .product-hero,.v1-feed,.v3-body,.home-work,.home-discover{width:calc(100% - 28px)}
+  .product-hero{padding:64px 0 46px}.product-hero h1{font-size:54px}
+  .home-composer{min-height:98px!important}.v1-section-head{padding-top:48px!important}.buyer-section{padding-top:44px!important}
+}
