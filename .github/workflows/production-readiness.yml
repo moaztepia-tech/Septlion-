@@ -44,3 +44,13 @@ jobs:
         run: pnpm --filter @septlion/web typecheck
       - name: Web production build
         run: pnpm --filter @septlion/web build
+      - name: Verify production route exports
+        run: |
+          set -euo pipefail
+          for route in index discover require requests account notifications documents operations analytics request offer commit execution receive reorder maritime-rfq demand-intelligence; do
+            if [ "$route" = "index" ]; then
+              test -f apps/web/out/index.html
+            else
+              test -f "apps/web/out/$route.html" || test -f "apps/web/out/$route/index.html"
+            fi
+          done
