@@ -3,6 +3,7 @@ import './globals.css';
 import './platform-v1.css';
 import './intelligence.css';
 import './offer-workspace.css';
+import './trade-workspace.css';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
@@ -33,3 +34,4 @@ export const viewport = {themeColor:'#051945'};
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body>{children}</body></html>;
 }
+

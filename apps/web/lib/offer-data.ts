@@ -1,4 +1,5 @@
 import{edge,accessToken}from'./api';
 export type BuyerOffer={id:string;requirementId:string;rfqId:string;status:string;currency:string;validUntil:string|null;currentRevision:number;revision?:{id:string;revisionNo:number;snapshot:any}|null;revisions?:Array<{id:string;revisionNo:number;snapshot:any}>};
 export async function offerForRequirement(id:string){if(!accessToken())return null;try{const r=await edge<{items:BuyerOffer[]}>('offers.list');const o=r.items.find(x=>x.requirementId===id);if(!o)return null;const d=await edge<{item:BuyerOffer;revision:any}>('offers.get',{id:o.id});return{...d.item,revision:d.revision,revisions:d.revision?[d.revision]:[]}}catch{return null}}
-export async function acceptBuyerOffer(id:string){if(!accessToken())throw new Error('يلزم تسجيل الدخول');return edge<{transactionId:string;reference:string}>('offers.accept',{offerId:id})}
+export async function acceptBuyerOffer(id:string,revision:number,mode:'TEST'|'COMMERCIAL'){if(!accessToken())throw new Error('يلزم تسجيل الدخول');return edge<{transactionId:string;reference:string}>('offers.accept',{offerId:id,revision,mode})}
+

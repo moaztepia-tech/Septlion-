@@ -566,6 +566,8 @@ model CommercialDocument {
   sha256                   String
   status                   DocumentStatus      @default(PENDING)
   visibilityToCounterparty Boolean             @default(false)
+  kind                     String              @default("OTHER")
+  idempotencyKey           String?             @unique
   organization             Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   uploadedBy               User                @relation("DocumentUploader", fields: [uploadedById], references: [id])
   createdAt                DateTime            @default(now())
@@ -1000,6 +1002,7 @@ model TradeTransaction {
   buyerOrgId       String
   supplierOrgId    String
   status           TradeTransactionStatus @default(PENDING_COMMIT)
+  testOnly         Boolean                @default(false)
   version          Int                    @default(1)
   commercialLock   CommercialLock         @relation(fields: [commercialLockId], references: [id], onDelete: Restrict)
   events           TradeEvent[]
