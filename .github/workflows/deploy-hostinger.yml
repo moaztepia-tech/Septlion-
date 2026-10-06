@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: septlion-production
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -144,6 +144,8 @@ jobs:
           port: 21
           local-dir: deploy/
           server-dir: /domains/septlion.com/public_html/
-          dangerous-clean-slate: true
+          # Preserve the live files while publishing the next build.
+          dangerous-clean-slate: false
 
 # deployment trigger: production-route-republish-2026-10-04
+
