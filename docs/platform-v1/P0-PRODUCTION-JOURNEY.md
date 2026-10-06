@@ -17,11 +17,23 @@ The two migration filenames use the versions returned by the production Supabase
 3. The server provisions a buyer profile and organization.
 4. An explicitly non-commercial TEST requirement qualifies, saves, and opens its request page.
 5. Reloading the request and opening Trade reads the same persisted requirement and its OPEN RFQ.
-6. The current account has BUYER membership, with zero operator memberships. The operator dashboard denies access as intended.
+6. Before operator enrollment, the account had BUYER membership and the operator dashboard denied access as intended.
+
+## Approved operator enrollment
+The account owner explicitly approved operator access on 2026-10-06. The verified Auth account associated with the existing TEST requirement received a second SALES membership in the active Septlion operator organization. Its original BUYER membership remains intact. An AuditLog record identifies the account, new membership, approval source and operational scope. No account identifiers or enrollment seeds are committed as a migration.
+
+The production operations page was verified to open successfully after enrollment.
+
+## Offer and document implementation
+- Operations reads Septlion's RFQ queue and saved requirement, then issues a validated offer through the authenticated Edge API.
+- The server enforces operator membership, Septlion RFQ ownership, valid line items/terms/expiry, supplier evidence for real offers and an idempotency key. Retrying the same saved payload returns the existing offer; changed retries conflict.
+- TEST status derives from the persisted requirement, not client-supplied flags. TEST offers and documents are explicitly non-commercial and non-binding.
+- The document endpoint checks buyer ownership or Septlion operator membership and loads the saved revision. PDF content omits exclusive classification labels and internal supplier evidence.
+- The Arabic document preview supports a high-resolution image PDF download with pagination and a browser print view for selectable-text PDF. It uses the existing Cairo font and original master artwork. No new dependency, paid PDF service or external messaging is introduced.
+- The deployment workflow includes the authenticated offer-document route. The new regression suite covers input validation, request replay, cross-buyer access, operator authorization and PDF structure.
 
 Database access regression checks are in `supabase/tests/trade_api_runtime_access.sql`; they do not modify business data.
 
 ## Still pending
-- Decide which verified account is the Septlion operator. Do not silently elevate a buyer account.
 - Issue a TEST-only offer and verify its document in an authorized operator session.
 - Verify commitment, execution, receipt and reorder with a clearly separated non-commercial test case. No real shipment, delivery, payment or completed transaction has been recorded in this test.

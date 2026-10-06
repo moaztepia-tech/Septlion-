@@ -39,6 +39,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Auth session and safe return-path regression tests
         run: node --test tests/auth-session.test.mjs
+      - name: Offer validation, retry and PDF regression tests
+        run: node --test tests/offer-document.test.mjs
       - name: Prisma validate
         working-directory: apps/api
         run: pnpm exec prisma validate
