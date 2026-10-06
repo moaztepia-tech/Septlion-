@@ -24,18 +24,19 @@ const qtyLabel=(c)=>{
  return c?.quantity||'Commercial / FCL volume';
 };
 
-const shellCss=`
-:root{--ink:#071833;--navy:#071b3c;--gold:#cba24a;--muted:#64748b;--line:#e6e9ef;--soft:#f6f7f9}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}
-a{color:inherit}.shell{width:min(1120px,calc(100% - 36px));margin:auto}.nav{height:78px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
-.brand{font-weight:900;letter-spacing:.12em}.nav small{font-size:10px;letter-spacing:.12em;color:var(--muted)}
-.hero{padding:72px 0 46px}.kicker{font-size:10px;font-weight:800;letter-spacing:.16em;color:var(--gold);text-transform:uppercase}
-h1{font-size:clamp(38px,6vw,72px);line-height:.98;margin:15px 0 24px;letter-spacing:-.04em}h1 em{font-style:normal;color:var(--gold)}
-.lead{max-width:760px;font-size:18px;line-height:1.7;color:var(--muted)}.cta{display:inline-block;margin-top:26px;background:var(--navy);color:#fff;text-decoration:none;padding:15px 20px;font-weight:800}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin:28px 0 58px}.card{background:#fff;padding:24px}.card small{display:block;color:var(--muted);font-weight:800;font-size:9px;letter-spacing:.1em}.card b{display:block;margin-top:10px;font-size:20px}.card p{color:var(--muted);line-height:1.6;font-size:13px}
-.section{padding:54px 0}.section.soft{background:var(--soft)}h2{font-size:34px;margin:8px 0 14px}.copy{max-width:760px;color:var(--muted);line-height:1.8}.faq{display:grid;gap:10px;margin-top:28px}.faq article{background:#fff;border:1px solid var(--line);padding:18px}.faq h3{font-size:15px;margin:0 0 8px}.faq p{font-size:13px;color:var(--muted);margin:0;line-height:1.6}.footer{padding:32px 0;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
-.index-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0 60px}.index-card{border:1px solid var(--line);padding:20px;text-decoration:none}.index-card:hover{border-color:var(--gold)}.index-card h3{margin:8px 0;font-size:18px}.index-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
-@media(max-width:760px){.grid,.index-grid{grid-template-columns:1fr}.hero{padding-top:48px}.nav small{display:none}}
+// Consume the approved brand source used by the React interface.
+const brandTokens=await readFile(new URL('../apps/web/app/design-tokens.css',import.meta.url),'utf8');
+const shellCss=brandTokens+`
+*{box-sizing:border-box}body{margin:0;font:400 16px/1.75 var(--font-ui);color:var(--ink);background:var(--canvas)}
+a{color:inherit;text-decoration:none}:focus-visible{outline:3px solid var(--brand-steel);outline-offset:3px}.shell{width:min(var(--page-width),calc(100% - 64px));margin:auto}.nav{min-height:88px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line)}
+.brand img{display:block;width:144px;height:52px;object-fit:contain}.nav nav{display:flex;gap:20px;align-items:center;font-size:15px}.nav nav a{padding:12px 0}.nav small{font-size:13px;color:var(--muted)}
+.hero{padding:56px 0 40px}.kicker{font-size:13px;font-weight:600;color:var(--brand-steel)}
+h1{font-size:clamp(34px,5vw,56px);line-height:1.2;margin:16px 0 24px;letter-spacing:-.025em}h1 em{font-style:normal;color:var(--brand-steel)}
+.lead{max-width:800px;font-size:17px;color:var(--muted)}.cta{display:inline-flex;align-items:center;min-height:48px;margin-top:24px;background:var(--brand-primary);color:var(--surface);padding:12px 20px;font-weight:600;border-radius:var(--radius-control)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:24px 0 48px}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);padding:24px}.card small{display:block;color:var(--muted);font-size:13px}.card b{display:block;margin-top:12px;font-size:22px}.card p{color:var(--muted);font-size:15px}
+.section{padding:48px 0}.section.soft{background:var(--brand-mist)}h2{font-size:30px;margin:8px 0 16px}.copy{max-width:800px;color:var(--muted)}.faq{display:grid;gap:16px;margin-top:24px}.faq article{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);padding:24px}.faq h3{font-size:20px;margin:0 0 12px}.faq p{font-size:15px;color:var(--muted);margin:0}.footer{padding:24px 0;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.index-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:24px 0 48px}.index-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);padding:24px}.index-card:hover{border-color:var(--brand-sky)}.index-card h3{margin:12px 0;font-size:22px}.index-card p{margin:0;color:var(--muted);font-size:15px}
+@media(max-width:760px){.shell{width:calc(100% - 32px)}.grid,.index-grid{grid-template-columns:1fr}.hero{padding-top:32px}.nav{gap:16px;min-height:72px}.brand img{width:112px}.nav nav{gap:12px;font-size:14px}.nav small{display:none}.nav .nav-home{display:none}}
 `;
 
 const generated=[];
@@ -126,7 +127,7 @@ for(const p of pages){
 <script type="application/ld+json">${json(datasetSchema)}</script>
 <script type="application/ld+json">${json(faq)}</script>
 <style>${shellCss}</style></head><body>
-<header class="nav shell"><a class="brand" href="/">SEPTLION</a><small>DEMAND-LED SUPPLY · ${esc(p.market)}</small></header>
+<header class="nav shell"><a class="brand" href="/" aria-label="Septlion Home"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="144" height="52"></a><nav aria-label="Main navigation"><a class="nav-home" href="/">Home</a><a href="/discover">Discover</a><a href="/requests">Trade</a><a href="/require">Start a requirement</a></nav></header>
 <main>
 <section class="hero shell"><p class="kicker">Demand-led market route</p><h1>${esc(product)}<br><em>${esc(p.market)}</em></h1><p class="lead">${esc(description)}</p><a class="cta" href="${intent}">Request a supply offer ↗</a></section>
 <section class="shell"><div class="grid">
@@ -149,7 +150,7 @@ for(const p of pages){
 }
 
 const indexHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Market Demand Routes | Septlion Supply</title><meta name="description" content="Demand-led supply routes created from recent public B2B buying signals across markets."><link rel="canonical" href="https://www.septlion.com/demand/"><meta name="robots" content="index,follow"><style>${shellCss}</style></head><body>
-<header class="nav shell"><a class="brand" href="/">SEPTLION</a><small>LIVE DEMAND ROUTES</small></header>
+<header class="nav shell"><a class="brand" href="/" aria-label="Septlion Home"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="144" height="52"></a><nav aria-label="Main navigation"><a class="nav-home" href="/">Home</a><a href="/discover">Discover</a><a href="/requests">Trade</a><a href="/require">Start a requirement</a></nav></header>
 <main class="shell"><section class="hero"><p class="kicker">Find demand → attract demand</p><h1>What buyers are<br><em>asking for now.</em></h1><p class="lead">Market-specific supply pages generated from recent public B2B buying signals. Choose a route and submit the exact requirement to Septlion.</p></section>
 <div class="index-grid">${generated.map(p=>`<a class="index-card" href="/demand/${p.slug}/"><small>${esc(p.market)}</small><h3>${esc(p.product)}</h3><p>${esc(p.description)}</p></a>`).join('')}</div></main>
 <footer class="footer shell">Septlion LLC · Demand Intelligence · ${generated.length} live demand routes</footer></body></html>`;

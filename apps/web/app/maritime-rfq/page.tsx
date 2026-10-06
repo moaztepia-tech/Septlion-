@@ -3,6 +3,7 @@
 import {FormEvent, useEffect, useMemo, useRef, useState} from 'react';
 import {accessToken,edge} from '../../lib/api';
 import styles from './rfq.module.css';
+import {PlatformHeader} from '../../components/platform-header';
 
 type Level={code:string;name:string;term:string;min:number;max:number|null;description:string};
 const levels:Level[]=[
@@ -33,8 +34,8 @@ export default function MaritimeRfqPage(){
  async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{if(!accessToken()){sessionStorage.setItem('septlion_pending_maritime',JSON.stringify(form));window.location.href='/account?next=/maritime-rfq';return}idempotencyKey.current||=crypto.randomUUID();const data:any=await edge('maritime.create',{input:{customerName:form.customerName,company:form.company,email:form.email,phone:form.phone,containerCount:count,containerType:form.type,pol:form.pol,pod:form.pod,incoterm:form.incoterm,cargoType:form.cargo,shipDate:form.shipDate,grossWeight:form.weight?Number(form.weight):undefined,cbm:form.cbm?Number(form.cbm):undefined,finalDestinations:Number(form.destinations)||1,paymentTerm:form.payment,notes:form.notes,idempotencyKey:idempotencyKey.current}});setRfq({id:data.id,reference:data.reference});setServerPrice({min:Number(data.priceMin),max:Number(data.priceMax),validUntil:String(data.validUntil).slice(0,10)});sessionStorage.removeItem('septlion_pending_maritime');setSubmitted(true)}catch(e:any){setError(e?.message||'تعذر حفظ الطلب الملاحي')}finally{setBusy(false);setTimeout(()=>document.getElementById('result')?.scrollIntoView({behavior:'smooth'}),50)}}
  function printRfq(){window.print()}
  return <main dir={lang==='ar'?'rtl':'ltr'} className={styles.page}>
-  <header className={styles.header}><a href="/" className={styles.brand}><img src="/brand/septlion-header-white.png" alt="Septlion"/></a><div><span>{lang==='ar'?'مصفوفة سبتليون الملاحية':'Septlion Maritime Matrix'}</span><button onClick={()=>setLang(lang==='ar'?'en':'ar')}>{lang==='ar'?'EN':'العربية'}</button></div></header>
-  <section className={styles.hero}><div><small>MARITIME RFQ · S-1—S-7</small><h1>{lang==='ar'?'حوّل احتياجك الملاحي إلى طلب عرض منظم.':'Turn your shipping requirement into a structured RFQ.'}</h1><p>{lang==='ar'?'أدخل مسار الشحنة وحجمها. سنصنفها فورًا وننشئ نطاقًا تقديريًا صالحًا لمدة 7 أيام.':'Enter the route and volume. We classify it instantly and generate a 7-day indicative range.'}</p></div><Heptagon active={Number(level.code.slice(2))}/></section>
+  <PlatformHeader lang={lang} actions={<button className="platform-action" onClick={()=>setLang(lang==='ar'?'en':'ar')}>{lang==='ar'?'EN':'العربية'}</button>}/>
+  <section className={styles.hero}><div><small>MARITIME RFQ · S-1—S-7</small><h1>{lang==='ar'?'حوّل احتياجك الملاحي إلى طلب عرض منظم.':'Turn your shipping requirement into a structured RFQ.'}</h1><p>{lang==='ar'?'أدخل مسار الشحنة وحجمها. سنصنفها فورًا وننشئ نطاقًا تقديريًا صالحًا لمدة 7 أيام.':'Enter the route and volume. We classify it instantly and generate a 7-day indicative range.'}</p></div></section>
   <section className={styles.workspace}>
    <form className={styles.form} onSubmit={submit}>
     <div className={styles.formHead}><div><small>01 / RFQ INPUT</small><h2>{lang==='ar'?'بيانات طلب الشحن':'Shipment request'}</h2></div><b>{level.code}</b></div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {PlatformHeader} from '../../../components/platform-header';
 import RfqForm from '../RfqForm';
 
 export const metadata={
@@ -7,11 +8,8 @@ export const metadata={
 };
 
 export default function WheatFlourIntent(){
- return <main className="di">
-  <header className="di-nav shell">
-   <Link href="/" className="brand"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link>
-   <span>WHEAT FLOUR · COMMERCIAL SUPPLY</span>
-  </header>
+ return <main className="di" dir="ltr">
+  <PlatformHeader lang="en"/>
 
   <section className="di-hero shell">
    <p className="kicker">DEMAND-LED SUPPLY</p>

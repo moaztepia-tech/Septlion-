@@ -39,19 +39,19 @@ export function jpegPagesToPdf(pages:Uint8Array[],width:number,height:number):Ui
 
 export async function downloadOfferPdf(d:OfferDocument){
   const model=offerDocumentModel(d);await document.fonts.ready;
-  const loaded=await document.fonts.load('500 18px Cairo','عرض سعر سبتليون');
+  const loaded=await document.fonts.load('500 18px "Noto Sans Arabic"','عرض سعر سبتليون');
   if(!loaded.length)throw new Error('لم يكتمل تحميل الخط العربي. أعد المحاولة أو استخدم الطباعة.');
   const logo=await new Promise<HTMLImageElement>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('تعذر تحميل شعار المستند'));img.src='/brand/septlion-primary-navy.png'});
   const w=794,h=1123,scale=2,canvas=document.createElement('canvas');canvas.width=w*scale;canvas.height=h*scale;
   const ctx=canvas.getContext('2d');if(!ctx)throw new Error('تعذر تجهيز المستند');ctx.scale(scale,scale);
   const pages:Uint8Array[]=[];let y=0,pageNo=1;
-  const line=(value:string,x:number,pos:number,size=15,bold=false,rtl=true)=>{ctx.font=(bold?'700':'500')+' '+size+'px Cairo';ctx.direction=rtl?'rtl':'ltr';ctx.textAlign=rtl?'right':'left';ctx.fillStyle='#051945';ctx.fillText(value,x,pos)};
+  const line=(value:string,x:number,pos:number,size=15,bold=false,rtl=true)=>{ctx.font=(bold?'700':'500')+' '+size+'px "Noto Sans Arabic"';ctx.direction=rtl?'rtl':'ltr';ctx.textAlign=rtl?'right':'left';ctx.fillStyle='#051945';ctx.fillText(value,x,pos)};
   const logoWidth=Math.min(185,100*logo.naturalWidth/logo.naturalHeight);
   const start=()=>{ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(logo,50,42,logoWidth,logoWidth*logo.naturalHeight/logo.naturalWidth);line(model.testOnly?'عرض TEST غير ملزم':'عرض سعر',744,88,26,true);line('SEPTLION',744,123,13,true);ctx.fillStyle='#051945';ctx.fillRect(50,159,694,3);line(model.reference,50,189,10,false,false);y=230};
   const finish=async()=>{ctx.fillStyle='#D9DFEA';ctx.fillRect(50,1063,694,1);line('septlion.com · '+pageNo,50,1090,11,false,false);line(model.testOnly?'TEST — اختبار غير تجاري':'نسخة من العرض المحفوظ',744,1090,11);const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('تعذر تجهيز صفحة PDF')),'image/jpeg',0.94));pages.push(new Uint8Array(await blob.arrayBuffer()))};
   const wrap=(value:string,max:number)=>{const lines:string[]=[];let current='';for(const word of value.split(/\s+/)){const joined=current?current+' '+word:word;if(ctx.measureText(joined).width<=max){current=joined;continue}if(current)lines.push(current);current='';for(const character of word){if(ctx.measureText(current+character).width>max&&current){lines.push(current);current=''}current+=character}}if(current)lines.push(current);return lines.length?lines:['—']};
   start();
-  for(const [label,value]of model.rows){ctx.font='500 15px Cairo';const lines=wrap(value,520);
+  for(const [label,value]of model.rows){ctx.font='500 15px "Noto Sans Arabic"';const lines=wrap(value,520);
     if(y+54>1040){await finish();pageNo++;start()}
     line(label,744,y,12,true);
     for(const valueLine of lines){if(y+28>1040){await finish();pageNo++;start();line(label+' — تابع',744,y,12,true)}line(valueLine,580,y,15);y+=27}y+=19;

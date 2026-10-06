@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import {PlatformHeader} from '../../../components/platform-header';
 import {useEffect,useState} from 'react';
 import RfqForm from '../RfqForm';
 
@@ -25,17 +26,17 @@ export default function DemandIntentPage(){
    .catch(()=>setPage(null));
  },[]);
 
- if(page===undefined)return <main className="di"><div className="shell di-section"><p className="kicker">INTENT PAGE</p><h2>Loading demand route…</h2></div></main>;
+ if(page===undefined)return <main className="di" dir="ltr"><PlatformHeader lang="en"/><div className="shell di-section"><p className="kicker">INTENT PAGE</p><h2>Loading demand route…</h2></div></main>;
 
- if(!page)return <main className="di">
-  <header className="di-nav shell"><Link href="/" className="brand"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link><span>DEMAND ROUTE</span></header>
+ if(!page)return <main className="di" dir="ltr">
+  <PlatformHeader lang="en"/>
   <section className="di-hero shell"><p className="kicker">NOT PUBLISHED</p><h1>This demand route<br/><em>is not public.</em></h1><p>The requested intent page is unavailable or still under internal qualification.</p><div className="di-actions"><Link href="/intent/wheat-flour">Wheat Flour RFQ →</Link></div></section>
  </main>;
 
  const product=page.content?.product||page.title;
 
- return <main className="di">
-  <header className="di-nav shell"><Link href="/" className="brand"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link><span>DEMAND ROUTE · {page.market}</span></header>
+ return <main className="di" dir="ltr">
+  <PlatformHeader lang="en"/>
 
   <section className="di-hero shell">
    <p className="kicker">MARKET-SPECIFIC SUPPLY INTENT</p>
