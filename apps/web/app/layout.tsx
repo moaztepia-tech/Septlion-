@@ -1,5 +1,7 @@
+import './design-tokens.css';
 import './globals.css';
 import './platform-v1.css';
+import './intelligence.css';
 import './offer-workspace.css';
 
 export const metadata = {
@@ -20,14 +22,14 @@ export const metadata = {
   },
   robots: { index: true, follow: true },
   icons: {
-    icon: '/brand/app-icon-rounded.svg',
-    shortcut: '/brand/app-icon-rounded.svg',
-    apple: '/brand/app-icon-rounded.svg',
+    icon: [{url:'/favicon.ico'}, {url:'/brand/app-icon-rounded.svg',type:'image/svg+xml'}],
+    shortcut: '/favicon.ico',
+    apple: '/brand/apple-touch-icon.png',
   },
-  themeColor: '#051945',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="ar" dir="rtl"><body>{children}</body></html>;
-}
+export const viewport = {themeColor:'#051945'};
 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body>{children}</body></html>;
+}

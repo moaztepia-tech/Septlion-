@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {PlatformHeader} from '../../components/platform-header';
 import DemandRadar from './DemandRadar';
 
 const pipeline=['Detect demand','Extract requirement','Resolve buyer','Qualify opportunity','Build exact offer','Attract matching demand','Convert to RFQ'];
@@ -6,8 +7,8 @@ const pipeline=['Detect demand','Extract requirement','Resolve buyer','Qualify o
 export const metadata={title:'Septlion Demand Intelligence — Tenders, RFQs & Auctions',description:'Demand intelligence for tenders, RFQs and auctions. Detect demand, qualify opportunities and turn intent into executable supply briefs.'};
 
 export default function DemandIntelligence(){
- return <main className="di">
-  <header className="di-nav shell"><Link href="/" className="brand"><img src="/brand/septlion-primary-navy.png" alt="Septlion"/></Link><div><span>DEMAND INTELLIGENCE</span><Link href="/require">ابدأ طلبًا ↗</Link></div></header>
+ return <main className="di" dir="ltr">
+  <PlatformHeader lang="en"/>
   <section className="di-hero shell"><p className="kicker">SEPTLION DEMAND INTELLIGENCE ENGINE</p><h1>Find demand.<br/>Predict demand.<br/><em>Attract demand.</em></h1><p>Public buying requests become demand clusters, market-specific search pages and live RFQ routes — so matching buyers can discover Septlion from the requirement itself.</p><div className="di-actions"><Link href="/demand/">Open live demand routes ↗</Link><a href="#radar">Open demand radar ↓</a></div></section>
   <section className="di-strip"><div className="shell">{pipeline.map((x,i)=><div key={x}><span>0{i+1}</span><b>{x}</b></div>)}</div></section>
   <section id="radar" className="di-section shell"><div className="di-head"><div><p className="kicker">LIVE OPERATING VIEW</p><h2>Demand Radar</h2></div><p>The first implementation is focused on wheat flour. Signals are treated as leads until independently verified; the engine separates detection from verification.</p></div>

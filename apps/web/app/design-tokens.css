@@ -1,0 +1,39 @@
+/* SEPTLION Master Brand Reference v1, approved 2026-10-05.
+   Change brand values here; do not add page-level palettes. */
+@font-face { font-family: 'Noto Sans Arabic'; src: url('/fonts/NotoSansArabic-Regular.woff') format('woff'); font-style: normal; font-weight: 400 500; font-display: swap; }
+@font-face { font-family: 'Noto Sans Arabic'; src: url('/fonts/NotoSansArabic-Bold.woff') format('woff'); font-style: normal; font-weight: 600 800; font-display: swap; }
+@font-face { font-family: Inter; src: url('/fonts/InterVariable.woff2') format('woff2'); font-style: normal; font-weight: 100 900; font-display: swap; }
+:root {
+  --brand-primary: #051945;
+  --brand-deep: #06112e;
+  --brand-steel: #3d5185;
+  --brand-sky: #8fa6d6;
+  --brand-mist: #e9edf5;
+  --canvas: #f7f8fa;
+  --surface: #ffffff;
+  --ink: #111318;
+  --muted: #5d6470;
+  --line: #e1e4e9;
+  --success: #16845b;
+  --success-surface: #edf7f2;
+  --warning: #996000;
+  --warning-surface: #fff7e8;
+  --critical: #b83232;
+  --critical-surface: #fff1f1;
+  --font-ui: Inter, 'Noto Sans Arabic', Arial, sans-serif;
+  --font-ar: 'Noto Sans Arabic', Arial, sans-serif;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-panel: 20px;
+  --shadow-panel: 0 8px 28px rgb(5 25 69 / 5%);
+  --page-width: 1184px;
+  --header-height: 88px;
+  --motion: 180ms;
+}

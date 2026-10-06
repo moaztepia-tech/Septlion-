@@ -3,6 +3,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {accessToken} from '../../../lib/api';
 import Link from 'next/link';
+import {PlatformHeader} from '../../../components/platform-header';
 
 type QueueItem={
  taskId:string;taskType:string;taskStatus:string;priority:number;dueAt?:string|null;
@@ -145,13 +146,10 @@ export default function DemandWorkbench(){
 
  const sorted=useMemo(()=>[...(data?.queue||[])].sort((a,b)=>(b.priority-a.priority)||((a.dueAt||'9999').localeCompare(b.dueAt||'9999'))),[data]);
 
- if(!data)return <main className="dw-login" dir="rtl"><div className="dw-login-card"><Link href="/demand-intelligence" className="dw-wordmark">SEPTLION · DEMAND INTELLIGENCE</Link><p className="kicker">INTERNAL OPERATOR WORKBENCH</p><h1>لوحة تشغيل محرك الطلب</h1><p>{error||'جارٍ التحقق من صلاحية حساب SEPTLION…'}</p><Link href="/account?next=/demand-intelligence/workbench"><button>تسجيل الدخول</button></Link></div></main>;
+ if(!data)return <main className="dw-login" dir="rtl"><PlatformHeader/><div className="dw-login-body"><div className="dw-login-card"><Link href="/demand-intelligence" className="dw-wordmark">SEPTLION · DEMAND INTELLIGENCE</Link><p className="kicker">INTERNAL OPERATOR WORKBENCH</p><h1>لوحة تشغيل محرك الطلب</h1><p>{error||'جارٍ التحقق من صلاحية حساب SEPTLION…'}</p><Link href="/account?next=/demand-intelligence/workbench"><button>تسجيل الدخول</button></Link></div></div></main>;
 
  return <main className="dw" dir="rtl">
-  <header className="dw-top shell">
-   <div><Link href="/demand-intelligence" className="dw-wordmark">SEPTLION · DEMAND INTELLIGENCE</Link><small>INTERNAL WORKBENCH</small></div>
-   <div className="dw-top-actions"><span>{data.operator}</span><button onClick={enablePush} disabled={pushState==='working'}>{pushState==='enabled'?'التنبيهات مفعلة':pushState==='working'?'جارٍ التفعيل…':'تفعيل تنبيهات RFQ'}</button><Link href="/account">الحساب</Link></div>
-  </header>
+  <PlatformHeader showOperations actions={<div className="dw-top-actions"><span>{data.operator}</span><button className="platform-action" onClick={enablePush} disabled={pushState==='working'}>{pushState==='enabled'?'التنبيهات مفعلة':pushState==='working'?'جارٍ التفعيل…':'تفعيل تنبيهات RFQ'}</button><Link className="platform-action" href="/account">الحساب</Link></div>}/>
 
   <section className="dw-hero shell">
    <p className="kicker">BUYER FIRST · SIGNAL → BUYER → INTENT → RFQ</p>
