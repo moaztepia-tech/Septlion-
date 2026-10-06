@@ -92,8 +92,10 @@ async function refreshSession(expected: StoredSession, rejectedToken?: string): 
   };
   // Web Locks serialize rotation across tabs. The promise also deduplicates
   // requests within this tab on browsers without Web Locks.
-  const promise = typeof navigator !== 'undefined' && navigator.locks
-    ? navigator.locks.request('septlion-auth-refresh', run) : run();
+  const promise: Promise<string> = (async () => {
+    if (typeof navigator !== 'undefined' && navigator.locks) return await navigator.locks.request('septlion-auth-refresh', run);
+    return run();
+  })();
   const pending = { key: expected.session_key, promise };
   refreshing = pending;
   try { return await promise; } finally { if (refreshing === pending) refreshing = null; }
