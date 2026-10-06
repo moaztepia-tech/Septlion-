@@ -1,14 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-const cors={"Access-Control-Allow-Origin":"https://septlion.com","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST,OPTIONS","Content-Type":"application/json"};
+const allowedOrigins=new Set(["https://septlion.com","https://www.septlion.com"]);
+const corsFor=(req:Request)=>{const origin=req.headers.get("Origin")||"";return{"Access-Control-Allow-Origin":allowedOrigins.has(origin)?origin:"https://septlion.com","Vary":"Origin","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST,OPTIONS","Content-Type":"application/json"}};
+let cors:Record<string,string>={};
 const out=(b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers:cors});
 const numberFrom=(v:unknown)=>{const m=String(v||"").match(/\d+(?:[.,]\d+)?/);return m?Number(m[0].replace(",",".")):null};
 Deno.serve(async(req)=>{
+ cors=corsFor(req);
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  const url=Deno.env.get("SUPABASE_URL")!,keys=JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS")||"{}"),secret=keys.default||Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");if(!secret)return out({error:"Server configuration unavailable"},500);
  const admin=createClient(url,secret,{auth:{persistSession:false}}),db=admin.schema("core"),token=(req.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
  if(!token)return out({error:"Authentication required"},401);const {data:{user},error:ae}=await admin.auth.getUser(token);if(ae||!user)return out({error:"Invalid session"},401);
- const now=new Date().toISOString();let {data:profile,error:pe}=await db.from("User").select("id,email,firstName,lastName").eq("id",user.id).maybeSingle();if(pe)return out({error:"Core profile lookup failed"},500);
+ const now=new Date().toISOString();let {data:profile,error:pe}=await db.from("User").select("id,email,firstName,lastName").eq("id",user.id).maybeSingle();if(pe){console.error(JSON.stringify({event:"trade-api.core-profile-lookup",code:pe.code,message:pe.message}));return out({error:"Core profile lookup failed"},500);}
  if(!profile){const {error:e}=await db.from("User").insert({id:user.id,email:user.email||`${user.id}@user.invalid`,passwordHash:"SUPABASE_AUTH",isActive:true,sessionVersion:1,createdAt:now,updatedAt:now});if(e)return out({error:"Core profile provisioning failed"},500);profile={id:user.id,email:user.email};}
  let {data:membership,error:me}=await db.from("Membership").select("id,organizationId,role").eq("userId",user.id).order("createdAt").limit(1).maybeSingle();if(me)return out({error:"Membership lookup failed"},500);
  if(!membership){const orgId=crypto.randomUUID(),mid=crypto.randomUUID();const {error:oe}=await db.from("Organization").insert({id:orgId,name:user.email?.split("@")[0]||"Buyer",organizationType:"BUYER",status:"ACTIVE",createdAt:now,updatedAt:now});if(oe)return out({error:"Organization provisioning failed"},500);const {error:mie}=await db.from("Membership").insert({id:mid,userId:user.id,organizationId:orgId,role:"BUYER",createdAt:now});if(mie)return out({error:"Membership provisioning failed"},500);membership={id:mid,organizationId:orgId,role:"BUYER"};}
