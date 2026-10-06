@@ -34,6 +34,10 @@ The production operations page was verified to open successfully after enrollmen
 
 Database access regression checks are in `supabase/tests/trade_api_runtime_access.sql`; they do not modify business data.
 
+## Production offer verification
+The deployed operator page issued one non-commercial TEST offer for the already-saved TEST requirement. The RFQ became QUOTED; the offer is ISSUED at revision 1. The stored snapshot identifies it as test-only, contains the entered test price and terms, and records the authorized issuing user. No CommercialLock or execution transaction was created.
+
+The authenticated document page displayed the same saved revision. Its PDF download completed through the website and was independently parsed as a valid one-page A4 PDF. Visual inspection identified a portrait-logo header overlap; the renderer now fits the unchanged master artwork inside a bounded 185 × 100 px header box. The final production download must be visually checked after this layout correction.
+
 ## Still pending
-- Issue a TEST-only offer and verify its document in an authorized operator session.
 - Verify commitment, execution, receipt and reorder with a clearly separated non-commercial test case. No real shipment, delivery, payment or completed transaction has been recorded in this test.
