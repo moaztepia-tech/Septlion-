@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { normalizeOffer, sameJson } from "./offer-input.ts";
 const allowedOrigins=new Set(["https://septlion.com","https://www.septlion.com"]);
 const corsFor=(req:Request)=>{const origin=req.headers.get("Origin")||"";return{"Access-Control-Allow-Origin":allowedOrigins.has(origin)?origin:"https://septlion.com","Vary":"Origin","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST,OPTIONS","Content-Type":"application/json"}};
 let cors:Record<string,string>={};
@@ -30,7 +31,46 @@ Deno.serve(async(req)=>{
  if(action==="outbox.retry"){if(!operatorMembership)return out({error:"Operator access required"},403);const id=String(body.id||"");const {data,error}=await db.from("OutboxEvent").update({status:"PENDING",attempts:0,lastError:null,availableAt:now}).eq("id",id).eq("status","FAILED").select("*").maybeSingle();return error?out({error:error.message},400):out({item:data});}
  if(action==="analytics.snapshot"){if(!operatorMembership)return out({error:"Operator access required"},403);const {data,error}=await db.rpc("platform_health_snapshot");return error?out({error:error.message},500):out(data);}
  if(action==="operator.queue"){if(!operatorMembership)return out({error:"Operator access required"},403);const [{data:rfqs},{data:transactions}]=await Promise.all([db.from("RFQ").select("id,reference,status,requirementId,buyerOrgId,deliveryCountry,deliveryPort,incoterm,createdAt").eq("supplierOrgId","septlion-operator").in("status",["OPEN","QUOTED","NEGOTIATING"]).order("createdAt",{ascending:false}).limit(100),db.from("TradeTransaction").select("id,reference,status,buyerOrgId,updatedAt").eq("supplierOrgId","septlion-operator").neq("status","COMPLETED").order("updatedAt",{ascending:false}).limit(100)]);return out({rfqs:rfqs||[],transactions:transactions||[]});}
- if(action==="offers.issue"){if(!operatorMembership)return out({error:"Operator access required"},403);const rfqId=String(body.rfqId||"");const snapshot=body.snapshot||{};const {data,error}=await db.rpc("issue_septlion_offer",{p_rfq_id:rfqId,p_user_id:user.id,p_snapshot:snapshot,p_currency:String(body.currency||"USD"),p_valid_until:body.validUntil||null});return error?out({error:error.message},400):out(data,201);}
+ if(action==="operator.rfq"){
+  if(!operatorMembership)return out({error:"Operator access required"},403);
+  const {data:rfq,error}=await db.from("RFQ").select("*").eq("id",String(body.id||"")).eq("supplierOrgId","septlion-operator").maybeSingle();
+  if(error)return out({error:error.message},500);if(!rfq)return out({error:"RFQ not found"},404);
+  const {data:requirement,error:qe}=await db.from("QualifiedRequirement").select("id,product,market,quantity,unit,containerCount,packing,deliveryPort,deliveryCountry,incoterm,paymentPreference").eq("id",rfq.requirementId).single();
+  if(qe)return out({error:qe.message},500);
+  const {data:offer,error:oe}=await db.from("SeptlionOffer").select("id,status,currentRevision,currency,validUntil").eq("rfqId",rfq.id).maybeSingle();if(oe)return out({error:oe.message},500);
+  return out({rfq,requirement,offer});
+ }
+ if(action==="offers.issue"){
+  if(!operatorMembership)return out({error:"Operator access required"},403);
+  const rfqId=String(body.rfqId||"");
+  const {data:rfq,error:re}=await db.from("RFQ").select("id,requirementId,status").eq("id",rfqId).eq("supplierOrgId","septlion-operator").maybeSingle();
+  if(re)return out({error:re.message},500);if(!rfq)return out({error:"RFQ not found"},404);
+  const {data:requirement,error:qe}=await db.from("QualifiedRequirement").select("id,product,market,deliveryPort,deliveryCountry,packing").eq("id",rfq.requirementId).single();if(qe)return out({error:qe.message},500);
+  let prepared;try{prepared=normalizeOffer(body,requirement)}catch(e){return out({error:e instanceof Error?e.message:"Invalid offer"},400)}
+  const existing=async()=>{
+   const {data:offer}=await db.from("SeptlionOffer").select("id,currentRevision,currency,validUntil").eq("rfqId",rfqId).maybeSingle();if(!offer)return null;
+   const {data:revision}=await db.from("SeptlionOfferRevision").select("id,snapshot,snapshotHash,issuedById").eq("offerId",offer.id).eq("revisionNo",offer.currentRevision).maybeSingle();
+   const same=revision?.issuedById===user.id&&offer.currency===prepared.currency&&offer.validUntil&&new Date(offer.validUntil).toISOString()===prepared.validUntil&&sameJson(revision.snapshot,prepared.snapshot);
+   return same?out({offerId:offer.id,revisionId:revision.id,snapshotHash:revision.snapshotHash,idempotent:true}):out({error:"صدر عرض لهذا الطلب بالفعل. راجع العرض المحفوظ."},409);
+  };
+  const prior=await existing();if(prior)return prior;
+  if(rfq.status!=="OPEN")return out({error:"الطلب غير مفتوح لإصدار عرض"},409);
+  const {data,error}=await db.rpc("issue_septlion_offer",{p_rfq_id:rfqId,p_user_id:user.id,p_snapshot:prepared.snapshot,p_currency:prepared.currency,p_valid_until:prepared.validUntil});
+  if(error){if(error.message.includes("offer_already_exists")){const retry=await existing();if(retry)return retry}return out({error:error.message},400)}
+  return out(data,201);
+ }
+ if(action==="offers.document"){
+  const {data:offer,error}=await db.from("SeptlionOffer").select("id,requirementId,rfqId,buyerOrgId,operatorOrgId,status,currentRevision,currency,validUntil").eq("id",String(body.id||"")).maybeSingle();
+  if(error)return out({error:error.message},500);
+  if(!offer||!(offer.buyerOrgId===membership.organizationId||(operatorMembership&&offer.operatorOrgId==="septlion-operator")))return out({error:"Offer not found"},404);
+  const [{data:revision,error:ve},{data:rfq,error:re},{data:buyer,error:be}]=await Promise.all([
+   db.from("SeptlionOfferRevision").select("revisionNo,snapshot,snapshotHash,issuedAt").eq("offerId",offer.id).eq("revisionNo",offer.currentRevision).single(),
+   db.from("RFQ").select("reference").eq("id",offer.rfqId).single(),
+   db.from("Organization").select("name,legalName,country").eq("id",offer.buyerOrgId).single()
+  ]);
+  if(ve||re||be)return out({error:"تعذر قراءة مستند العرض المحفوظ"},500);
+  return out({offer,revision,rfq,buyer});
+ }
  if(action==="offers.accept"){const {data,error}=await db.rpc("accept_septlion_offer",{p_offer_id:String(body.offerId||""),p_buyer_org_id:membership.organizationId,p_user_id:user.id});return error?out({error:error.message},400):out(data);}
  if(action==="transactions.list"){const {data,error}=await db.from("TradeTransaction").select("id,reference,status,version,createdAt,updatedAt").eq("buyerOrgId",membership.organizationId).order("updatedAt",{ascending:false}).limit(100);return error?out({error:error.message},500):out({items:data||[]});}
  if(action==="transactions.get"){const id=String(body.id||"");const {data,error}=await db.from("TradeTransaction").select("*").eq("id",id).eq("buyerOrgId",membership.organizationId).maybeSingle();if(error)return out({error:error.message},500);if(!data)return out({error:"Transaction not found"},404);const [{data:milestones},{data:receipt},{data:events},{data:commercialLock}]=await Promise.all([db.from("TradeMilestone").select("*").eq("transactionId",id).eq("buyerVisible",true).order("sequence"),db.from("TradeReceipt").select("*").eq("transactionId",id).maybeSingle(),db.from("TradeEvent").select("*").eq("transactionId",id).in("visibility",["BUYER"]).order("sequence"),db.from("CommercialLock").select("id,lockedAt,snapshotHash,snapshot").eq("id",data.commercialLockId).maybeSingle()]);return out({item:data,commercialLock,milestones:milestones||[],receipt,events:events||[]});}

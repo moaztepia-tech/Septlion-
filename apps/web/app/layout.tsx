@@ -1,5 +1,6 @@
 import './globals.css';
 import './platform-v1.css';
+import './offer-workspace.css';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
@@ -29,3 +30,4 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return <html lang="ar" dir="rtl"><body>{children}</body></html>;
 }
+

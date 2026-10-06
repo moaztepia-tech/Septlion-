@@ -61,6 +61,11 @@ jobs:
           test -n "$OFFER_HTML"
           cp "$OFFER_HTML" deploy/offer/index.html
           test -s deploy/offer/index.html
+          mkdir -p deploy/offer-document
+          OFFER_DOCUMENT_HTML="$(find apps/web/.next/server/app -type f -path '*/offer-document.html' | head -n 1)"
+          test -n "$OFFER_DOCUMENT_HTML"
+          cp "$OFFER_DOCUMENT_HTML" deploy/offer-document/index.html
+          test -s deploy/offer-document/index.html
           mkdir -p deploy/commit
           COMMIT_HTML="$(find apps/web/.next/server/app -type f -path '*/commit.html' | head -n 1)"
           test -n "$COMMIT_HTML"
