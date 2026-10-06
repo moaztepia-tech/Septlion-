@@ -41,6 +41,10 @@ jobs:
         run: node --test tests/auth-session.test.mjs
       - name: Offer validation, retry and PDF regression tests
         run: node --test tests/offer-document.test.mjs
+      - name: Execution permissions, private documents and retry regression tests
+        run: node --test tests/trade-lifecycle.test.mjs
+      - name: Requirement input regression tests
+        run: node --test tests/requirement-input.test.mjs
       - name: Prisma validate
         working-directory: apps/api
         run: pnpm exec prisma validate
@@ -72,3 +76,4 @@ jobs:
         run: pnpm --filter @septlion/web typecheck
       - name: Web production build
         run: pnpm --filter @septlion/web build
+

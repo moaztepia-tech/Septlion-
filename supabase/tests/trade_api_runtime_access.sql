@@ -8,7 +8,7 @@ DECLARE
     'SeptlionOffer','CommercialLock','TradeTransaction','SeptlionOfferRevision',
     'DemandSignal','Opportunity','SupplyCandidate','OutboxEvent','HumanApproval',
     'TradeMilestone','TradeReceipt','TradeEvent','MaritimeRFQ',
-    'CommercialDocument','Notification'
+    'CommercialDocument','Notification','TradeClaim'
   ];
   expected_inserts text[] := ARRAY['User','Membership','Organization','SupplyCandidate','MaritimeRFQ'];
 BEGIN
@@ -42,7 +42,11 @@ BEGIN
     WHERE n.nspname='core' AND p.proname IN (
       'create_buyer_requirement','issue_septlion_offer','accept_septlion_offer',
       'advance_trade_transaction','accept_trade_receipt','reorder_trade_transaction',
-      'check_edge_rate_limit','complete_trade_memory','open_trade_claim','platform_health_snapshot'
+      'check_edge_rate_limit','complete_trade_memory','open_trade_claim','platform_health_snapshot',
+      'require_trade_actor','accept_trade_offer_v2','advance_trade_transaction_v2',
+      'accept_trade_receipt_v2','open_trade_claim_v2','resolve_trade_claim_v2',
+      'reorder_trade_transaction_v2','prepare_trade_document','finalize_trade_document',
+      'platform_health_snapshot_v2'
     ) AND (
       NOT has_function_privilege('service_role',p.oid,'EXECUTE')
       OR has_function_privilege('anon',p.oid,'EXECUTE')
@@ -62,3 +66,4 @@ BEGIN
 END
 $verify$;
 ROLLBACK;
+

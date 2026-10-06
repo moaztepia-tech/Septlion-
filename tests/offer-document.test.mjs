@@ -47,7 +47,7 @@ class Query{
 }
 function fixture({operator=true,buyer='buyer-1',supplier='septlion-operator',valid=true}={}){
  const user={id:'user-1',email:'fixture@example.invalid'};
- const tables={User:[user],Membership:[{id:'mb',userId:user.id,organizationId:buyer,role:'BUYER'},...(operator?[{id:'mo',userId:user.id,organizationId:'septlion-operator',role:'SALES'}]:[])],RFQ:[{id:'rfq-1',requirementId:'req-1',supplierOrgId:supplier,buyerOrgId:'buyer-1',status:'OPEN',reference:'RFQ-001'}],QualifiedRequirement:[requirement],SeptlionOffer:[],SeptlionOfferRevision:[],Organization:[{id:'buyer-1',name:'TEST Buyer'}]};
+ const tables={User:[user],Membership:[{id:'mb',userId:user.id,organizationId:buyer,role:'BUYER'},...(operator?[{id:'mo',userId:user.id,organizationId:'septlion-operator',role:'SALES'}]:[])],RFQ:[{id:'rfq-1',requirementId:'req-1',supplierOrgId:supplier,buyerOrgId:'buyer-1',status:'OPEN',reference:'RFQ-001'}],QualifiedRequirement:[requirement],SeptlionOffer:[],SeptlionOfferRevision:[],Organization:[{id:buyer,name:'TEST Buyer',status:'ACTIVE'},{id:'septlion-operator',status:'ACTIVE'}]};
  const db={schema:()=>db,auth:{getUser:async()=>({data:{user:valid?user:null},error:valid?null:{message:'invalid'}})},from:name=>new Query(tables[name]||[]),writes:0,
   rpc:async(name,args)=>{if(name==='check_edge_rate_limit')return{data:true,error:null};if(name!=='issue_septlion_offer')throw new Error('unexpected RPC');if(tables.SeptlionOffer.length)return{error:{message:'offer_already_exists'}};
    db.writes++;tables.SeptlionOffer.push({id:'offer-1',rfqId:args.p_rfq_id,requirementId:'req-1',buyerOrgId:'buyer-1',operatorOrgId:'septlion-operator',currency:args.p_currency,validUntil:args.p_valid_until,currentRevision:1,status:'ISSUED'});
@@ -55,7 +55,11 @@ function fixture({operator=true,buyer='buyer-1',supplier='septlion-operator',val
  return{db,tables};
 }
 const edgeSource=await readFile(new URL('../supabase/functions/trade-api/index.ts',import.meta.url),'utf8');
-const preparedSource=edgeSource.replace('import "jsr:@supabase/functions-js/edge-runtime.d.ts";','').replace('import { createClient } from "npm:@supabase/supabase-js@2";','const createClient = () => globalThis.__offerFixtureDb;').replace('import { normalizeOffer, sameJson } from "./offer-input.ts";','const {normalizeOffer,sameJson}=globalThis.__offerFixtureHelpers;').replace('Deno.serve(async(req)=>{','export const handler=async(req)=>{').replace(/\}\);\s*$/,'};');
+const moduleUrl=s=>'data:text/javascript;base64,'+Buffer.from(transpile(s)).toString('base64');
+const lifecycleUrl=moduleUrl(await readFile(new URL('../supabase/functions/trade-api/lifecycle-input.ts',import.meta.url),'utf8'));
+const uploadUrl=moduleUrl(await readFile(new URL('../supabase/functions/trade-api/document-input.ts',import.meta.url),'utf8'));
+const lifecycleApiUrl=moduleUrl((await readFile(new URL('../supabase/functions/trade-api/lifecycle-api.ts',import.meta.url),'utf8')).replace("'./lifecycle-input.ts'",JSON.stringify(lifecycleUrl)).replace("'./document-input.ts'",JSON.stringify(uploadUrl)));
+const preparedSource=edgeSource.replace('import { handleLifecycle } from \"./lifecycle-api.ts\";', 'import {handleLifecycle} from '+JSON.stringify(lifecycleApiUrl)+';').replace('import "jsr:@supabase/functions-js/edge-runtime.d.ts";','').replace('import { createClient } from "npm:@supabase/supabase-js@2";','const createClient = () => globalThis.__offerFixtureDb;').replace('import { normalizeOffer, sameJson } from "./offer-input.ts";','const {normalizeOffer,sameJson}=globalThis.__offerFixtureHelpers;').replace('Deno.serve(async(req)=>{','export const handler=async(req)=>{').replace(/\}\);\s*$/,'};');
 globalThis.__offerFixtureHelpers=helpers;const oldDeno=globalThis.Deno;globalThis.Deno={env:{get:n=>n==='SUPABASE_SECRET_KEYS'?'{}':'fixture-server-config'}};
 const {handler}=await load(preparedSource);
 async function call(db,action,payload={}){globalThis.__offerFixtureDb=db;const request=new Request('https://fixture.invalid/trade-api',{method:'POST',headers:{Authorization:'Bearer TEST-FIXTURE',Origin:'https://septlion.com'},body:JSON.stringify({...payload,action})});const r=await handler(request);return{status:r.status,body:await r.json()}}
@@ -68,7 +72,8 @@ test('real handler issues once, replays the same request and rejects changed ret
 });
 test('document read is allowed to its buyer/operator and denied to another buyer',async()=>{
  const{db,tables}=fixture();const x=input();x.validUntil=new Date(Date.now()+7*86400000).toISOString();await call(db,'offers.issue',x);assert.equal((await call(db,'offers.document',{id:'offer-1'})).status,200);
- tables.Membership=[{id:'other',userId:'user-1',organizationId:'other-buyer',role:'BUYER'}];assert.equal((await call(db,'offers.document',{id:'offer-1'})).status,404);
+ tables.Organization.push({id:'other-buyer',status:'ACTIVE'});tables.Membership=[{id:'other',userId:'user-1',organizationId:'other-buyer',role:'BUYER'}];assert.equal((await call(db,'offers.document',{id:'offer-1'})).status,404);
  tables.Membership=[{id:'own',userId:'user-1',organizationId:'buyer-1',role:'BUYER'}];const r=await call(db,'offers.document',{id:'offer-1'});assert.equal(r.status,200);assert.equal(r.body.revision.snapshot.testOnly,true);assert.equal(r.body.buyer.name,'TEST Buyer');
 });
 test('restore test globals',()=>{globalThis.Deno=oldDeno;delete globalThis.__offerFixtureDb;delete globalThis.__offerFixtureHelpers});
+

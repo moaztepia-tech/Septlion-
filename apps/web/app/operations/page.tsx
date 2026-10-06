@@ -1,6 +1,7 @@
 'use client';
 import { FormEvent, useEffect, useState } from 'react';
 import { BuyerShell } from '../../components/buyer-shell';
+import {OperatorExecution} from '../../components/operator-execution';
 import { edge, hasSession } from '../../lib/api';
 type Dashboard={health:Record<string,number>;opportunities:any[];outbox:any[]};
 type Rfq={id:string;reference:string;status:string};
@@ -35,6 +36,8 @@ export default function Operations(){
   {!d&&!err&&<p role="status">جارٍ تحميل مركز العمليات…</p>}
   {d&&<>
    <div className="terms-grid">{counts.map(([label,k])=><div key={k}><small>{label}</small><b>{d.health[k]??0}</b></div>)}</div>
+   <p className="workspace-muted">الإحصاءات التجارية تستبعد حالات TEST. حالات المحاكاة: {d.health.testTransactions??0}</p>
+   <OperatorExecution onChanged={()=>void load()}/>
    <section className="operator-offer-panel" aria-labelledby="offer-editor-title"><div className="section-intro"><small>RFQ → OFFER</small><h2 id="offer-editor-title">إصدار العرض</h2></div>
     {rfqs.length===0?<div className="empty-state"><b>لا توجد طلبات مفتوحة لإصدار عرض</b></div>:<>
      <label className="operator-select">طلب عرض السعر<select disabled={busy} value={selected} onChange={e=>setSelected(e.target.value)}>{rfqs.map(x=><option key={x.id} value={x.id}>{x.reference} · {x.status}</option>)}</select></label>
@@ -67,3 +70,4 @@ export default function Operations(){
   </>}
  </section></BuyerShell>;
 }
+
