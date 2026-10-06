@@ -37,6 +37,8 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Auth session and safe return-path regression tests
+        run: node --test tests/auth-session.test.mjs
       - name: Prisma validate
         working-directory: apps/api
         run: pnpm exec prisma validate

@@ -2,10 +2,11 @@
 import{useState}from'react';
 import{BuyerShell}from'../../components/buyer-shell';
 import{clearSession,hasSession,signIn,signUp}from'../../lib/api';
+import{authReturnPath}from'../../lib/auth-return-path';
 
 export default function Account(){
  const[logged,setLogged]=useState(()=>typeof window!=='undefined'&&hasSession()),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const afterAuth=()=>{setLogged(true);const next=new URLSearchParams(window.location.search).get('next');if(next&&next.startsWith('/'))window.location.href=next};const login=async()=>{setBusy(true);setError('');try{await signIn(email,password);afterAuth()}catch(e:any){setError(e?.message||'تعذر تسجيل الدخول')}finally{setBusy(false)}};
+ const afterAuth=()=>{setLogged(true);const next=authReturnPath(new URLSearchParams(window.location.search).get('next'),window.location.origin);if(next)window.location.href=next};const login=async()=>{setBusy(true);setError('');try{await signIn(email,password);afterAuth()}catch(e:any){setError(e?.message||'تعذر تسجيل الدخول')}finally{setBusy(false)}};
  const logout=async()=>{clearSession();setLogged(false)};
  return <BuyerShell title="الحساب"><section className="buyer-section">
   <div className="profile-card"><div className="avatar" aria-hidden="true">S</div><div><small>BUYER PROFILE</small><h1>حساب SEPTLION</h1><p>بياناتك التجارية وذاكرة طلباتك في مكان واحد.</p></div></div>
