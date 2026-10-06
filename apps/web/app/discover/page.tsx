@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {PlatformHeader} from '../../components/platform-header';
+import './discover-previous.css';
 import {catalogPreview} from '../../lib/catalog-preview';
 import {useRouter} from 'next/navigation';
 import {SCALE_RANGES,getSeptlionScale,scaleProgress} from '../../lib/septlion-scale';
@@ -72,47 +72,45 @@ export default function DiscoverPage(){
   localStorage.setItem('septlion_draft_requests',JSON.stringify([context,...previous].slice(0,20)));
   router.push('/require?source=feed');
  }
- return <main className="v1-app" dir="rtl">
-  <PlatformHeader/>
-  <div className="v1-tabs"><span className="status-pill">الأغذية · زولانا</span><a className="platform-action" href="/require">اطلب منتجًا آخر ←</a></div>
-  <section className="v1-feed">
-   <div className="v1-section-head"><div><small>DISCOVER</small><h1>اكتشف ما يتحرك في السوق.</h1></div><span>ابدأ من إشارة طلب أو منتج مناسب، ثم حوّله مباشرة إلى احتياج تجاري قابل للتنفيذ.</span></div>
-   <article className="v1-product">
-    <div className="v1-product-visual"><div className="v2-visual-meta"><span>01</span><small>FOOD / FLOUR</small></div><div className="v1-product-mark"><span>ZOLLANA</span><h2>{product.name}</h2><p>{product.en}</p></div><div className="v1-pager">{products.map((_,i)=><button key={i} aria-label={'عرض '+products[i].name} aria-pressed={i===active} className={i===active?'active':''} onClick={()=>{setActive(i);setCount(1)}}/> )}</div></div>
-    <div className="v1-product-copy"><small>{product.eyebrow}</small><h2>{product.name}</h2><p>{product.en}</p><dl><div><dt>التعبئة</dt><dd>{product.pack}</dd></div><div><dt>التوريد</dt><dd>{product.note}</dd></div></dl></div>
+ return <main className="discover-page" dir="rtl">
+  <header className="discover-top"><a href="/" className="discover-brand" aria-label="Septlion"><img src="/brand/septlion-wordmark-navy.svg" alt="Septlion"/></a><nav aria-label="التنقل الرئيسي"><a href="/">الرئيسية</a><a className="active" aria-current="page" href="/discover">اكتشف</a><a href="/requests">التجارة</a></nav><div><a className="discover-muted" href="/notifications">التنبيهات</a><a className="discover-home-ai" href="/require">ماذا تحتاج؟ <b>↗</b></a></div></header>
+  <div className="discover-tabs"><button className="active">لأجلك</button><button>الأغذية</button><button>التغليف</button><button>المواد الخام</button><button>الصناعة</button></div>
+  <section className="discover-feed">
+   <div className="discover-section-head"><div><small>DISCOVER</small><h1>اكتشف ما يتحرك في السوق.</h1></div><span>ابدأ من إشارة طلب أو منتج مناسب، ثم حوّله مباشرة إلى احتياج تجاري قابل للتنفيذ.</span></div>
+   <article className="discover-product">
+    <div className="discover-product-visual"><div className="discover-visual-meta"><span>01</span><small>FOOD / FLOUR</small></div><div className="discover-bag"><span>ZOLLANA</span><b>{product.name}</b><small>{product.en}</small><em>25 / 50 KG</em></div><div className="discover-pager">{products.map((_,i)=><button key={i} aria-label={'عرض '+products[i].name} aria-pressed={i===active} className={i===active?'active':''} onClick={()=>{setActive(i);setCount(1)}}/> )}</div></div>
+    <div className="discover-product-copy"><small>{product.eyebrow}</small><h2>{product.name}</h2><p>{product.en}</p><dl><div><dt>التعبئة</dt><dd>{product.pack}</dd></div><div><dt>التوريد</dt><dd>{product.note}</dd></div></dl></div>
 
-    <div className="v1-config"><div className="v2-config-head"><small>YOUR REQUIREMENT</small><b>حدّد الأساسيات</b><span>سنكمل التفاصيل داخل الطلب.</span></div>
-     <div className="v1-label-row"><b>كم تحتاج؟</b><span>الحد الأدنى حاوية واحدة</span></div>
+    <div className="discover-config-head"><small>YOUR REQUIREMENT</small><b>حدّد الأساسيات</b><span>سنكمل التفاصيل داخل الطلب.</span></div><div className="discover-config">
+     <div className="discover-label-row"><b>كم تحتاج؟</b><span>الحد الأدنى حاوية واحدة</span></div>
+     <div className="discover-counter"><button aria-label="تقليل عدد الحاويات" onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}<small> حاوية</small></strong><button aria-label="زيادة عدد الحاويات" onClick={()=>setCount(count+1)}>+</button></div>
+     <div className="discover-scale-current">{scale}</div>
+     <div className="discover-scale"><div className="discover-scale-line"/><i style={{insetInlineStart:`calc(${progress}% - 4px)`}}/></div>
+     <div className="discover-scale-labels">{SCALE_RANGES.map(x=><span key={x.name}><b>{x.name}</b><small>{x.label}</small></span>)}</div>
 
-     <div className="v1-scale-current">{scale}</div>
-     <div className="v1-scale"><div className="v1-scale-line"/><i style={{insetInlineStart:`calc(${progress}% - 4px)`}}/></div>
-     <div className="v1-scale-labels">{SCALE_RANGES.map(x=><span key={x.name}><b>{x.name}</b><small>{x.label}</small></span>)}</div>
-     <div className="v1-counter"><button aria-label="تقليل عدد الحاويات" onClick={()=>setCount(Math.max(1,count-1))}>−</button><strong>{count}<small> حاوية</small></strong><button aria-label="زيادة عدد الحاويات" onClick={()=>setCount(count+1)}>+</button></div>
+     <fieldset className="discover-choice"><legend>شرط التجارة</legend><div>{(['CIF','CFR','FOB'] as Incoterm[]).map(x=><button key={x} className={incoterm===x?'selected':''} onClick={()=>{setIncoterm(x);setDestination(null)}}>{x}</button>)}</div></fieldset>
 
-     <fieldset className="v1-choice"><legend>شرط التجارة</legend><div>{(['CIF','CFR','FOB'] as Incoterm[]).map(x=><button key={x} className={incoterm===x?'selected':''} onClick={()=>{setIncoterm(x);setDestination(null)}}>{x}</button>)}</div></fieldset>
-
-     <button className={'v1-destination '+(destination?'filled':'')} onClick={()=>setSheet(true)}>
+     <button className={'discover-destination '+(destination?'filled':'')} onClick={()=>setSheet(true)}>
       <span><small>{incoterm==='FOB'?'الميناء':'الشحن إلى'}</small><b>{destination?destination.port:(incoterm==='FOB'?'حدد الميناء المتفق عليه':'حدد ميناء الوصول')}</b>{destination&&<em>{destination.country} · {destination.code}</em>}</span><strong>⌄</strong>
      </button>
 
-     <fieldset className="v1-choice"><legend>طريقة الدفع</legend><div>{([['L/C','L/C'],['T/T','T/T'],['OTHER','أخرى']] as [Payment,string][]).map(([v,l])=><button key={v} className={payment===v?'selected':''} onClick={()=>setPayment(v)}>{l}</button>)}</div></fieldset>
+     <fieldset className="discover-choice"><legend>طريقة الدفع</legend><div>{([['L/C','L/C'],['T/T','T/T'],['OTHER','أخرى']] as [Payment,string][]).map(([v,l])=><button key={v} className={payment===v?'selected':''} onClick={()=>setPayment(v)}>{l}</button>)}</div></fieldset>
 
-     <button className="v1-primary" onClick={startIdentity}><span>ابدأ طلب التوريد</span><b>↗</b></button><p className="v2-assurance">طلب واحد · عرض واحد · Septlion مسؤولة عن التنفيذ</p>
+     <button className="discover-primary" onClick={startIdentity}><span>ابدأ طلب التوريد</span><b>↗</b></button><p className="discover-assurance">طلب واحد · عرض واحد · Septlion مسؤولة عن التنفيذ</p>
     </div>
    </article>
   </section>
+  <nav className="discover-bottom-nav" aria-label="التنقل السريع"><a href="/">الرئيسية</a><a className="active" aria-current="page" href="/discover">اكتشف</a><a href="/requests">التجارة</a><a href="/notifications">التنبيهات</a><a href="/account">الحساب</a></nav>
 
+  {sheet&&<div className="discover-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setSheet(false)}}><section className="discover-sheet" role="dialog" aria-modal="true" aria-label="بيانات الطلب"><div className="discover-grab"/><div className="discover-sheet-head"><div><small>{incoterm}</small><h3>{incoterm==='FOB'?'حدد الميناء':'حدد وجهة الشحن'}</h3></div><button aria-label="إغلاق اختيار الوجهة" onClick={()=>setSheet(false)}>×</button></div><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث عن دولة أو ميناء"/><div className="discover-destinations">{filtered.map(d=><button key={d.code} onClick={()=>{setDestination(d);setSheet(false);setQuery('')}}><span><b>{d.port}</b><small>{d.country}</small></span><em>{d.code}</em></button>)}</div></section></div>}
 
-
-  {sheet&&<div className="v1-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setSheet(false)}}><section className="v1-sheet" role="dialog" aria-modal="true" aria-label="بيانات الطلب"><div className="v1-grab"/><div className="v1-sheet-head"><div><small>{incoterm}</small><h3>{incoterm==='FOB'?'حدد الميناء':'حدد وجهة الشحن'}</h3></div><button aria-label="إغلاق اختيار الوجهة" onClick={()=>setSheet(false)}>×</button></div><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث عن دولة أو ميناء"/><div className="v1-destinations">{filtered.map(d=><button key={d.code} onClick={()=>{setDestination(d);setSheet(false);setQuery('')}}><span><b>{d.port}</b><small>{d.country}</small></span><em>{d.code}</em></button>)}</div></section></div>}
-
-  {identity&&<div className="v1-overlay identity"><section className="v1-sheet v1-identity" role="dialog" aria-modal="true" aria-label="بيانات الطلب"><div className="v1-grab"/><div className="v1-sheet-head"><div><small>خطوة أخيرة</small><h3>بيانات التواصل</h3><p>حتى نحفظ طلبك ونكمل معك من حيث توقفت.</p></div><button aria-label="إغلاق بيانات التواصل" onClick={()=>setIdentity(false)}>×</button></div>
+  {identity&&<div className="discover-overlay identity"><section className="discover-sheet discover-identity" role="dialog" aria-modal="true" aria-label="بيانات الطلب"><div className="discover-grab"/><div className="discover-sheet-head"><div><small>خطوة أخيرة</small><h3>بيانات التواصل</h3><p>حتى نحفظ طلبك ونكمل معك من حيث توقفت.</p></div><button aria-label="إغلاق بيانات التواصل" onClick={()=>setIdentity(false)}>×</button></div>
    <label>الاسم<input id="buyer-name" value={name} onChange={e=>{setName(e.target.value);setError('')}} autoComplete="name"/></label>
    <label>الشركة<input value={company} onChange={e=>{setCompany(e.target.value);setError('')}} autoComplete="organization"/></label>
    <label>البريد الإلكتروني <small>اختياري</small><input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email"/></label>
    <label>رقم WhatsApp<input type="tel" inputMode="tel" value={phone} onChange={e=>{setPhone(e.target.value);setError('')}}  placeholder="+966 5X XXX XXXX" autoComplete="tel"/></label>
-   {error&&<p className="v1-error">{error}</p>}
-   <button className="v1-primary" onClick={handoff}>متابعة الطلب ←</button><p className="v1-auto-note">راجع بياناتك ثم تابع لإكمال الطلب.</p>
+   {error&&<p className="discover-error">{error}</p>}
+   <button className="discover-primary" onClick={handoff}>متابعة الطلب ←</button><p className="discover-auto-note">راجع بياناتك ثم تابع لإكمال الطلب.</p>
   </section></div>}
  </main>
 }
