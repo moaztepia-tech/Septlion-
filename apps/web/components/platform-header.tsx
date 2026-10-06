@@ -28,7 +28,7 @@ const links = [
 const tradePaths = ['/request','/offer','/commit','/execution','/documents','/receive','/reorder'];
 
 export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {actions?: ReactNode; lang?: 'ar' | 'en'; showOperations?: boolean}) {
-  const pathname = usePathname();
+  const pathname = (usePathname() || '/').replace(/\/+$/, '') || '/';
   const active = (href: string) => href === '/' ? pathname === '/' : href === '/requests' ? pathname === href || tradePaths.some(p => pathname === p || pathname.startsWith(p + '/')) : pathname === href || pathname.startsWith(href + '/');
   return <>
     <header className="platform-header">

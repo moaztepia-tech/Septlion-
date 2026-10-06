@@ -5,7 +5,7 @@ import {usePathname} from 'next/navigation';
 import {PlatformHeader} from './platform-header';
 const tradePaths=['/request','/offer','/commit','/execution','/documents','/receive','/reorder'];
 export function BuyerShell({children,title,eyebrow='SEPTLION'}:{children:ReactNode;title?:string;eyebrow?:string}){
- const p=usePathname(); const inTrade=p==='/requests'||tradePaths.some(x=>p.startsWith(x));
+ const p=(usePathname()||'/').replace(/\/+$/,'')||'/'; const inTrade=p==='/requests'||tradePaths.some(x=>p.startsWith(x));
  return <main className="buyer-app v3-app" dir="rtl">
   <PlatformHeader showOperations/>
   {title&&<div className="v3-context"><div><small>{eyebrow}</small><span>{title}</span></div></div>}
