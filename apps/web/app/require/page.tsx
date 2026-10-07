@@ -1,53 +1,119 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {FormEvent, useEffect, useRef, useState} from 'react';
 import {PlatformHeader} from '../../components/platform-header';
-import {extractRequirement as extract, mergeRequirementInput} from '../../lib/requirement-input';
-import {accessToken} from '../../lib/api';
+import {edge, hasSession, sessionUserId} from '../../lib/api';
 import {createTradeRequirement} from '../../lib/trade-data';
+import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../../lib/composer-draft';
 
-type Lang='ar'|'en';
-type FeedContext={source:'product_feed';product:{id:string;name:string;nameEn:string;packing:string};containerCount:number;septlionScale:string;incoterm:string;destination:{port:string;country:string;code:string};paymentPreference:string;buyer:{name:string;company:string;whatsapp:string;email:string|null;whatsappStatus:string}};
-const ar={hello:'ماذا تحتاج؟',sub:'صف احتياجك بطريقتك. سنحوّله معك إلى طلب توريد واضح.',ph:'اكتب ما تحتاجه…',hint:'مثال: أحتاج 5 حاويات دقيق مخابز إلى تنزانيا',thinking:'فهمت. أحتاج معلومة واحدة فقط لأكمل طلبك.',ready:'طلبك يحتوي الآن على المعلومات الأساسية اللازمة للتأهيل والتسعير.',new:'طلب جديد'};
-const en={hello:'What do you need?',sub:'Describe it naturally. You do not need to know the technical specification.',ph:'Describe your requirement…',hint:'Start simply: I need 5 containers of bakery flour in Tanzania',thinking:'Got it. I only need one more detail to complete your requirement.',ready:'Great. I now have the core information needed to prepare your requirement for pricing.',new:'New chat'};
-export default function RequirePage(){const[lang,setLang]=useState<Lang>('ar'),[input,setInput]=useState(''),[data,setData]=useState<Record<string,string>>({}),[messages,setMessages]=useState<{role:'user'|'assistant',text:string}[]>([]),[feedContext,setFeedContext]=useState<FeedContext|null>(null),[saving,setSaving]=useState(false),[saveError,setSaveError]=useState('');const box=useRef<HTMLTextAreaElement>(null),t=lang==='ar'?ar:en;
-useEffect(()=>{
- const pending=sessionStorage.getItem('septlion_pending_requirement');if(pending&&accessToken()){try{const p=JSON.parse(pending);if(p?.source==='product_feed'){setFeedContext(p);setData({product:p.product.nameEn,quantity:p.containerCount+' FCL',packing:p.product.packing,destination:p.destination.port,incoterm:p.incoterm,payment:p.paymentPreference});return}else if(p&&typeof p==='object'){setData(p);return}}catch{}}
- const raw=sessionStorage.getItem('septlion_feed_context');
- if(raw){
-  try{
-   const ctx=JSON.parse(raw) as FeedContext;
-   if(ctx?.source==='product_feed'){
-    setFeedContext(ctx);
-    setData({product:ctx.product.nameEn,quantity:ctx.containerCount+' FCL',packing:ctx.product.packing,destination:ctx.destination.port,incoterm:ctx.incoterm,payment:ctx.paymentPreference});
-    return;
-   }
-  }catch{}
- }
- const seed=sessionStorage.getItem('septlion_requirement_seed');
- if(seed){let context:Record<string,string>={};try{context=JSON.parse(sessionStorage.getItem('septlion_requirement_context')||'{}')}catch{}sessionStorage.removeItem('septlion_requirement_seed');sessionStorage.removeItem('septlion_requirement_context');submit(seed,context)}
-},[]);
-const required=['product',...(data.product==='Wheat Flour'?['application']:[]),'quantity','packing','destination'];const missing=required.filter(k=>!data[k]);const next=missing[0];
-const q:Record<string,string>=lang==='ar'?{product:'ما المنتج الذي تحتاجه؟',application:'هل الدقيق للمخابز أم لاستخدام آخر؟',quantity:'ما الكمية التقريبية التي تحتاجها؟',packing:'ما حجم التعبئة الذي تفضله؟ وإذا لم تكن متأكدًا أخبرني.',destination:'إلى أي دولة أو ميناء تريد التوريد؟'}:{product:'What product do you need?',application:'Is the flour for bakeries or another use?',quantity:'What approximate quantity do you need?',packing:'What packing size do you prefer? If you are unsure, tell me.',destination:'Which country or port should we supply to?'};
-function normalize(k:string,v:string){if(k==='application'&&/مخابز|bakery/i.test(v))return'Bakery';if(k==='quantity'&&/حاوي|fcl|container/i.test(v))return(v.match(/\d+/)?.[0]||'1')+' FCL';if(k==='packing'&&/لا اعرف|لا أعرف|غير متأكد|not sure/i.test(v))return data.product==='Wheat Flour'?'50kg (suggested)':'Septlion-assisted';return v}
-function submit(raw?:string,context:Record<string,string>={}){const text=(raw??input).trim();if(!text)return;let parsed=extract(text);let nextData=mergeRequirementInput(text,{...data,...context});const currentRequired=['product',...(nextData.product==='Wheat Flour'?['application']:[]),'quantity','packing','destination'];const currentMissing=currentRequired.filter(k=>!nextData[k]);if(messages.length&&next&&!parsed[next])nextData[next]=normalize(next,text);const afterMissing=currentRequired.filter(k=>!nextData[k]);setData(nextData);setMessages(m=>[...m,{role:'user',text},{role:'assistant',text:afterMissing.length?(lang==='ar'?'فهمت. '+(q[afterMissing[0]]||t.thinking):'Got it. '+(q[afterMissing[0]]||t.thinking)):t.ready}]);setInput('');setTimeout(()=>box.current?.focus(),50)}
-function reset(){setData({});setMessages([]);setInput('');setFeedContext(null);setSaveError('');sessionStorage.removeItem('septlion_feed_context');sessionStorage.removeItem('septlion_pending_requirement')}
-async function saveRequirement(){setSaving(true);setSaveError('');try{
- if(!accessToken()){sessionStorage.setItem('septlion_pending_requirement',JSON.stringify(feedContext||data));window.location.href='/account?next=/require';return}
- let id:string;
- if(feedContext){const r=await createTradeRequirement({product:feedContext.product.nameEn,quantity:feedContext.containerCount+' FCL',containerCount:feedContext.containerCount,packing:feedContext.product.packing,destination:feedContext.destination.port,deliveryCountry:feedContext.destination.country,destinationCode:feedContext.destination.code,incoterm:feedContext.incoterm,paymentPreference:feedContext.paymentPreference,source:'PRODUCT_FEED',sourceContext:feedContext});id=r.item.id}
- else{const r=await createTradeRequirement({...data,source:'AI_COMPOSER'});id=r.item.id}
- sessionStorage.setItem('septlion_active_request',id);sessionStorage.removeItem('septlion_pending_requirement');window.location.href='/request?id='+encodeURIComponent(id)
- }catch(e:any){setSaveError(e?.message||'تعذر حفظ الطلب الآن. حاول مرة أخرى.')}finally{setSaving(false)}}
-return <main className="chat-ai" dir={lang==='ar'?'rtl':'ltr'}>
-<PlatformHeader lang={lang} actions={<><button className="secondary-link" onClick={reset}>{t.new}</button><button className="platform-action" onClick={()=>setLang(lang==='ar'?'en':'ar')} aria-label={lang==='ar'?'Switch to English':'التبديل إلى العربية'}>{lang==='ar'?'EN':'ع'}</button></>}/>
-<section className={'chat-stage '+(messages.length?'has-chat':'')}>
-<div className="intent-canvas"><div className="chat-thread">
-{!messages.length&&!feedContext&&<div className="chat-welcome"><h1>{t.hello}</h1><p>{t.sub}</p></div>}
-{feedContext&&<div className="feed-context-card"><div><small>طلبك الحالي · {feedContext.buyer.company}</small><b>{feedContext.product.name} · {feedContext.containerCount} حاويات</b></div><span>{feedContext.incoterm} · {feedContext.destination.port} · {feedContext.paymentPreference}</span></div>}
-{feedContext&&!messages.length&&<div className="chat-msg assistant"><div>طلبك جاهز هنا. يمكنك تعديل أي تفصيل، إضافة ملاحظة أو إرفاق مواصفة، وسأكمل من المعلومات التي أدخلتها بالفعل.</div></div>}
-{messages.map((m,i)=><div key={i} className={'chat-msg '+m.role}><div>{m.text}</div></div>)}
-{Object.keys(data).length>0&&<div className="intent-context">{Object.entries(data).filter(([k])=>['product','application','quantity','packing','destination','incoterm','payment'].includes(k)).map(([k,v])=><span key={k}>{v}</span>)}</div>}{Object.keys(data).length>0&&missing.length===0&&<div className="qualified-card"><span>✓</span><div><small>QUALIFIED REQUIREMENT</small><b>طلبك جاهز للتسعير</b><p>المعلومات الأساسية مكتملة. يمكن الآن إرسال الطلب إلى Septlion لإعداد العرض.</p></div><button className="primary-link" disabled={saving} onClick={saveRequirement}>{saving?'جارٍ الحفظ…':'حفظ ومتابعة الطلب'}</button>{saveError&&<p role="alert">{saveError}</p>}</div>}</div></div>
-<div className="chat-composer-wrap"><div className="chat-composer"><textarea aria-label={lang==='ar'?'احتياجك التجاري':'Your requirement'} ref={box} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit()}}} placeholder={feedContext?'اكتب ملاحظتك أو التعديل المطلوب…':t.ph}/><div className="chat-tools"><div><span className="trade-capability">اكتب احتياجك أو التعديل المطلوب</span></div><button className="chat-send" disabled={!input.trim()} onClick={()=>submit()} aria-label={lang==='ar'?'إرسال الاحتياج':'Send requirement'}>↑</button></div></div>{!messages.length&&!feedContext&&<p className="chat-hint">{t.hint}</p>}</div>
-</section>
-<footer className="chat-foot">SEPTLION · From real demand to executed trade.</footer>
-</main>}
+const labels = {
+  ar: {product:'المنتج', application:'الاستخدام', quantity:'الكمية والوحدة', packing:'التعبئة', destination:'الدولة أو الميناء', incoterm:'شرط التجارة', payment:'طريقة الدفع'},
+  en: {product:'Product', application:'Use', quantity:'Quantity and unit', packing:'Pack size', destination:'Country or port', incoterm:'Trade term', payment:'Payment method'},
+};
+export default function RequirePage() {
+  const [lang,setLang] = useState<'ar'|'en'>('ar');
+  const [draft,setDraft] = useState<ComposerDraft>(()=>emptyComposerDraft(''));
+  const [hydrated,setHydrated] = useState(false), [saving,setSaving] = useState(false);
+  const [saveError,setSaveError] = useState(''), [storageError,setStorageError] = useState(false);
+  const [undo,setUndo] = useState<ComposerDraft|null>(null);
+  const mounted = useRef(false), busy = useRef(false), box = useRef<HTMLTextAreaElement>(null), end = useRef<HTMLDivElement>(null);
+  const ar = lang === 'ar', missing = missingComposerFields(draft), ready = missing.length === 0;
+
+  useEffect(()=>{
+    if (mounted.current) return;
+    mounted.current = true;
+    const id = crypto.randomUUID(), ownerId = sessionUserId();
+    let next = emptyComposerDraft(id);
+    try {
+      const feedRaw = sessionStorage.getItem('septlion_feed_context');
+      const seed = sessionStorage.getItem('septlion_requirement_seed');
+      if (feedRaw) {
+        const feed = JSON.parse(feedRaw);
+        if (isFeedContext(feed)) next = draftFromFeed(feed,id);
+      } else if (seed) {
+        let context = {};
+        try {context = JSON.parse(sessionStorage.getItem('septlion_requirement_context') || '{}');} catch {}
+        next = answerRequirement({...next,data:context},seed,'ar');
+      } else {
+        const restored = restoreComposerDraft(sessionStorage.getItem(COMPOSER_DRAFT_KEY),ownerId);
+        if (restored) next = restored;
+        else {
+          const pending = JSON.parse(sessionStorage.getItem('septlion_pending_requirement') || 'null');
+          if (isFeedContext(pending)) next = draftFromFeed(pending,id);
+          else if (pending && typeof pending === 'object') next = restoreComposerDraft(JSON.stringify({...next,data:pending}),ownerId) || next;
+        }
+      }
+      // Persist first: interrupted navigation must not consume the only draft.
+      next = {...next,ownerId};
+      sessionStorage.setItem(COMPOSER_DRAFT_KEY,JSON.stringify(next));
+      for (const key of ['septlion_feed_context','septlion_requirement_seed','septlion_requirement_context','septlion_pending_requirement']) sessionStorage.removeItem(key);
+    } catch {setStorageError(true);}
+    setDraft(next); setHydrated(true);
+  },[]);
+  useEffect(()=>{
+    if (!hydrated) return;
+    try {sessionStorage.setItem(COMPOSER_DRAFT_KEY,JSON.stringify(draft));setStorageError(false);} catch {setStorageError(true);}
+  },[draft,hydrated]);
+
+  function submit(event?:FormEvent) {
+    event?.preventDefault();
+    if (!draft.input.trim() || saving || draft.savedRequirementId) return;
+    setDraft(d=>answerRequirement(d,d.input,lang)); setSaveError('');
+    requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});
+  }
+  function edit(field:RequirementField,value:string) {
+    setDraft(d=>({...d,data:{...d.data,[field]:value}}));setSaveError('');
+  }
+  function reset() {
+    if (saving) return;
+    setUndo(draft); setDraft({...emptyComposerDraft(crypto.randomUUID()),ownerId:sessionUserId()});setSaveError('');
+  }
+  async function save() {
+    if (busy.current || !ready || draft.savedRequirementId) return;
+    busy.current=true;setSaving(true);setSaveError('');
+    try {
+      const input=draft.reorder?reorderPayload(draft):requirementPayload(draft);
+      if (!hasSession()) {
+        // The draft includes all edits and the conversation, not only Feed defaults.
+        sessionStorage.setItem(COMPOSER_DRAFT_KEY,JSON.stringify(draft));
+        window.location.href='/account?next='+encodeURIComponent('/require');return;
+      }
+      const result=draft.reorder?await edge<{id:string}>('reorder.create',input):await createTradeRequirement(input);
+      const id='item' in result?result.item.id:result.id;
+      if (!id) throw new Error(ar?'تعذر قراءة مرجع الطلب المحفوظ.':'Could not read the saved request reference.');
+      setDraft(d=>({...d,savedRequirementId:id}));
+      sessionStorage.setItem(COMPOSER_DRAFT_KEY,JSON.stringify({...draft,savedRequirementId:id,ownerId:sessionUserId()}));
+      sessionStorage.setItem('septlion_active_request',id);
+      window.location.href='/request?id='+encodeURIComponent(id);
+    } catch (e) {setSaveError(e instanceof Error?e.message:(ar?'تعذر إرسال الطلب. مسودتك ما زالت هنا.':'Could not send. Your draft is still here.'));}
+    finally {busy.current=false;setSaving(false);}
+  }
+  const lastReply=draft.messages.filter(m=>m.role==='assistant').at(-1)?.text;
+  return <main className="chat-ai customer-composer" dir={ar?'rtl':'ltr'} lang={lang}>
+    <PlatformHeader lang={lang} actions={<><button className="secondary-link" disabled={saving} onClick={reset}>{ar?'طلب جديد':'New request'}</button><button className="platform-action" onClick={()=>setLang(ar?'en':'ar')} aria-label={ar?'Switch to English':'التبديل إلى العربية'}>{ar?'EN':'ع'}</button></>}/>
+    <section className={'chat-stage '+(draft.messages.length?'has-chat':'')} aria-labelledby="composer-title">
+      <div className="composer-status"><span>{storageError?(ar?'تعذر حفظ المسودة على هذا الجهاز':'Draft storage unavailable'):(ar?'مسودتك محفوظة في هذا التبويب':'Draft saved in this tab')}</span><span>{ar?'طلب توريد · Composer':'Supply request · Composer'}</span></div>
+      {undo&&<p className="composer-undo" role="status">{ar?'بدأت طلبًا جديدًا.':'New request started.'} <button onClick={()=>{setDraft(undo);setUndo(null);}}>{ar?'استعادة الطلب السابق':'Restore previous request'}</button></p>}
+      <div className="intent-canvas"><div className="chat-thread">
+        <div className="chat-welcome"><h1 id="composer-title">{draft.reorder?(ar?'مراجعة إعادة الطلب':'Review reorder'):draft.feed?(ar?'نكمل طلبك من هنا':'Continue your request'):(ar?'ماذا تحتاج؟':'What do you need?')}</h1><p>{ar?'أخبرنا باحتياجك، ثم راجع تفاصيله قبل إرساله لإعداد عرض Septlion.':'Describe your need, then review the details before requesting a Septlion offer.'}</p></div>
+        {draft.reorder&&<p className={draft.reorder.testOnly?'test-notice':'workspace-muted'}>{draft.reorder.testOnly?'TEST — إعادة طلب لمحاكاة غير تجارية. ':''}{ar?'ستحتفظ هذه الإعادة بالتكوين المعتمد مع إمكانية تعديل الكمية. السعر والتوفر وموعد الشحن تُراجع في عرض جديد.':'This reorder preserves the approved configuration. You can change the quantity. Price, availability and shipping date will be checked in a new offer.'}</p>}
+        {draft.feed&&<div className="feed-context-card"><div><small>{ar?'منتج اخترته من اكتشف':'Selected in Discover'} · {draft.feed.buyer.company}</small><b>{draft.feed.product.name}</b></div><span>{ar?'معلومات اختيارك مرفقة، والتعديلات أدناه هي تفاصيل الطلب الذي سيُرسل.':'Your selection is attached. The edited details below will be sent.'}</span></div>}
+        <div className="composer-conversation" role="log" aria-label={ar?'محادثة الطلب':'Request conversation'}>
+          {draft.feed&&!draft.messages.length&&missing.length>0&&<div className="chat-msg assistant"><div>{requirementQuestion(missing[0],lang,draft.feed)}</div></div>}
+          {draft.messages.map((message,i)=><div key={i} className={'chat-msg '+message.role}><div>{message.text}</div></div>)}
+        </div>
+        <span className="sr-only" aria-live="polite">{lastReply}</span>
+        {Object.keys(draft.data).length>0&&<section className="composer-review" aria-labelledby="review-title">
+          <div className="composer-review-head"><div><small>{ar?'تفاصيل الطلب':'REQUEST DETAILS'}</small><h2 id="review-title">{ar?'راجع ما سنرسله':'Review what we will send'}</h2></div><span>{ready?(ar?'الأساسيات مكتملة':'Essentials complete'):(ar?missing.length+' معلومات متبقية':missing.length+' details remaining')}</span></div>
+          <p>{draft.reorder?(ar?'يمكنك تعديل الكمية بوحدة '+draft.reorder.unit+'. لبقية التغييرات، ابدأ طلبًا جديدًا.':'Change the quantity in '+draft.reorder.unit+'. Start a new request for other changes.'):(ar?'يمكنك تعديل أي حقل مباشرة. التعبئة غير المحددة تبقى للمناقشة، ولا نعتمد مواصفة نيابةً عنك.':'Edit any field directly. Unconfirmed packing remains to be agreed with you.')}</p>
+          <div className="composer-field-grid">{requirementFields.filter(k=>k!=='application'||(!draft.reorder&&/flour|دقيق/i.test(draft.data.product||''))).map(field=><label key={field}><span>{labels[lang][field]}{missing.includes(field)&&<small>{ar?' مطلوب':' required'}</small>}</span>{!draft.reorder&&(field==='incoterm'||field==='payment')?<select disabled={saving||!!draft.savedRequirementId} value={draft.data[field]||''} onChange={e=>edit(field,e.target.value)}><option value="">{ar?'اختر':'Choose'}</option>{(field==='incoterm'?[['CIF','CIF'],['CFR','CFR'],['FOB','FOB']]:[['L/C',ar?'L/C — اعتماد مستندي':'L/C'],['T/T',ar?'T/T — تحويل بنكي':'T/T'],['OTHER',ar?'تُناقش في العرض':'Discuss in the offer']]).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select>:<input disabled={saving||!!draft.savedRequirementId||!!draft.reorder&&field!=='quantity'} value={draft.data[field]||''} onChange={e=>edit(field,e.target.value)} placeholder={field==='quantity'?(ar?'مثل: 5 FCL أو 40 MT':'e.g. 5 FCL or 40 MT'):field==='packing'?(ar?'مثل: 50 كجم أو تُحدد مع Septlion':'e.g. 50 kg or agree with Septlion'):''} maxLength={2000} autoComplete="off"/>}</label>)}</div>
+          {!draft.reorder&&<label className="composer-notes"><span>{ar?'ملاحظات المواصفة والتوريد — اختياري':'Specification and supply notes — optional'}</span><textarea disabled={saving||!!draft.savedRequirementId} value={draft.notes} onChange={e=>setDraft(d=>({...d,notes:e.target.value}))} maxLength={8000} rows={3} placeholder={ar?'أضف متطلبات الجودة أو التعبئة أو أي تفصيل مهم لعرضك…':'Add quality, packaging or other requirements for your offer…'}/></label>}
+          {draft.savedRequirementId?<a className="primary-link" href={'/request?id='+encodeURIComponent(draft.savedRequirementId)}>{ar?'فتح الطلب الذي أُرسل':'Open submitted request'}</a>:<div className="composer-review-actions"><p>{ready?(ar?'الإرسال يطلب إعداد عرض؛ تثبيت الشروط يتم عند قبول العرض لاحقًا.':'Sending requests an offer. Terms are locked when you accept the offer later.'):requirementQuestion(missing[0],lang,draft.feed)}</p><button className="primary-link" disabled={!hydrated||!ready||saving} onClick={()=>void save()}>{saving?(ar?'جارٍ الإرسال…':'Sending…'):(ar?'إرسال الطلب لإعداد العرض':'Request a Septlion offer')}</button></div>}
+          {saveError&&<p className="workspace-error" role="alert">{saveError}</p>}
+        </section>}
+        <div ref={end}/>
+      </div></div>
+      <form className="chat-composer-wrap" onSubmit={submit}><div className="chat-composer"><textarea aria-label={ar?'احتياجك أو إجابتك':'Your requirement or answer'} ref={box} rows={2} disabled={saving||!!draft.savedRequirementId} value={draft.input} onChange={e=>setDraft(d=>({...d,input:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit();}}} maxLength={4000} placeholder={draft.feed?(ar?'أجب عن السؤال أو اكتب التعديل المطلوب…':'Answer the question or describe a change…'):(ar?'اكتب ما تحتاجه…':'Describe your requirement…')}/><div className="chat-tools"><span className="trade-capability">{ar?'سؤال واحد في كل مرة · ويمكنك تعديل الملخص':'One question at a time · editable summary'}</span><button type="submit" className="chat-send" disabled={!hydrated||!draft.input.trim()||saving||!!draft.savedRequirementId} aria-label={ar?'إضافة إلى الطلب':'Add to requirement'}>↑</button></div></div>{!draft.messages.length&&!draft.feed&&!draft.reorder&&<p className="chat-hint">{ar?'مثال: أحتاج 5 حاويات دقيق مخابز بتعبئة 50 كجم إلى تنزانيا':'Example: 5 containers of bakery flour, 50 kg bags, to Tanzania'}</p>}</form>
+    </section>
+    <footer className="chat-foot">SEPTLION · From demand to trade.</footer>
+  </main>;
+}

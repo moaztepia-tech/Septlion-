@@ -1,4 +1,4 @@
-export type UiRequest={id:string;product:string;packing:string;containers:number;scale:string;incoterm:string;destination:string;payment:string;status:string;createdAt:string};
+export type UiRequest={id:string;product:string;packing:string;containers:number;quantityLabel?:string;scale:string;incoterm:string;destination:string;payment:string;status:string;createdAt:string};
 export function browserRequests():UiRequest[]{
  if(typeof window==='undefined')return [];
  try{
