@@ -154,3 +154,5 @@ export function clearSession() {
   for (const key of [SESSION_KEY, 'septlion_access', 'septlion_refresh']) window.localStorage.removeItem(key);
 }
 export function hasSession() { const s = readSession(); return Boolean(s?.access_token || s?.refresh_token); }
+// Only scopes local UI drafts. The API independently verifies organization access.
+export function sessionUserId() { return readSession()?.user?.id; }

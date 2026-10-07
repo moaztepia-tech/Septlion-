@@ -1,7 +1,22 @@
-import{edge,accessToken}from'./api';import{browserRequests,UiRequest}from'./buyer-ui-store';
-export type ServerRequirement={id:string;product:string;packing?:unknown;containerCount?:number|null;septlionScale?:string|null;incoterm?:string|null;deliveryPort?:string|null;deliveryCountry?:string|null;paymentPreference?:string|null;status:string;createdAt:string};
-const packing=(v:unknown)=>{if(!v)return'تُحدد في الطلب';if(typeof v==='string')return v;if(typeof v==='object'&&v&&'display'in v)return String((v as any).display);return'تُحدد في الطلب'};
-export function mapRequirement(r:ServerRequirement):UiRequest{return{id:r.id,product:r.product||'طلب توريد',packing:packing(r.packing),containers:r.containerCount||1,scale:r.septlionScale||'S-1',incoterm:r.incoterm||'—',destination:r.deliveryPort||r.deliveryCountry||'—',payment:r.paymentPreference||'—',status:r.status,createdAt:r.createdAt}}
-export async function tradeRequests():Promise<UiRequest[]>{if(!accessToken())return browserRequests();try{const r=await edge<{items:ServerRequirement[]}>('requirements.list');return r.items.map(mapRequirement)}catch{return browserRequests()}}
-export async function tradeRequest(id:string):Promise<UiRequest|null>{if(accessToken()&&!id.startsWith('DRAFT-')){try{const r=await edge<{item:ServerRequirement}>('requirements.get',{id});return mapRequirement(r.item)}catch{}}return browserRequests().find(x=>x.id===id)||null}
-export async function createTradeRequirement(input:Record<string,unknown>){return edge<{item:ServerRequirement}>('requirements.create',{input})}
+import {edge,hasSession} from './api';
+import {UiRequest} from './buyer-ui-store';
+export type ServerRequirement={id:string;product:string;packing?:unknown;quantity?:string|number|null;unit?:string|null;market?:string|null;containerCount?:number|null;septlionScale?:string|null;incoterm?:string|null;deliveryPort?:string|null;deliveryCountry?:string|null;paymentPreference?:string|null;status:string;createdAt:string};
+export type RequestDetail={request:UiRequest;rfq:{id:string;reference:string;status:string}|null;offer:{id:string;status:string;currentRevision:number}|null;transaction:{id:string;reference:string;status:string;updatedAt:string}|null};
+const packing=(value:unknown)=>typeof value==='string'?value:value&&typeof value==='object'&&'display'in value?String(value.display):'تُحدد في الطلب';
+export function mapRequirement(row:ServerRequirement):UiRequest{
+  const containers=row.containerCount||0;
+  const quantityLabel=containers?containers+' حاويات':row.quantity&&row.unit?row.quantity+' '+row.unit:'الكمية تُراجع في تفاصيل الطلب';
+  return{id:row.id,product:row.product||'طلب توريد',packing:packing(row.packing),containers,quantityLabel,scale:row.septlionScale||'—',incoterm:row.incoterm||'—',destination:row.deliveryPort||row.deliveryCountry||row.market||'—',payment:row.paymentPreference||'—',status:row.status,createdAt:row.createdAt};
+}
+export async function tradeRequests():Promise<UiRequest[]>{
+  if(!hasSession())throw new Error('سجل الدخول لعرض طلبات مؤسستك.');
+  const result=await edge<{items:ServerRequirement[]}>('requirements.list');
+  return result.items.map(mapRequirement);
+}
+export async function tradeRequestDetails(id:string):Promise<RequestDetail>{
+  if(!hasSession())throw new Error('سجل الدخول لعرض هذا الطلب.');
+  const result=await edge<{item:ServerRequirement;rfq:RequestDetail['rfq'];offer:RequestDetail['offer'];transaction:RequestDetail['transaction']}>('requirements.get',{id});
+  return{request:mapRequirement(result.item),rfq:result.rfq,offer:result.offer&&['ISSUED','REVISED','ACCEPTED'].includes(result.offer.status)?result.offer:null,transaction:result.transaction};
+}
+export async function tradeRequest(id:string):Promise<UiRequest|null>{return(await tradeRequestDetails(id)).request;}
+export async function createTradeRequirement(input:Record<string,unknown>){return edge<{item:ServerRequirement}>('requirements.create',{input});}

@@ -8,8 +8,8 @@ export default function OfferDocumentPage(){
   useEffect(()=>{const id=new URLSearchParams(window.location.search).get('id');if(!id){setErr('اختر عرضًا لعرض مستنده.');return}if(!hasSession()){setErr('سجل الدخول لفتح مستند العرض.');return}edge<OfferDocument>('offers.document',{id}).then(setD).catch(e=>setErr(e.message))},[]);
   const m=d?offerDocumentModel(d):null;
   async function download(){if(!d||busy)return;setBusy(true);setErr('');try{await downloadOfferPdf(d)}catch(e){setErr(e instanceof Error?e.message:'تعذر تنزيل المستند')}finally{setBusy(false)}}
-  return <BuyerShell title="مستند العرض"><section className="buyer-section offer-document-workspace">
-    <div className="offer-document-actions"><a href="/operations">مركز العمليات</a>{d&&<><button className="primary-link" disabled={busy} onClick={download}>{busy?'جارٍ تجهيز PDF…':'تنزيل PDF'}</button><button onClick={()=>window.print()}>طباعة / حفظ PDF نصي</button></>}</div>
+  return <BuyerShell title="مستند العرض" context={{offerId:d?.offer.id}}><section className="buyer-section offer-document-workspace">
+    <div className="offer-document-actions"><a href={d?"/offer?id="+encodeURIComponent(d.offer.id):"/requests"}>العودة إلى العرض والطلب</a>{d&&<><button className="primary-link" disabled={busy} onClick={download}>{busy?'جارٍ تجهيز PDF…':'تنزيل PDF'}</button><button onClick={()=>window.print()}>طباعة / حفظ PDF نصي</button></>}</div>
     {err&&<p role="alert">{err}</p>}{!d&&!err&&<p role="status">جارٍ تحميل المستند المحفوظ…</p>}
     {d&&m&&<article className="offer-document-sheet" dir="rtl">
       <header><img src="/brand/septlion-primary-navy.png" alt="Septlion"/><div><small>SEPTLION</small><h1>{m.testOnly?'عرض TEST غير ملزم':'عرض سعر'}</h1></div></header>

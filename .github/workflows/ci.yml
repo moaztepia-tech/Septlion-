@@ -45,6 +45,8 @@ jobs:
         run: node --test tests/trade-lifecycle.test.mjs
       - name: Requirement input regression tests
         run: node --test tests/requirement-input.test.mjs
+      - name: Customer draft, context, contact and acceptance regression tests
+        run: node --test tests/customer-experience.test.mjs
       - name: Prisma validate
         working-directory: apps/api
         run: pnpm exec prisma validate
@@ -76,4 +78,3 @@ jobs:
         run: pnpm --filter @septlion/web typecheck
       - name: Web production build
         run: pnpm --filter @septlion/web build
-
