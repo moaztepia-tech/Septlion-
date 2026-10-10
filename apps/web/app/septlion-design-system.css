@@ -1905,6 +1905,7 @@ textarea{resize:vertical;line-height:1.75}
 
 .ds-customer button.chip{border:0;background:transparent;box-shadow:none;clip-path:none;min-height:44px}
 .discover-tabs .chip,.discover-pager .chip{height:44px;padding-inline:var(--sp-4);width:auto;font-size:var(--fs-sm)}
-.discover-tabs::-webkit-scrollbar{display:none}
+.ds-customer .discover-tabs{scrollbar-width:none}
+.ds-customer .discover-tabs::-webkit-scrollbar{display:none}
 
 .platform-actions .icon-btn{width:44px;height:44px;padding:0}
