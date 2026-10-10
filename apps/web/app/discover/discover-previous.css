@@ -11,7 +11,7 @@
 .discover-page .discover-section-head h1 { margin: 6px 0 0; line-height: 1.4; }
 .discover-page .discover-section-head > span { display: block; line-height: 1.9; }
 .discover-page .discover-product { min-width: 0; }
-.discover-page .discover-product-visual { position: relative; display: flex; align-items: center; justify-content: center; padding: 64px 20px 88px; min-width: 0; }
+.discover-page .discover-product-visual { position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 64px 20px 40px; min-width: 0; }
 .discover-page .discover-visual-meta { position: absolute; inset-block-start: 24px; inset-inline: 24px; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--sl-muted); }
 .discover-page .discover-visual-meta small { font-size: inherit; }
 .discover-page .discover-bag { position: relative; width: min(210px,100%); min-height: 260px; padding: 36px 18px 24px; border: 1px solid var(--sl-line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
@@ -20,7 +20,7 @@
 .discover-page .discover-bag b { font-size: 24px; }
 .discover-page .discover-bag small { font: 400 13px/1.6 Inter,sans-serif; }
 .discover-page .discover-bag em { font-size: 12px; font-style: normal; line-height: 1.8; }
-.discover-page .discover-pager { position: absolute; inset-block-end: 20px; inset-inline: 12px; display: flex; justify-content: center; gap: 6px; }
+.discover-page .discover-pager { position: relative; margin-block-start: 24px; display: flex; justify-content: center; gap: 6px; }
 .discover-page .discover-pager button { min-height: 44px; min-width: 64px; padding: 8px 12px; border: 1px solid var(--sl-line); background: transparent; color: var(--sl-muted); font-size: 14px; }
 .discover-page .discover-pager button.active { background: var(--sl-mist); color: var(--sl-deep); border-color: var(--sl-mist); font-weight: 700; }
 .discover-page .discover-product-copy { min-width: 0; }

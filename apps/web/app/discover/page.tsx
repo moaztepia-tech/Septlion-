@@ -101,10 +101,10 @@ export default function DiscoverPage(){
 
     <div className="discover-config-head"><small>طلبك يبدأ هنا</small><b>حدّد الأساسيات</b><span>سنكمل التفاصيل داخل الطلب.</span></div><div className="discover-config">
      <div className="discover-label-row"><b>كم تحتاج؟</b><span>الحد الأدنى حاوية واحدة</span></div>
-     <div className="discover-scale-current"><b dir="ltr">{scale}</b><span>{Number.isFinite(range.max)?`${range.min}–${range.max} حاويات`:'1000 حاوية فأكثر'}</span></div>
+     <div className="discover-scale-current"><b dir="ltr">{scale}</b><span><bdi dir="ltr">{Number.isFinite(range.max)?`${range.min}–${range.max}`:'1000+'}</bdi> حاويات</span></div>
      <div className="discover-scale" dir="ltr" aria-hidden="true"><div className="discover-scale-line"/><i style={{insetInlineStart:`calc(${progress}% - 5px)`}}/></div>
      <div className="discover-scale-labels" dir="ltr" aria-hidden="true">{SCALE_RANGES.map(x=><span key={x.name} className={x.name===scale?'active':undefined}>{x.name}</span>)}</div>
-     <div className="discover-counter"><button disabled={count===1} aria-label="تقليل عدد الحاويات" onClick={()=>setContainerCount(count-1)}>−</button><label><span className="sr-only">عدد الحاويات</span><input type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={count} onChange={e=>setContainerCount(Number(e.target.value))}/><small>حاوية</small></label><button disabled={count>=1000000000} aria-label="زيادة عدد الحاويات" onClick={()=>setContainerCount(count+1)}>+</button></div>
+     <div className="discover-counter"><button disabled={count===1} aria-label="تقليل عدد الحاويات" onClick={()=>setContainerCount(count-1)}>−</button><label><span className="sr-only">عدد الحاويات</span><input aria-label="عدد الحاويات" type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={count} onChange={e=>setContainerCount(Number(e.target.value))}/><small>حاوية</small></label><button disabled={count>=1000000000} aria-label="زيادة عدد الحاويات" onClick={()=>setContainerCount(count+1)}>+</button></div>
 
      <fieldset className="discover-choice"><legend>شرط التجارة</legend><div>{(['CIF','CFR','FOB'] as Incoterm[]).map(x=><button key={x} aria-pressed={incoterm===x} className={incoterm===x?'selected':''} onClick={()=>setIncoterm(x)}>{x}</button>)}</div></fieldset>
 
