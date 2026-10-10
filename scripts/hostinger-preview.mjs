@@ -177,7 +177,35 @@ ErrorDocument 404 ${basePath}/404.html
     }
   }
   if (!(await stat(path.join(destination, '_rsc/require.rsc'))).size) throw new Error('Missing App Router navigation payload.');
+  // Verify the built CSS cascade, not just the presence of the latest source.
+  const stylesheetLists = [];
+  for (const route of ['index.html', 'discover/index.html', 'require/index.html', 'requests/index.html']) {
+    const html = await readFile(path.join(destination, route), 'utf8');
+    const stylesheets = [...html.matchAll(/<link\b[^>]*>/g)]
+      .map(match => match[0]).filter(tag => tag.includes('rel="stylesheet"'))
+      .map(tag => tag.match(/href="([^"]+)"/)[1]);
+    stylesheetLists.push(stylesheets);
+  }
+  if (!stylesheetLists[0].length || stylesheetLists.some(list => JSON.stringify(list) !== JSON.stringify(stylesheetLists[0]))) {
+    throw new Error('A route stylesheet can override the approved customer theme.');
+  }
+  const stylesheets = await Promise.all(stylesheetLists[0].map(url => {
+    if (!url.startsWith(basePath + '/_next/static/css/')) throw new Error('Unscoped customer stylesheet.');
+    return readFile(path.join(destination, url.slice(basePath.length + 1)), 'utf8');
+  }));
+  const css = require('postcss').parse(stylesheets.join('\n'));
+  for (const [selector, expected] of [['.discover-page', 'radial-gradient'], ['.discover-page .discover-product', 'linear-gradient']]) {
+    let winner;
+    css.walkRules(rule => {
+      if (rule.parent.type === 'atrule' || !rule.selector.split(',').includes(selector)) return;
+      rule.walkDecls('background', declaration => {
+        if (!winner || declaration.important || !winner.important) winner = declaration;
+      });
+    });
+    if (!winner?.value.includes(expected)) throw new Error('Legacy CSS hides the approved theme: ' + selector);
+  }
   console.log('Verified preview package: ' + routes.length + ' routes, scoped assets, RSC navigation and noindex.');
+  console.log('Verified stable customer stylesheet order and visible v2 theme.');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

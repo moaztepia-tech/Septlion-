@@ -1,6 +1,5 @@
 'use client';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import './discover-previous.css';
 import {catalogPreview} from '../../lib/catalog-preview';
 import {useRouter} from 'next/navigation';
 import {SCALE_RANGES,getSeptlionScale,scaleProgress} from '../../lib/septlion-scale';

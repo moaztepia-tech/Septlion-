@@ -5,6 +5,9 @@ import './intelligence.css';
 import './offer-workspace.css';
 import './trade-workspace.css';
 import './customer-experience.css';
+// Load the catalog baseline in the same bundle before the approved v2 theme.
+// Route-loaded legacy CSS otherwise overrides v2 after navigation or refresh.
+import './discover/discover-previous.css';
 import './septlion-v2.css';
 
 export const metadata = {
