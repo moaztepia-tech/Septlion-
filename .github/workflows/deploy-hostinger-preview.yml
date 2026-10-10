@@ -1,0 +1,71 @@
+name: Deploy customer v2 Preview to Hostinger
+
+on:
+  push:
+    branches: [septlion-customer-v2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: septlion-customer-v2-hostinger-preview
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    if: github.ref == 'refs/heads/septlion-customer-v2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify preview isolation
+        run: node --test tests/hostinger-preview.test.mjs
+      - name: Prepare isolated preview build
+        run: node scripts/hostinger-preview.mjs --prepare
+      - name: Typecheck preview URLs
+        run: pnpm --filter @septlion/web typecheck
+      - name: Build customer preview
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD
+        run: pnpm --filter @septlion/web build
+      - name: Package and verify separate preview routes
+        run: node scripts/hostinger-preview.mjs --package
+      - name: Upload only the preview directory to Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: deploy-preview/
+          server-dir: /domains/septlion.com/public_html/preview/septlion-customer-v2/
+          state-name: .ftp-deploy-preview-sync-state.json
+          dangerous-clean-slate: false
+      - name: Verify deployed preview build
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          const base = 'https://septlion.com/preview/septlion-customer-v2';
+          const response = await fetch(base + '/deployment.json?commit=' + process.env.EXPECTED_COMMIT);
+          if (!response.ok) throw new Error('Preview deployment marker returned ' + response.status);
+          const deployed = await response.json();
+          if (deployed.commit !== process.env.EXPECTED_COMMIT) throw new Error('Hostinger is serving a different commit.');
+          for (const route of ['/', '/discover/', '/require/', '/account/']) {
+            const page = await fetch(base + route);
+            if (!page.ok || !(await page.text()).includes('/preview/septlion-customer-v2/_next/')) throw new Error('Preview route failed: ' + route);
+          }
+          console.log('Verified Hostinger preview: ' + base + '/');
+          NODE
