@@ -187,3 +187,14 @@
  .buyer-app .customer-next-action,.buyer-app .workspace-heading,.buyer-app .profile-card{align-items:stretch}.buyer-app .trade-subnav{overflow:auto}
 }
 @media(max-width:480px){.buyer-app .terms-grid{grid-template-columns:1fr}.buyer-app .section-intro h1,.buyer-app .execution-head h1,.buyer-app .profile-card h1,.buyer-app .offer-hero h1{font-size:29px}}
+
+/* QA hardening — preserve readable controls and responsive navigation */
+.product-home select option,.discover-page select option,.customer-composer select option,.buyer-app select option{background:#071536;color:#E9EDF5}
+.product-home a:focus-visible,.product-home button:focus-visible,.discover-page a:focus-visible,.discover-page button:focus-visible,.customer-composer a:focus-visible,.customer-composer button:focus-visible,.buyer-app a:focus-visible,.buyer-app button:focus-visible{outline:2px solid var(--v2-sky);outline-offset:3px}
+@media(max-width:760px){
+ .buyer-app .platform-navigation{display:none}
+ .buyer-app .v3-stage{overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
+ .buyer-app .v3-stage::-webkit-scrollbar{display:none}
+ .buyer-app .v3-stage span{min-width:72px}
+}
+@media(prefers-reduced-motion:reduce){.discover-page *,.customer-composer *,.buyer-app *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
