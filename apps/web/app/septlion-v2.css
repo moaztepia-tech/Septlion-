@@ -138,3 +138,52 @@
 .customer-composer .composer-field-grid label,.customer-composer .composer-notes{color:#cbd5e8}.customer-composer .composer-field-grid input,.customer-composer .composer-field-grid select,.customer-composer .composer-notes textarea,.customer-composer .chat-composer textarea{background:rgb(2 9 24/.70);color:var(--v2-mist);border-color:rgb(143 166 214/.23);border-radius:0;clip-path:var(--v2-shape)}
 .customer-composer .composer-review-actions{border-color:rgb(143 166 214/.14)}.customer-composer .chat-composer-wrap{background:linear-gradient(180deg,transparent,rgb(3 13 38/.96) 26%)}.customer-composer .chat-composer{background:#071536;border:1px solid rgb(143 166 214/.28);border-radius:0;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-md)}
 .customer-composer .chat-hint,.customer-composer .trade-capability,.customer-composer .chat-foot{color:#8192b5}
+
+
+/* Unified post-Composer customer workspace */
+.buyer-app.v3-app{
+ --canvas:var(--v2-deep);--surface:#071536;--ink:var(--v2-mist);--muted:#98a8c7;--line:rgb(143 166 214/.18);
+ --brand-primary:var(--v2-sky);--brand-steel:var(--v2-sky);--brand-mist:rgb(143 166 214/.10);
+ min-height:100vh;background:radial-gradient(ellipse at 50% 0%,var(--v2-light),var(--v2-navy) 52%,var(--v2-deep));color:var(--v2-mist);font-family:var(--font-ar)
+}
+.buyer-app.v3-app .platform-header{background:rgb(3 13 38/.88);border-color:rgb(143 166 214/.14);backdrop-filter:blur(18px)}
+.buyer-app.v3-app .platform-brand{background:var(--v2-mist);padding:6px 12px;clip-path:var(--v2-shape)}
+.buyer-app.v3-app .platform-brand img{height:38px;width:132px}
+.buyer-app.v3-app .platform-action{color:#aebbd7}
+.buyer-app .v3-context{border-bottom:1px solid rgb(143 166 214/.13);background:rgb(3 13 38/.46)}
+.buyer-app .v3-context>div{max-width:1184px;margin:auto;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}
+.buyer-app .v3-context small{font-family:var(--font-en);font-size:10px;letter-spacing:.18em;color:var(--v2-sky)}
+.buyer-app .v3-context span{font-size:15px;font-weight:700;color:#dce4f3}
+.buyer-app .trade-subnav{background:rgb(5 25 69/.72);border-color:rgb(143 166 214/.13);backdrop-filter:blur(14px)}
+.buyer-app .trade-subnav a,.buyer-app .trade-subnav>span{color:#8192b5;border-color:transparent}
+.buyer-app .trade-subnav a.active{color:var(--v2-mist);border-color:var(--v2-sky);background:rgb(143 166 214/.06)}
+.buyer-app .v3-body{max-width:1184px;margin:auto;padding:52px 32px 96px}
+.buyer-app .buyer-section{display:grid;gap:24px}
+.buyer-app .section-intro{max-width:760px;margin-bottom:12px}.buyer-app .section-intro small,.buyer-app .execution-head small,.buyer-app .profile-card small,.buyer-app .action-card>small{font-family:var(--font-en);letter-spacing:.16em;color:var(--v2-sky)}
+.buyer-app .section-intro h1,.buyer-app .execution-head h1,.buyer-app .profile-card h1,.buyer-app .action-card h2,.buyer-app .offer-hero h1{color:var(--v2-mist);font-size:clamp(28px,4vw,44px);margin:8px 0 10px}
+.buyer-app .section-intro p,.buyer-app .execution-head p,.buyer-app .profile-card p,.buyer-app .action-card p,.buyer-app .offer-hero p,.buyer-app .workspace-muted{color:#98a8c7;line-height:1.9}
+.buyer-app .request-list,.buyer-app .document-list,.buyer-app .settings-list{display:grid;gap:12px}
+.buyer-app .request-row,.buyer-app .notification-row,.buyer-app .settings-list>a,.buyer-app .settings-list>button{
+ background:linear-gradient(180deg,rgb(10 24 56/.82),rgb(5 25 69/.72));border:1px solid rgb(143 166 214/.19);color:var(--v2-mist);border-radius:0;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-sm)
+}
+.buyer-app .request-row{padding:24px 26px}.buyer-app .request-row small,.buyer-app .request-row p,.buyer-app .notification-row p,.buyer-app .notification-row time{color:#8fa0c0}.buyer-app .request-row>span,.buyer-app .notification-row>span{color:var(--v2-sky)}
+.buyer-app .empty-state,.buyer-app .profile-card,.buyer-app .action-card,.buyer-app .request-summary,.buyer-app .customer-next-action,.buyer-app .offer-note,.buyer-app .offer-acceptance,.buyer-app .terms-grid>div,.buyer-app .receipt-confirmation{
+ background:linear-gradient(180deg,rgb(10 24 56/.84),rgb(5 25 69/.76));border:1px solid rgb(143 166 214/.20);color:var(--v2-mist);border-radius:0;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-sm)
+}
+.buyer-app .empty-state,.buyer-app .profile-card,.buyer-app .action-card,.buyer-app .customer-next-action,.buyer-app .offer-note,.buyer-app .offer-acceptance{padding:28px}
+.buyer-app .request-summary{padding:28px}.buyer-app .request-summary h2,.buyer-app .customer-next-action h1,.buyer-app .customer-next-action h2,.buyer-app .offer-note h2{color:var(--v2-mist)}
+.buyer-app .request-summary p,.buyer-app .customer-next-action p,.buyer-app .offer-note p{color:#98a8c7}
+.buyer-app .status-pill{background:rgb(143 166 214/.12);border:1px solid rgb(143 166 214/.22);color:#cbd6ea;border-radius:0;clip-path:var(--v2-shape)}
+.buyer-app .terms-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.buyer-app .terms-grid>div{padding:22px}.buyer-app .terms-grid small{display:block;color:#8192b5;margin-bottom:7px}.buyer-app .terms-grid b{color:#dce4f3}
+.buyer-app .primary-link{background:linear-gradient(180deg,#304878,var(--v2-navy));border:1px solid rgb(143 166 214/.50);color:var(--v2-mist);border-radius:0;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-sm)}
+.buyer-app .secondary-link{background:rgb(143 166 214/.07);border:1px solid rgb(143 166 214/.24);color:#cbd6ea;border-radius:0;clip-path:var(--v2-shape)}
+.buyer-app .action-card label{color:#cbd6ea}.buyer-app .action-card input{background:rgb(2 9 24/.68);border:1px solid rgb(143 166 214/.24);color:var(--v2-mist);border-radius:0;clip-path:var(--v2-shape)}
+.buyer-app .avatar{background:linear-gradient(180deg,#304878,var(--v2-navy));color:var(--v2-mist);border:1px solid rgb(143 166 214/.35)}
+.buyer-app .v3-stage{background:transparent;border:0}.buyer-app .v3-stage:before{background:rgb(143 166 214/.15)}.buyer-app .v3-stage span i{background:#071536;border-color:rgb(143 166 214/.28);color:#8192b5}.buyer-app .v3-stage span.on i{background:var(--v2-sky);border-color:var(--v2-sky);color:var(--v2-deep)}.buyer-app .v3-stage span small{color:#8192b5}.buyer-app .v3-stage span.on small{color:#dce4f3}
+.buyer-app .workspace-heading{gap:24px}.buyer-app .workspace-loading,.buyer-app .workspace-reference{color:#91a2c4}.buyer-app .workspace-error{color:#ffb4b4}
+.buyer-app .notification-row{padding:22px 24px}.buyer-app .offer-acceptance input{accent-color:var(--v2-sky)}
+@media(max-width:760px){
+ .buyer-app .v3-context>div{padding:16px 18px}.buyer-app .v3-body{padding:34px 16px 88px}.buyer-app .terms-grid{grid-template-columns:1fr 1fr}
+ .buyer-app .customer-next-action,.buyer-app .workspace-heading,.buyer-app .profile-card{align-items:stretch}.buyer-app .trade-subnav{overflow:auto}
+}
+@media(max-width:480px){.buyer-app .terms-grid{grid-template-columns:1fr}.buyer-app .section-intro h1,.buyer-app .execution-head h1,.buyer-app .profile-card h1,.buyer-app .offer-hero h1{font-size:29px}}
