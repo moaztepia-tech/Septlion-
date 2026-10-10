@@ -77,3 +77,64 @@
   .product-home .home-composer-actions{gap:12px}.product-home .home-composer-actions .primary-link{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.product-home *{animation:none!important;transition-duration:.01ms!important}}
+
+
+/* Discover v2 */
+.discover-page{
+ --sl-navy:var(--v2-navy);--sl-deep:var(--v2-deep);--sl-steel:var(--v2-steel);--sl-mist:var(--v2-mist);
+ --sl-white:#071536;--sl-ink:var(--v2-mist);--sl-muted:#9eacc9;--sl-line:rgb(143 166 214/.17);--sl-canvas:var(--v2-deep);
+ min-height:100vh!important;background:radial-gradient(ellipse at 50% 0%,var(--v2-light),var(--v2-navy) 52%,var(--v2-deep))!important;color:var(--v2-mist)!important;
+ font-family:var(--font-ar)!important
+}
+.discover-page .discover-top{background:rgb(3 13 38/.88)!important;border-color:rgb(143 166 214/.14)!important;color:var(--v2-mist)!important;max-width:none!important;width:100%!important;padding-inline:max(24px,calc((100vw - 1184px)/2))!important;position:sticky;top:0;z-index:35}
+.discover-page .discover-brand{background:var(--v2-mist);padding:5px 10px;clip-path:var(--v2-shape)}
+.discover-page .discover-brand img{height:38px!important;max-width:140px!important}
+.discover-page .discover-top nav a,.discover-page .discover-muted{color:#aab8d5!important}
+.discover-page .discover-top nav a.active{color:var(--v2-mist)!important}
+.discover-page .discover-top nav a.active:after{background:var(--v2-sky)!important}
+.discover-page .discover-home-ai,.discover-page .discover-primary{background:linear-gradient(180deg,#304878,var(--v2-navy))!important;border:1px solid rgb(143 166 214/.48)!important;color:var(--v2-mist)!important;border-radius:0!important;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-sm)}
+.discover-page .discover-tabs{top:76px;background:rgb(3 13 38/.88)!important;border-color:rgb(143 166 214/.12)!important;backdrop-filter:blur(18px)}
+.discover-page .discover-tabs button{color:#8798bb}.discover-page .discover-tabs button.active{color:var(--v2-mist)!important;border-color:var(--v2-sky)!important}
+.discover-page .discover-feed{max-width:1184px!important;width:calc(100% - 64px);padding:46px 0 110px!important}
+.discover-page .discover-section-head{display:flex!important;padding:0 0 28px!important}
+.discover-page .discover-section-head small,.discover-page .discover-config-head small,.discover-page .discover-product-copy>small{color:var(--v2-sky)!important}
+.discover-page .discover-section-head h1{color:var(--v2-mist)!important;font-size:clamp(30px,4vw,46px)!important}
+.discover-page .discover-section-head>span{color:#91a2c4!important;max-width:390px!important;font-size:12px!important}
+.discover-page .discover-product{
+ display:grid;grid-template-columns:minmax(300px,.9fr) minmax(300px,.85fr) minmax(340px,1.05fr);
+ background:linear-gradient(180deg,rgb(10 24 56/.92),rgb(5 25 69/.88))!important;border:1px solid rgb(143 166 214/.28)!important;
+ border-radius:0!important;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-lg)!important;overflow:hidden
+}
+.discover-page .discover-product-visual{height:auto!important;min-height:590px;background:radial-gradient(circle at 50% 40%,#173267 0,#081b43 48%,#030d26 100%)!important;border:0!important}
+.discover-page .discover-bag{background:linear-gradient(180deg,#102b60,#06112e)!important;color:var(--v2-mist)!important;border-color:rgb(143 166 214/.38)!important;box-shadow:0 30px 60px rgb(0 0 0/.50)!important}
+.discover-page .discover-bag:before{background:var(--v2-sky)!important}.discover-page .discover-bag span,.discover-page .discover-bag small,.discover-page .discover-bag em{color:#aebbd7!important}
+.discover-page .discover-product-copy{padding:40px 32px!important;border-inline-end:1px solid rgb(143 166 214/.14)}
+.discover-page .discover-product-copy h2{color:var(--v2-mist);font-size:32px!important}.discover-page .discover-product-copy p,.discover-page .discover-product-copy dt{color:#91a2c4!important}
+.discover-page .discover-product-copy dl{border-color:rgb(143 166 214/.14)}.discover-page .discover-product-copy dl div{border-color:rgb(143 166 214/.14);font-size:12px}.discover-page .discover-product-copy dd{color:#dce4f3!important}
+.discover-page .discover-config-head{margin:0;padding:36px 28px 12px;border:0;grid-column:3}.discover-page .discover-config{padding:0 28px 32px!important;grid-column:3}
+.discover-page .discover-label-row span,.discover-page .discover-counter small,.discover-page .discover-scale-labels small,.discover-page .discover-assurance{color:#8192b5!important}
+.discover-page .discover-counter,.discover-page .discover-destination,.discover-page .discover-choice button{background:rgb(2 9 24/.58)!important;border:1px solid rgb(143 166 214/.22)!important;border-radius:0!important;color:#c7d1e5!important;clip-path:var(--v2-shape)}
+.discover-page .discover-counter button,.discover-page .discover-destination>strong{color:var(--v2-sky)!important}.discover-page .discover-choice button.selected{background:linear-gradient(180deg,#304878,var(--v2-navy))!important;color:var(--v2-mist)!important;border-color:rgb(143 166 214/.55)!important}
+.discover-page .discover-scale-line{background:rgb(143 166 214/.18)!important}.discover-page .discover-scale i{background:var(--v2-sky)!important;box-shadow:0 0 12px rgb(143 166 214/.60)!important}.discover-page .discover-scale-current{color:var(--v2-sky)!important}
+.discover-page .discover-category-empty{background:rgb(10 24 56/.55);border-color:rgb(143 166 214/.18);border-radius:0;clip-path:var(--v2-shape)}
+.discover-page .discover-bottom-nav{background:rgb(3 13 38/.94);border-color:rgb(143 166 214/.16)}.discover-page .discover-bottom-nav a{color:#8293b6!important}.discover-page .discover-bottom-nav .active{color:var(--v2-sky)!important}
+.discover-page .discover-overlay{background:rgb(1 6 18/.72);backdrop-filter:blur(10px)}.discover-page .discover-sheet{background:#071536;color:var(--v2-mist);border:1px solid rgb(143 166 214/.25);border-radius:0!important;box-shadow:var(--v2-shadow-lg)!important}
+.discover-page .discover-sheet>input,.discover-page .discover-identity label input{background:rgb(2 9 24/.72);color:var(--v2-mist);border-color:rgb(143 166 214/.24);border-radius:0!important}.discover-page .discover-destinations button{background:transparent;color:var(--v2-mist);border-color:rgb(143 166 214/.14)}
+.discover-page .discover-sheet-head>button{background:rgb(143 166 214/.10);color:var(--v2-mist)}
+@media(max-width:980px){.discover-page .discover-product{grid-template-columns:1fr 1fr}.discover-page .discover-product-visual{min-height:430px}.discover-page .discover-config-head,.discover-page .discover-config{grid-column:1/-1}.discover-page .discover-product-copy{border-inline-end:0}}
+@media(max-width:700px){.discover-page .discover-top{padding-inline:14px!important}.discover-page .discover-tabs{top:66px}.discover-page .discover-feed{width:calc(100% - 28px)}.discover-page .discover-section-head{display:block!important}.discover-page .discover-section-head>span{margin-top:10px!important}.discover-page .discover-product{display:block}.discover-page .discover-product-visual{min-height:300px}.discover-page .discover-product-copy{padding:26px 22px!important}.discover-page .discover-config-head{padding:24px 22px 10px}.discover-page .discover-config{padding:0 22px 26px!important}}
+
+/* Composer v2 */
+.customer-composer{--canvas:var(--v2-deep);--surface:#071536;--ink:var(--v2-mist);--muted:#9aa9c7;--line:rgb(143 166 214/.18);--brand-primary:var(--v2-sky);--brand-steel:var(--v2-sky);--brand-mist:rgb(143 166 214/.10);background:radial-gradient(ellipse at 50% 0%,var(--v2-light),var(--v2-navy) 55%,var(--v2-deep));color:var(--v2-mist)}
+.customer-composer .platform-header{background:rgb(3 13 38/.86);border-color:rgb(143 166 214/.14);backdrop-filter:blur(18px)}
+.customer-composer .platform-brand{background:var(--v2-mist);padding:6px 12px;clip-path:var(--v2-shape)}.customer-composer .platform-brand img{height:38px;width:132px}
+.customer-composer .primary-link,.customer-composer .secondary-link,.customer-composer .chat-send{border-radius:0;clip-path:var(--v2-shape);border:1px solid rgb(143 166 214/.45);background:linear-gradient(180deg,#304878,var(--v2-navy));color:var(--v2-mist)}
+.customer-composer .platform-action{color:#aebbd7}.customer-composer .chat-stage{color:var(--v2-mist)}
+.customer-composer .composer-status{color:#8192b5}.customer-composer .chat-welcome{text-align:center;max-width:760px;margin-inline:auto}.customer-composer .chat-welcome h1{color:var(--v2-mist);font-size:clamp(32px,4vw,50px)}.customer-composer .chat-welcome p{color:#9dacc9}
+.customer-composer .chat-msg.assistant>div,.customer-composer .feed-context-card{background:rgb(10 24 56/.72);border:1px solid rgb(143 166 214/.18);color:#dce4f3;border-radius:0;clip-path:var(--v2-shape)}
+.customer-composer .chat-msg.user>div{background:linear-gradient(180deg,#304878,var(--v2-navy));color:var(--v2-mist);border-radius:0;clip-path:var(--v2-shape)}
+.customer-composer .composer-review{background:linear-gradient(180deg,rgb(10 24 56/.90),rgb(5 25 69/.88));border-color:rgb(143 166 214/.28);border-radius:0;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-lg)}
+.customer-composer .composer-review h2{color:var(--v2-mist)}.customer-composer .composer-review-head>span{background:rgb(143 166 214/.10);color:#c4d0e6;border-radius:0;clip-path:var(--v2-shape)}
+.customer-composer .composer-field-grid label,.customer-composer .composer-notes{color:#cbd5e8}.customer-composer .composer-field-grid input,.customer-composer .composer-field-grid select,.customer-composer .composer-notes textarea,.customer-composer .chat-composer textarea{background:rgb(2 9 24/.70);color:var(--v2-mist);border-color:rgb(143 166 214/.23);border-radius:0;clip-path:var(--v2-shape)}
+.customer-composer .composer-review-actions{border-color:rgb(143 166 214/.14)}.customer-composer .chat-composer-wrap{background:linear-gradient(180deg,transparent,rgb(3 13 38/.96) 26%)}.customer-composer .chat-composer{background:#071536;border:1px solid rgb(143 166 214/.28);border-radius:0;clip-path:var(--v2-shape);box-shadow:var(--v2-shadow-md)}
+.customer-composer .chat-hint,.customer-composer .trade-capability,.customer-composer .chat-foot{color:#8192b5}
