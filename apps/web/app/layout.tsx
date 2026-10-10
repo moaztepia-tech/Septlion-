@@ -1,14 +1,4 @@
-import './design-tokens.css';
-import './globals.css';
-import './platform-v1.css';
-import './intelligence.css';
-import './offer-workspace.css';
-import './trade-workspace.css';
-import './customer-experience.css';
-// Load the catalog baseline in the same bundle before the approved v2 theme.
-// Route-loaded legacy CSS otherwise overrides v2 after navigation or refresh.
-import './discover/discover-previous.css';
-import './septlion-v2.css';
+import './septlion-design-system.css';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
@@ -37,5 +27,5 @@ export const metadata = {
 export const viewport = {themeColor:'#051945'};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body>{children}</body></html>;
+  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body className="ds-customer">{children}</body></html>;
 }

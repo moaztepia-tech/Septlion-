@@ -167,7 +167,7 @@ ErrorDocument 404 ${basePath}/404.html
 `);
   await writeFile(path.join(destination, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
   await writeFile(path.join(destination, 'deployment.json'), JSON.stringify({branch: 'septlion-customer-v2', commit: process.env.GITHUB_SHA || 'local-validation', basePath, buildId, routes, backend: 'existing Septlion Supabase backend', deployedAt: new Date().toISOString()}, null, 2) + '\n');
-  for (const route of ['/', '/discover', '/require', '/requests', '/request', '/offer', '/offer-document', '/commit', '/execution', '/documents', '/receive', '/reorder', '/account', '/notifications']) {
+  for (const route of ['/', '/discover', '/require', '/requests', '/request', '/offer', '/offer-document', '/commit', '/execution', '/documents', '/receive', '/reorder', '/account', '/notifications', '/product', '/review', '/my-septlion', '/company']) {
     const file = path.join(destination, route === '/' ? 'index.html' : route.slice(1) + '/index.html');
     if (!(await stat(file)).size) throw new Error('Missing preview route: ' + route);
     const html = await readFile(file, 'utf8');
@@ -179,7 +179,7 @@ ErrorDocument 404 ${basePath}/404.html
   if (!(await stat(path.join(destination, '_rsc/require.rsc'))).size) throw new Error('Missing App Router navigation payload.');
   // Verify the built CSS cascade, not just the presence of the latest source.
   const stylesheetLists = [];
-  for (const route of ['index.html', 'discover/index.html', 'require/index.html', 'requests/index.html']) {
+  for (const route of ['index.html', 'discover/index.html', 'require/index.html', 'review/index.html', 'requests/index.html', 'product/index.html', 'my-septlion/index.html', 'company/index.html', 'request/index.html', 'offer/index.html', 'execution/index.html', 'documents/index.html']) {
     const html = await readFile(path.join(destination, route), 'utf8');
     const stylesheets = [...html.matchAll(/<link\b[^>]*>/g)]
       .map(match => match[0]).filter(tag => tag.includes('rel="stylesheet"'))
@@ -205,7 +205,8 @@ ErrorDocument 404 ${basePath}/404.html
     if (!winner?.value.includes(expected)) throw new Error('Legacy CSS hides the approved theme: ' + selector);
   }
   console.log('Verified preview package: ' + routes.length + ' routes, scoped assets, RSC navigation and noindex.');
-  console.log('Verified stable customer stylesheet order and visible v2 theme.');
+  for(const value of ['--color-navy:#051945','--color-navy-dark:#030D26','--fs-base:14px',"font-family:Montserrat",'.layer-4', '.btn .inner-edge']){const normalized=stylesheets.join('').replace(/\s+/g,'').toLowerCase();if(!normalized.includes(value.replace(/\s+/g,'').toLowerCase()))throw new Error('Missing approved Design System v1.0 value: '+value);}
+  console.log('Verified single shared customer stylesheet and approved Design System v1.0 components.');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

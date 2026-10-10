@@ -22,14 +22,14 @@ export function PlatformIcon({name}: {name: IconName}) {
 const links = [
   {href: '/', ar: 'الرئيسية', en: 'Home', icon: 'home'},
   {href: '/discover', ar: 'اكتشف', en: 'Discover', icon: 'discover'},
-  {href: '/requests', ar: 'التجارة', en: 'Trade', icon: 'trade'},
-  {href: '/account', ar: 'الحساب', en: 'Account', icon: 'account'},
+  {href: '/my-septlion', ar: 'مساحتي', en: 'My Septlion', icon: 'trade'},
+  {href: '/company', ar: 'الشركة', en: 'Company', icon: 'account'},
 ] as const;
 const tradePaths = ['/request','/offer','/commit','/execution','/documents','/receive','/reorder'];
 
 export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {actions?: ReactNode; lang?: 'ar' | 'en'; showOperations?: boolean}) {
   const pathname = (usePathname() || '/').replace(/\/+$/, '') || '/';
-  const active = (href: string) => href === '/' ? pathname === '/' : href === '/requests' ? pathname === href || tradePaths.some(p => pathname === p || pathname.startsWith(p + '/')) : pathname === href || pathname.startsWith(href + '/');
+  const active = (href: string) => href === '/' ? pathname === '/' : href === '/my-septlion' ? pathname === href || pathname === '/requests' || tradePaths.some(p => pathname === p || pathname.startsWith(p + '/')) : pathname === href || pathname.startsWith(href + '/');
   return <>
     <header className="platform-header">
       <div className="platform-header-inner">

@@ -14,6 +14,7 @@ export type FeedContext = {
   buyer: {name: string; company: string; whatsapp: string; email: string | null; whatsappStatus: string};
 };
 export type ComposerDraft = {
+  composerVisited?: boolean;
   version: 2; id: string; ownerId?: string; data: RequirementData; feed: FeedContext | null;
   messages: Array<{role: 'user' | 'assistant'; text: string}>;
   supplyPlan?: SupplyPlan | null;
@@ -134,7 +135,7 @@ export function restoreComposerDraft(raw: string | null, ownerId?: string): Comp
     if (draft?.version !== 2 || typeof draft.id !== 'string' || !draft.data || Array.isArray(draft.data) || (draft.ownerId && draft.ownerId !== ownerId)) return null;
     const data: RequirementData = {};
     for (const key of requirementFields) if (typeof draft.data[key] === 'string') data[key] = draft.data[key].slice(0,2000);
-    return {...emptyComposerDraft(draft.id), data, ...(typeof draft.ownerId === 'string' ? {ownerId: draft.ownerId} : {}), feed: isFeedContext(draft.feed) ? draft.feed : null,
+    return {...emptyComposerDraft(draft.id), ...(draft.composerVisited === true ? {composerVisited:true} : {}), data, ...(typeof draft.ownerId === 'string' ? {ownerId: draft.ownerId} : {}), feed: isFeedContext(draft.feed) ? draft.feed : null,
       messages: Array.isArray(draft.messages) ? draft.messages.filter((x: any) => ['user','assistant'].includes(x?.role) && typeof x.text === 'string').slice(-100).map((x: any) => ({role:x.role,text:x.text.slice(0,4000)})) : [],
       input: typeof draft.input === 'string' ? draft.input.slice(0,4000) : '', notes: typeof draft.notes === 'string' ? draft.notes.slice(0,8000) : '',
       ...(typeof draft.reorder?.transactionId === 'string' && typeof draft.reorder.unit === 'string' ? {reorder: {transactionId: draft.reorder.transactionId, unit: draft.reorder.unit, testOnly: Boolean(draft.reorder.testOnly)}} : {}),
