@@ -1,5 +1,6 @@
 'use client';
 
+import {DesignLink} from './design-system';
 import type {ReactNode} from 'react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -43,9 +44,9 @@ export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {
           <Link className="platform-action mobile-discover" href="/discover">{lang === 'ar' ? 'اكتشف' : 'Discover'}</Link>
           {actions ?? <>
             {showOperations && <Link className="platform-action" href="/operations" aria-label="العمليات"><PlatformIcon name="operations"/><span className="platform-action-label">العمليات</span></Link>}
-            <Link className="platform-action" href="/notifications" aria-label={lang === 'ar' ? 'التنبيهات' : 'Notifications'}><PlatformIcon name="bell"/><span className="platform-action-label">{lang === 'ar' ? 'التنبيهات' : 'Notifications'}</span></Link>
-            <Link className="platform-action" href="/account" aria-label={lang === 'ar' ? 'الحساب' : 'Account'}><PlatformIcon name="account"/><span className="platform-action-label">{lang === 'ar' ? 'الحساب' : 'Account'}</span></Link>
-            <Link className="primary-link header-start" href="/require">{lang === 'ar' ? 'ابدأ طلبًا' : 'Start a requirement'}</Link>
+            <DesignLink className="icon-btn platform-action" href="/notifications" aria-label={lang === 'ar' ? 'التنبيهات' : 'Notifications'}><PlatformIcon name="bell"/><span className="platform-action-label">{lang === 'ar' ? 'التنبيهات' : 'Notifications'}</span></DesignLink>
+            <DesignLink className="icon-btn platform-action" href="/account" aria-label={lang === 'ar' ? 'الحساب' : 'Account'}><PlatformIcon name="account"/><span className="platform-action-label">{lang === 'ar' ? 'الحساب' : 'Account'}</span></DesignLink>
+            <DesignLink className="primary-link header-start" href="/require">{lang === 'ar' ? 'ابدأ طلبًا' : 'Start a requirement'}</DesignLink>
           </>}
         </div>
       </div>

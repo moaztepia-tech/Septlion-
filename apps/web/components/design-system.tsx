@@ -18,3 +18,11 @@ export function DesignLink({children, className = '', ...props}: AnchorHTMLAttri
 export function DesignCard({children, className = ''}: {children: ReactNode; className?: string}) {
   return <section className={'card layer-4 ' + className}><DesignLayers sheen/><div className="card-content">{children}</div></section>;
 }
+
+export function DesignField({children, multiline = false}: {children: ReactNode; multiline?: boolean}) {
+  return <span className={'field ds-field layer-3' + (multiline ? ' multiline' : '')}><DesignLayers/>{children}</span>;
+}
+
+export function DesignChip({children, className = '', ...props}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return <button {...props} className={'chip ' + className}><DesignLayers/><span className="label">{children}</span></button>;
+}

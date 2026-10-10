@@ -1,5 +1,5 @@
 'use client';
-import {DesignLink, DesignButton, DesignLayers} from "../components/design-system";
+import {DesignField, DesignLink, DesignButton, DesignLayers} from "../components/design-system";
 import {FormEvent, useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {PlatformHeader, PlatformIcon} from '../components/platform-header';
@@ -64,12 +64,12 @@ export default function Home() {
       <div className="product-hero-copy"><small>من احتياجك إلى التوريد</small><h1 id="home-title">ماذا تحتاج؟</h1><p>صف احتياجك. سنرتّب المواصفة والتوريد والخطوة التالية معك.</p></div>
       <form className="home-composer-panel layer-4" onSubmit={start}><DesignLayers sheen/><div className="card-content">
         <div className="home-commercial-fields">
-          <label><span>الوجهة</span><select value={destination} onChange={e=>setDestination(e.target.value)}><option value="">حدّد دولة أو ميناء</option>{ports.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-          <label><span>شرط التجارة</span><select value={incoterm} onChange={e=>setIncoterm(e.target.value)}>{['CIF','CFR','FOB'].map(x=><option key={x}>{x}</option>)}</select></label>
-          <label><span>طريقة الدفع</span><select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></label>
+          <label><span>الوجهة</span><DesignField><select value={destination} onChange={e=>setDestination(e.target.value)}><option value="">حدّد دولة أو ميناء</option>{ports.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></DesignField></label>
+          <label><span>شرط التجارة</span><DesignField><select value={incoterm} onChange={e=>setIncoterm(e.target.value)}>{['CIF','CFR','FOB'].map(x=><option key={x}>{x}</option>)}</select></DesignField></label>
+          <label><span>طريقة الدفع</span><DesignField><select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></DesignField></label>
           <div className="home-volume"><div className="home-volume-label"><span>عدد الحاويات</span><small dir="ltr">{getSeptlionScale(count)}</small></div><div className="home-scale" dir="ltr" aria-hidden="true"><i style={{insetInlineStart:`calc(${scaleProgress(count)}% - 5px)`}}/></div><div className="home-volume-counter"><DesignButton type="button" disabled={count===1} aria-label="تقليل عدد الحاويات" onClick={()=>safeCount(count-1)}>−</DesignButton><input aria-label="عدد الحاويات" type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={count} onChange={e=>safeCount(Number(e.target.value))}/><DesignButton type="button" disabled={count>=1000000000} aria-label="زيادة عدد الحاويات" onClick={()=>safeCount(count+1)}>+</DesignButton></div></div>
         </div>
-        <label className="home-compose-input"><span className="sr-only">احتياجك التجاري</span><textarea required value={text} onChange={e=>setText(e.target.value)} placeholder="اكتب المنتج والمواصفة التي تحتاجها…" rows={2} maxLength={4000}/></label>
+        <label className="home-compose-input"><span className="sr-only">احتياجك التجاري</span><DesignField multiline><textarea required value={text} onChange={e=>setText(e.target.value)} placeholder="اكتب المنتج والمواصفة التي تحتاجها…" rows={2} maxLength={4000}/></DesignField></label>
         {startError&&<p role="alert" className="workspace-error">{startError}</p>}
         <div className="home-composer-actions"><span>يمكنك البدء بالمعلومات المتاحة لديك.</span><DesignButton className="primary-link" type="submit">ابدأ طلب التوريد <PlatformIcon name="arrow"/></DesignButton></div>
       </div></form>

@@ -4,7 +4,7 @@ import {useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {BuyerShell} from '../../components/buyer-shell';
 import {DesignLink, DesignCard, DesignButton} from '../../components/design-system';
-import {catalogPreview} from '../../lib/catalog-preview';
+import {catalogPreview, restoreCatalogSelection} from '../../lib/catalog-preview';
 import {COMPOSER_DRAFT_KEY, emptyComposerDraft} from '../../lib/composer-draft';
 import {sessionUserId} from '../../lib/api';
 
@@ -17,7 +17,7 @@ export default function ProductDetails() {
   function start() {
     if (!product) return;
     try {
-      const draft = {...emptyComposerDraft(crypto.randomUUID()), ownerId:sessionUserId(), data:{product:product.en, ...(product.id === 'flour-bakery' ? {application:'Bakery'} : {}), ...(pack ? {packing:pack} : {})}};
+      const draft = {...emptyComposerDraft(crypto.randomUUID()), ownerId:sessionUserId(), data:{...restoreCatalogSelection(product.id,sessionStorage.getItem('septlion_discover_config')),product:product.en, ...(product.id === 'flour-bakery' ? {application:'Bakery'} : {}), ...(pack ? {packing:pack} : {})}};
       sessionStorage.setItem(COMPOSER_DRAFT_KEY, JSON.stringify(draft));
       for (const key of ['septlion_feed_context','septlion_requirement_seed','septlion_requirement_context','septlion_pending_requirement']) sessionStorage.removeItem(key);
       router.push('/require');
