@@ -60,13 +60,13 @@ export default function Home() {
   return <main className="product-home" dir="rtl">
     <PlatformHeader/>
     <section className="product-hero" aria-labelledby="home-title">
-      <div className="product-hero-copy"><small>FROM DEMAND TO TRADE</small><h1 id="home-title">ماذا تحتاج؟</h1><p>ابدأ باحتياجك. سنرتّب المواصفة والتوريد والخطوة التالية معك.</p></div>
+      <div className="product-hero-copy"><small>من احتياجك إلى التوريد</small><h1 id="home-title">ماذا تحتاج؟</h1><p>صف احتياجك. سنرتّب المواصفة والتوريد والخطوة التالية معك.</p></div>
       <form className="home-composer-panel" onSubmit={start}>
         <div className="home-commercial-fields">
           <label><span>الوجهة</span><select value={destination} onChange={e=>setDestination(e.target.value)}><option value="">حدّد دولة أو ميناء</option>{ports.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>شرط التجارة</span><select value={incoterm} onChange={e=>setIncoterm(e.target.value)}>{['CIF','CFR','FOB'].map(x=><option key={x}>{x}</option>)}</select></label>
           <label><span>طريقة الدفع</span><select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></label>
-          <div className="home-volume"><div className="home-volume-label"><span>عدد الحاويات</span><small>{getSeptlionScale(count)}</small></div><div className="home-scale" aria-hidden="true"><i style={{insetInlineStart:`calc(${scaleProgress(count)}% - 5px)`}}/></div><div className="home-volume-counter"><button type="button" aria-label="تقليل عدد الحاويات" onClick={()=>safeCount(count-1)}>−</button><input aria-label="عدد الحاويات" type="number" min="1" step="1" value={count} onChange={e=>safeCount(Number(e.target.value))}/><button type="button" aria-label="زيادة عدد الحاويات" onClick={()=>safeCount(count+1)}>+</button></div></div>
+          <div className="home-volume"><div className="home-volume-label"><span>عدد الحاويات</span><small dir="ltr">{getSeptlionScale(count)}</small></div><div className="home-scale" dir="ltr" aria-hidden="true"><i style={{insetInlineStart:`calc(${scaleProgress(count)}% - 5px)`}}/></div><div className="home-volume-counter"><button type="button" disabled={count===1} aria-label="تقليل عدد الحاويات" onClick={()=>safeCount(count-1)}>−</button><input aria-label="عدد الحاويات" type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={count} onChange={e=>safeCount(Number(e.target.value))}/><button type="button" disabled={count>=1000000000} aria-label="زيادة عدد الحاويات" onClick={()=>safeCount(count+1)}>+</button></div></div>
         </div>
         <label className="home-compose-input"><span className="sr-only">احتياجك التجاري</span><textarea required value={text} onChange={e=>setText(e.target.value)} placeholder="اكتب المنتج والمواصفة التي تحتاجها…" rows={2} maxLength={4000}/></label>
         {startError&&<p role="alert" className="workspace-error">{startError}</p>}
@@ -75,7 +75,7 @@ export default function Home() {
       <div className="home-starts"><span>ابدأ مثلًا:</span><button onClick={()=>setText('أحتاج 5 حاويات دقيق مخابز بتعبئة 50 كجم إلى تنزانيا')}>دقيق مخابز إلى تنزانيا</button><button onClick={()=>setText('أحتاج عبوة خاصة لمنتج غذائي')}>تغليف لمنتج غذائي</button></div>
     </section>
     <section className="home-discover" aria-labelledby="discover-title">
-      <div className="home-empty"><div><h2 id="discover-title">تفضل البدء من منتج؟</h2><p>اختر منتجك من «اكتشف»، ثم أكمل طلبك داخل Composer.</p></div><a className="secondary-link" href="/discover">اكتشف المنتجات <PlatformIcon name="arrow"/></a></div>
+      <div className="home-empty"><div><h2 id="discover-title">تفضّل البدء من منتج؟</h2><p>اختر منتجك من «اكتشف»، ثم أكمل التفاصيل داخل محرّر الطلب.</p></div><a className="secondary-link" href="/discover">اكتشف المنتجات <PlatformIcon name="arrow"/></a></div>
     </section>
     <section className="home-work" aria-labelledby="trade-title">
       <div className="home-section-title"><div><small>مساحة تجارتك</small><h2 id="trade-title">{recent.length ? 'تابع مسوداتك' : 'كل طلب في مكانه'}</h2></div><a href="/requests">كل الطلبات ←</a></div>

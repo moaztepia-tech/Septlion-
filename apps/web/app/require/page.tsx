@@ -91,7 +91,7 @@ export default function RequirePage() {
   return <main className="chat-ai customer-composer" dir={ar?'rtl':'ltr'} lang={lang}>
     <PlatformHeader lang={lang} actions={<><button className="secondary-link" disabled={saving} onClick={reset}>{ar?'طلب جديد':'New request'}</button><button className="platform-action" onClick={()=>setLang(ar?'en':'ar')} aria-label={ar?'Switch to English':'التبديل إلى العربية'}>{ar?'EN':'ع'}</button></>}/>
     <section className={'chat-stage '+(draft.messages.length?'has-chat':'')} aria-labelledby="composer-title">
-      <div className="composer-status"><span>{storageError?(ar?'تعذر حفظ المسودة على هذا الجهاز':'Draft storage unavailable'):(ar?'مسودتك محفوظة في هذا التبويب':'Draft saved in this tab')}</span><span>{ar?'طلب توريد · Composer':'Supply request · Composer'}</span></div>
+      <div className="composer-status"><span>{storageError?(ar?'تعذر حفظ المسودة على هذا الجهاز':'Draft storage unavailable'):(ar?'مسودتك محفوظة في هذا التبويب':'Draft saved in this tab')}</span><span>{ar?'محرّر طلب التوريد':'Supply request · Composer'}</span></div>
       {undo&&<p className="composer-undo" role="status">{ar?'بدأت طلبًا جديدًا.':'New request started.'} <button onClick={()=>{setDraft(undo);setUndo(null);}}>{ar?'استعادة الطلب السابق':'Restore previous request'}</button></p>}
       <div className="intent-canvas"><div className="chat-thread">
         <div className="chat-welcome"><h1 id="composer-title">{draft.reorder?(ar?'مراجعة إعادة الطلب':'Review reorder'):draft.feed?(ar?'نكمل طلبك من هنا':'Continue your request'):(ar?'ماذا تحتاج؟':'What do you need?')}</h1><p>{ar?'أخبرنا باحتياجك، ثم راجع تفاصيله قبل إرساله لإعداد عرض Septlion.':'Describe your need, then review the details before requesting a Septlion offer.'}</p></div>
@@ -114,6 +114,6 @@ export default function RequirePage() {
       </div></div>
       <form className="chat-composer-wrap" onSubmit={submit}><div className="chat-composer"><textarea aria-label={ar?'احتياجك أو إجابتك':'Your requirement or answer'} ref={box} rows={2} disabled={saving||!!draft.savedRequirementId} value={draft.input} onChange={e=>setDraft(d=>({...d,input:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit();}}} maxLength={4000} placeholder={draft.feed?(ar?'أجب عن السؤال أو اكتب التعديل المطلوب…':'Answer the question or describe a change…'):(ar?'اكتب ما تحتاجه…':'Describe your requirement…')}/><div className="chat-tools"><span className="trade-capability">{ar?'سؤال واحد في كل مرة · ويمكنك تعديل الملخص':'One question at a time · editable summary'}</span><button type="submit" className="chat-send" disabled={!hydrated||!draft.input.trim()||saving||!!draft.savedRequirementId} aria-label={ar?'إضافة إلى الطلب':'Add to requirement'}>↑</button></div></div>{!draft.messages.length&&!draft.feed&&!draft.reorder&&<p className="chat-hint">{ar?'مثال: أحتاج 5 حاويات دقيق مخابز بتعبئة 50 كجم إلى تنزانيا':'Example: 5 containers of bakery flour, 50 kg bags, to Tanzania'}</p>}</form>
     </section>
-    <footer className="chat-foot">SEPTLION · From demand to trade.</footer>
+    <footer className="chat-foot">{ar?'SEPTLION · من احتياجك إلى التوريد':'SEPTLION · From demand to trade.'}</footer>
   </main>;
 }
