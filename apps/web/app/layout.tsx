@@ -5,6 +5,7 @@ import './intelligence.css';
 import './offer-workspace.css';
 import './trade-workspace.css';
 import './customer-experience.css';
+import './septlion-v2.css';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
