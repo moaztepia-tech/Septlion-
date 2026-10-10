@@ -1,5 +1,8 @@
 'use client';
 import {FormEvent, useEffect, useRef, useState} from 'react';
+import {SupplyPlanEditor} from '../../components/supply-plan';
+import {supplyPlanProblem} from '../../lib/supply-plan';
+import {quantityDetails} from '../../lib/composer-draft';
 import {PlatformHeader} from '../../components/platform-header';
 import {edge, hasSession, sessionUserId} from '../../lib/api';
 import {createTradeRequirement} from '../../lib/trade-data';
@@ -16,7 +19,7 @@ export default function RequirePage() {
   const [saveError,setSaveError] = useState(''), [storageError,setStorageError] = useState(false);
   const [undo,setUndo] = useState<ComposerDraft|null>(null);
   const mounted = useRef(false), busy = useRef(false), box = useRef<HTMLTextAreaElement>(null), end = useRef<HTMLDivElement>(null);
-  const ar = lang === 'ar', missing = missingComposerFields(draft), ready = missing.length === 0;
+  const ar = lang === 'ar', missing = missingComposerFields(draft), planError = supplyPlanProblem(draft.supplyPlan,quantityDetails(draft.data.quantity)||undefined), ready = missing.length === 0 && !planError;
 
   useEffect(()=>{
     if (mounted.current) return;
@@ -107,7 +110,9 @@ export default function RequirePage() {
           <p>{draft.reorder?(ar?'يمكنك تعديل الكمية بوحدة '+draft.reorder.unit+'. لبقية التغييرات، ابدأ طلبًا جديدًا.':'Change the quantity in '+draft.reorder.unit+'. Start a new request for other changes.'):(ar?'يمكنك تعديل أي حقل مباشرة. التعبئة غير المحددة تبقى للمناقشة، ولا نعتمد مواصفة نيابةً عنك.':'Edit any field directly. Unconfirmed packing remains to be agreed with you.')}</p>
           <div className="composer-field-grid">{requirementFields.filter(k=>k!=='application'||(!draft.reorder&&/flour|دقيق/i.test(draft.data.product||''))).map(field=><label key={field}><span>{labels[lang][field]}{missing.includes(field)&&<small>{ar?' مطلوب':' required'}</small>}</span>{!draft.reorder&&(field==='incoterm'||field==='payment')?<select disabled={saving||!!draft.savedRequirementId} value={draft.data[field]||''} onChange={e=>edit(field,e.target.value)}><option value="">{ar?'اختر':'Choose'}</option>{(field==='incoterm'?[['CIF','CIF'],['CFR','CFR'],['FOB','FOB']]:[['L/C',ar?'L/C — اعتماد مستندي':'L/C'],['T/T',ar?'T/T — تحويل بنكي':'T/T'],['OTHER',ar?'تُناقش في العرض':'Discuss in the offer']]).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select>:<input disabled={saving||!!draft.savedRequirementId||!!draft.reorder&&field!=='quantity'} value={draft.data[field]||''} onChange={e=>edit(field,e.target.value)} placeholder={field==='quantity'?(ar?'مثل: 5 FCL أو 40 MT':'e.g. 5 FCL or 40 MT'):field==='packing'?(ar?'مثل: 50 كجم أو تُحدد مع Septlion':'e.g. 50 kg or agree with Septlion'):''} maxLength={2000} autoComplete="off"/>}</label>)}</div>
           {!draft.reorder&&<label className="composer-notes"><span>{ar?'ملاحظات المواصفة والتوريد — اختياري':'Specification and supply notes — optional'}</span><textarea disabled={saving||!!draft.savedRequirementId} value={draft.notes} onChange={e=>setDraft(d=>({...d,notes:e.target.value}))} maxLength={8000} rows={3} placeholder={ar?'أضف متطلبات الجودة أو التعبئة أو أي تفصيل مهم لعرضك…':'Add quality, packaging or other requirements for your offer…'}/></label>}
-          {draft.savedRequirementId?<a className="primary-link" href={'/request?id='+encodeURIComponent(draft.savedRequirementId)}>{ar?'فتح الطلب الذي أُرسل':'Open submitted request'}</a>:<div className="composer-review-actions"><p>{ready?(ar?'الإرسال يطلب إعداد عرض؛ تثبيت الشروط يتم عند قبول العرض لاحقًا.':'Sending requests an offer. Terms are locked when you accept the offer later.'):requirementQuestion(missing[0],lang,draft.feed)}</p><button className="primary-link" disabled={!hydrated||!ready||saving} onClick={()=>void save()}>{saving?(ar?'جارٍ الإرسال…':'Sending…'):(ar?'إرسال الطلب لإعداد العرض':'Request a Septlion offer')}</button></div>}
+          {!draft.reorder&&<SupplyPlanEditor plan={draft.supplyPlan||null} onChange={supplyPlan=>setDraft(d=>({...d,supplyPlan}))} unit={quantityDetails(draft.data.quantity)?.unit||'FCL'} disabled={saving||!!draft.savedRequirementId} ar={ar}/>}
+          {planError&&<p className="workspace-error" role="alert">{planError}</p>}
+          {draft.savedRequirementId?<a className="primary-link" href={'/request?id='+encodeURIComponent(draft.savedRequirementId)}>{ar?'فتح الطلب الذي أُرسل':'Open submitted request'}</a>:<div className="composer-review-actions"><p>{ready?(ar?'الإرسال يطلب إعداد عرض؛ تثبيت الشروط يتم عند قبول العرض لاحقًا.':'Sending requests an offer. Terms are locked when you accept the offer later.'):missing.length?requirementQuestion(missing[0],lang,draft.feed):planError}</p><button className="primary-link" disabled={!hydrated||!ready||saving} onClick={()=>void save()}>{saving?(ar?'جارٍ الإرسال…':'Sending…'):(ar?'إرسال الطلب لإعداد العرض':'Request a Septlion offer')}</button></div>}
           {saveError&&<p className="workspace-error" role="alert">{saveError}</p>}
         </section>}
         <div ref={end}/>

@@ -1,4 +1,6 @@
 'use client';
+import {SupplyPlanSummary} from '../../components/supply-plan';
+import {SupplyPlan} from '../../lib/supply-plan';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {BuyerShell,Stage} from '../../components/buyer-shell';
 import {activeRequestId,rememberActiveRequest} from '../../lib/buyer-ui-store';
@@ -34,6 +36,7 @@ export default function Offer(){
  <Stage current={1}/><div className="workspace-heading"><div className="offer-hero"><small>عرض Septlion · النسخة {offer.currentRevision}</small><h1>{r.product}</h1><p>{testOnly?'TEST — محاكاة غير تجارية. هذا العرض لا يمثل بيعًا أو التزامًا بالدفع.':'راجع هذه النسخة؛ قبولها يثبّت شروطها التجارية ويربطها بالصفقة.'}</p></div><button className="secondary-link" disabled={busy} onClick={()=>void load()}>تحديث النسخة</button></div>
  <div className="terms-grid"><div><small>الإجمالي</small><b dir="auto">{Number.isFinite(total)?total.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+offer.currency:'راجع المستند'}</b></div><div><small>صالح حتى</small><b>{offer.validUntil?new Date(offer.validUntil).toLocaleString('ar'):'غير محدد'}</b></div>{[['شرط التجارة',terms.incoterm],['التسليم',terms.destination],['التعبئة',terms.packing],['شروط الدفع',terms.payment]].map(([label,value])=><div key={label}><small>{label}</small><b>{String(value||'غير محدد')}</b></div>)}</div>
  {items.length>0&&<div className="offer-note"><h2>بنود النسخة {offer.currentRevision}</h2>{items.map((x,i)=><p key={i}>{x.description} · {x.quantity} {x.unit} · {x.unitPrice} {offer.currency}</p>)}</div>}
+ <SupplyPlanSummary plan={terms.supplyPlan as SupplyPlan|undefined}/>
  <a className="secondary-link" href={'/offer-document?id='+encodeURIComponent(offer.id)}>مراجعة المستند الكامل وتنزيل PDF</a>
  {eligible?<div className="offer-acceptance"><label><input type="checkbox" checked={reviewed} disabled={busy} onChange={e=>setReviewed(e.target.checked)}/><span>{testOnly?'راجعت نسخة '+offer.currentRevision+' وأريد بدء محاكاة غير تجارية.':'راجعت بنود وشروط وصلاحية نسخة '+offer.currentRevision+'، وأوافق على تثبيتها.'}</span></label><button className="primary-link" disabled={busy||!reviewed} onClick={()=>void accept()}>{busy?'جارٍ التثبيت…':testOnly?'بدء المحاكاة للنسخة '+offer.currentRevision:'قبول النسخة '+offer.currentRevision+' وتثبيت الطلب'}</button></div>:tx?<a className="primary-link wide" href={'/execution?id='+encodeURIComponent(tx.id)}>متابعة الصفقة المرتبطة بهذا العرض</a>:<p className="workspace-muted">هذه النسخة غير متاحة للقبول حاليًا. حدّث حالة العرض لمراجعة آخر نسخة.</p>}
  {error&&<p role="alert" className="workspace-error">{error}</p>}

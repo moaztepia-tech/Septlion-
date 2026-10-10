@@ -9,7 +9,8 @@ async function moduleUrl(name,imports={}) {
  return 'data:text/javascript;base64,'+Buffer.from(js).toString('base64');
 }
 const inputUrl=await moduleUrl('requirement-input');
-const draft=await import(await moduleUrl('composer-draft',{'./requirement-input':inputUrl}));
+const supplyUrl=await moduleUrl('supply-plan');
+const draft=await import(await moduleUrl('composer-draft',{'./requirement-input':inputUrl,'./supply-plan':supplyUrl}));
 const contact=await import(await moduleUrl('buyer-contact'));
 const journey=await import(await moduleUrl('customer-journey'));
 const feed={source:'product_feed',product:{id:'flour-bakery',name:'دقيق خبازو',nameEn:'Bakery Flour',packing:'50 كجم · 25 كجم'},containerCount:5,septlionScale:'S-1',incoterm:'CIF',destination:{port:'Dar es Salaam',country:'Tanzania',code:'TZDAR'},paymentPreference:'L/C',buyer:{name:'Fixture buyer',company:'Fixture company',whatsapp:'+255712345678',email:null,whatsappStatus:'UNCONFIRMED'}};

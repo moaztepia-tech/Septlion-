@@ -6,7 +6,8 @@ let transpile;
 try { const {default:ts}=await import('typescript');transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText; }
 catch { if(!nodeModule.stripTypeScriptTypes)throw new Error('Use workspace TypeScript or Node 22.13+.');transpile=s=>nodeModule.stripTypeScriptTypes(s,{mode:'strip'}); }
 const load=s=>import('data:text/javascript;base64,'+Buffer.from(transpile(s)).toString('base64'));
-const helpers=await load(await readFile(new URL('../supabase/functions/trade-api/offer-input.ts',import.meta.url),'utf8'));
+const supplyUrl='data:text/javascript;base64,'+Buffer.from(transpile(await readFile(new URL('../apps/web/lib/supply-plan.ts',import.meta.url),'utf8'))).toString('base64');
+const helpers=await load((await readFile(new URL('../supabase/functions/trade-api/offer-input.ts',import.meta.url),'utf8')).replace("'../../../apps/web/lib/supply-plan.ts'",JSON.stringify(supplyUrl)));
 const documentApi=await load(await readFile(new URL('../apps/web/lib/offer-document.ts',import.meta.url),'utf8'));
 const now=Date.parse('2026-10-06T12:00:00Z');
 const requirement={id:'req-1',product:'TEST — غير تجاري',market:'TEST destination',packing:{display:'50kg'}};
@@ -59,7 +60,8 @@ const moduleUrl=s=>'data:text/javascript;base64,'+Buffer.from(transpile(s)).toSt
 const lifecycleUrl=moduleUrl(await readFile(new URL('../supabase/functions/trade-api/lifecycle-input.ts',import.meta.url),'utf8'));
 const uploadUrl=moduleUrl(await readFile(new URL('../supabase/functions/trade-api/document-input.ts',import.meta.url),'utf8'));
 const lifecycleApiUrl=moduleUrl((await readFile(new URL('../supabase/functions/trade-api/lifecycle-api.ts',import.meta.url),'utf8')).replace("'./lifecycle-input.ts'",JSON.stringify(lifecycleUrl)).replace("'./document-input.ts'",JSON.stringify(uploadUrl)));
-const preparedSource=edgeSource.replace('import { handleLifecycle } from \"./lifecycle-api.ts\";', 'import {handleLifecycle} from '+JSON.stringify(lifecycleApiUrl)+';').replace('import "jsr:@supabase/functions-js/edge-runtime.d.ts";','').replace('import { createClient } from "npm:@supabase/supabase-js@2";','const createClient = () => globalThis.__offerFixtureDb;').replace('import { normalizeOffer, sameJson } from "./offer-input.ts";','const {normalizeOffer,sameJson}=globalThis.__offerFixtureHelpers;').replace('Deno.serve(async(req)=>{','export const handler=async(req)=>{').replace(/\}\);\s*$/,'};');
+const requirementUrl=moduleUrl((await readFile(new URL('../supabase/functions/trade-api/requirement-input.ts',import.meta.url),'utf8')).replace("'../../../apps/web/lib/supply-plan.ts'",JSON.stringify(supplyUrl)));
+const preparedSource=edgeSource.replace('\"./requirement-input.ts\"',JSON.stringify(requirementUrl)).replace('import { handleLifecycle } from \"./lifecycle-api.ts\";', 'import {handleLifecycle} from '+JSON.stringify(lifecycleApiUrl)+';').replace('import "jsr:@supabase/functions-js/edge-runtime.d.ts";','').replace('import { createClient } from "npm:@supabase/supabase-js@2";','const createClient = () => globalThis.__offerFixtureDb;').replace('import { normalizeOffer, sameJson } from "./offer-input.ts";','const {normalizeOffer,sameJson}=globalThis.__offerFixtureHelpers;').replace('Deno.serve(async(req)=>{','export const handler=async(req)=>{').replace(/\}\);\s*$/,'};');
 globalThis.__offerFixtureHelpers=helpers;const oldDeno=globalThis.Deno;globalThis.Deno={env:{get:n=>n==='SUPABASE_SECRET_KEYS'?'{}':'fixture-server-config'}};
 const {handler}=await load(preparedSource);
 async function call(db,action,payload={}){globalThis.__offerFixtureDb=db;const request=new Request('https://fixture.invalid/trade-api',{method:'POST',headers:{Authorization:'Bearer TEST-FIXTURE',Origin:'https://septlion.com'},body:JSON.stringify({...payload,action})});const r=await handler(request);return{status:r.status,body:await r.json()}}

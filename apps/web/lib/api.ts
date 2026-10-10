@@ -156,3 +156,17 @@ export function clearSession() {
 export function hasSession() { const s = readSession(); return Boolean(s?.access_token || s?.refresh_token); }
 // Only scopes local UI drafts. The API independently verifies organization access.
 export function sessionUserId() { return readSession()?.user?.id; }
+
+export async function whatsappLoginAvailable():Promise<boolean> {
+ configured();const r=await fetch(`${SUPABASE_URL}/auth/v1/settings`,{headers:headers()});
+ if(!r.ok)throw new Error('تعذر التحقق من طرق الدخول.');const b=await responseBody(r);
+ return b?.external?.phone===true&&['twilio','twilio_verify'].includes(b?.sms_provider);
+}
+export async function requestWhatsAppCode(phone:string):Promise<void> {
+ configured();if(!/^\+[1-9]\d{7,14}$/.test(phone))throw new Error('أدخل الرقم مع رمز الدولة.');
+ const r=await fetch(`${SUPABASE_URL}/auth/v1/otp`,{method:'POST',headers:headers(),body:JSON.stringify({phone,channel:'whatsapp',create_user:true,data:{source:'septlion-platform'}})});const b=await responseBody(r);if(!r.ok)throw new Error(message(b,'تعذر إرسال رمز واتساب.'));
+}
+export async function verifyWhatsAppCode(phone:string,code:string):Promise<void> {
+ configured();if(!/^\d{6}$/.test(code))throw new Error('أدخل رمز التحقق المكون من 6 أرقام.');
+ const r=await fetch(`${SUPABASE_URL}/auth/v1/verify`,{method:'POST',headers:headers(),body:JSON.stringify({phone,token:code,type:'sms'})});const b=await responseBody(r);if(!r.ok)throw new Error(message(b,'تعذر تأكيد الرمز.'));saveSession(b);
+}

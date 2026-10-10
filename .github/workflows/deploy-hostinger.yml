@@ -30,6 +30,12 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Verify customer workflows
+        run: node --test tests/*.test.mjs
+
+      - name: Typecheck website
+        run: pnpm --filter @septlion/web typecheck
+
       - name: Build website
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
@@ -37,99 +43,7 @@ jobs:
         run: pnpm --filter @septlion/web build
 
       - name: Prepare static deployment
-        run: |
-          rm -rf deploy
-          mkdir -p deploy/_next deploy/discover deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
-          cp apps/web/.next/server/app/index.html deploy/index.html
-          cp apps/web/.next/server/app/index.html deploy/404.html
-          DISCOVER_HTML="$(find apps/web/.next/server/app -type f -path '*/discover.html' | head -n 1)"
-          test -n "$DISCOVER_HTML"
-          cp "$DISCOVER_HTML" deploy/discover/index.html
-          test -s deploy/discover/index.html
-          mkdir -p deploy/requests
-          REQUESTS_HTML="$(find apps/web/.next/server/app -type f -path '*/requests.html' | head -n 1)"
-          test -n "$REQUESTS_HTML"
-          cp "$REQUESTS_HTML" deploy/requests/index.html
-          test -s deploy/requests/index.html
-          mkdir -p deploy/request
-          REQUEST_HTML="$(find apps/web/.next/server/app -type f -path '*/request.html' | head -n 1)"
-          test -n "$REQUEST_HTML"
-          cp "$REQUEST_HTML" deploy/request/index.html
-          test -s deploy/request/index.html
-          mkdir -p deploy/offer
-          OFFER_HTML="$(find apps/web/.next/server/app -type f -path '*/offer.html' | head -n 1)"
-          test -n "$OFFER_HTML"
-          cp "$OFFER_HTML" deploy/offer/index.html
-          test -s deploy/offer/index.html
-          mkdir -p deploy/offer-document
-          OFFER_DOCUMENT_HTML="$(find apps/web/.next/server/app -type f -path '*/offer-document.html' | head -n 1)"
-          test -n "$OFFER_DOCUMENT_HTML"
-          cp "$OFFER_DOCUMENT_HTML" deploy/offer-document/index.html
-          test -s deploy/offer-document/index.html
-          mkdir -p deploy/commit
-          COMMIT_HTML="$(find apps/web/.next/server/app -type f -path '*/commit.html' | head -n 1)"
-          test -n "$COMMIT_HTML"
-          cp "$COMMIT_HTML" deploy/commit/index.html
-          test -s deploy/commit/index.html
-          mkdir -p deploy/execution
-          EXECUTION_HTML="$(find apps/web/.next/server/app -type f -path '*/execution.html' | head -n 1)"
-          test -n "$EXECUTION_HTML"
-          cp "$EXECUTION_HTML" deploy/execution/index.html
-          test -s deploy/execution/index.html
-          mkdir -p deploy/receive
-          RECEIVE_HTML="$(find apps/web/.next/server/app -type f -path '*/receive.html' | head -n 1)"
-          test -n "$RECEIVE_HTML"
-          cp "$RECEIVE_HTML" deploy/receive/index.html
-          test -s deploy/receive/index.html
-          mkdir -p deploy/reorder
-          REORDER_HTML="$(find apps/web/.next/server/app -type f -path '*/reorder.html' | head -n 1)"
-          test -n "$REORDER_HTML"
-          cp "$REORDER_HTML" deploy/reorder/index.html
-          test -s deploy/reorder/index.html
-          mkdir -p deploy/notifications
-          NOTIFICATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/notifications.html' | head -n 1)"
-          test -n "$NOTIFICATIONS_HTML"
-          cp "$NOTIFICATIONS_HTML" deploy/notifications/index.html
-          test -s deploy/notifications/index.html
-          mkdir -p deploy/account
-          ACCOUNT_HTML="$(find apps/web/.next/server/app -type f -path '*/account.html' | head -n 1)"
-          test -n "$ACCOUNT_HTML"
-          cp "$ACCOUNT_HTML" deploy/account/index.html
-          test -s deploy/account/index.html
-          mkdir -p deploy/operations
-          OPERATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/operations.html' | head -n 1)"
-          test -n "$OPERATIONS_HTML"
-          cp "$OPERATIONS_HTML" deploy/operations/index.html
-          test -s deploy/operations/index.html
-          mkdir -p deploy/analytics
-          ANALYTICS_HTML="$(find apps/web/.next/server/app -type f -path '*/analytics.html' | head -n 1)"
-          test -n "$ANALYTICS_HTML"
-          cp "$ANALYTICS_HTML" deploy/analytics/index.html
-          test -s deploy/analytics/index.html
-          mkdir -p deploy/documents
-          DOCUMENTS_HTML="$(find apps/web/.next/server/app -type f -path '*/documents.html' | head -n 1)"
-          test -n "$DOCUMENTS_HTML"
-          cp "$DOCUMENTS_HTML" deploy/documents/index.html
-          test -s deploy/documents/index.html
-          cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
-          if [ -f apps/web/.next/server/app/demand-intelligence.html ]; then cp apps/web/.next/server/app/demand-intelligence.html deploy/demand-intelligence/index.html; fi
-          if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html; fi
-          REQUIRE_HTML="$(find apps/web/.next/server/app -type f -path '*/require.html' | head -n 1)"
-          test -n "$REQUIRE_HTML"
-          cp "$REQUIRE_HTML" deploy/require/index.html
-          test -s deploy/require/index.html
-          test -s deploy/operations/index.html
-          test -s deploy/analytics/index.html
-          if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html; fi
-          if [ -f apps/web/.next/server/app/intent/demand.html ]; then cp apps/web/.next/server/app/intent/demand.html deploy/intent/demand/index.html; fi
-          cp -R apps/web/.next/static deploy/_next/static
-          if [ -d apps/web/public ]; then cp -R apps/web/public/. deploy/; fi
-          if [ -f apps/web/.next/server/app/robots.txt.body ]; then cp apps/web/.next/server/app/robots.txt.body deploy/robots.txt; fi
-          if [ -f apps/web/.next/server/app/sitemap.xml.body ]; then cp apps/web/.next/server/app/sitemap.xml.body deploy/sitemap.xml; fi
-          if [ -f apps/web/.next/server/app/llms.txt.body ]; then cp apps/web/.next/server/app/llms.txt.body deploy/llms.txt; fi
-          echo "Deployment files verified"
-          test -s deploy/index.html
-          test -s deploy/require/index.html
+        run: node scripts/hostinger-production.mjs
 
       - name: Generate live demand SEO pages
         run: node scripts/generate-demand-pages.mjs
@@ -149,3 +63,22 @@ jobs:
 
 # deployment trigger: production-route-republish-2026-10-04
 
+
+      - name: Verify deployed production build
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          const base = 'https://septlion.com';
+          const response = await fetch(base + '/deployment.json?commit=' + process.env.EXPECTED_COMMIT);
+          if (!response.ok) throw new Error('Deployment marker returned ' + response.status);
+          const deployed = await response.json();
+          if (deployed.commit !== process.env.EXPECTED_COMMIT || deployed.basePath !== '') throw new Error('Hostinger is serving a different build.');
+          for (const route of ['/', '/discover/', '/require/', '/account/']) {
+            const page = await fetch(base + route);
+            if (!page.ok || !(await page.text()).includes('/_next/')) throw new Error('Production route failed: ' + route);
+          }
+          const rsc = await fetch(base + '/require/?_rsc=release', {headers: {RSC: '1'}});
+          if (!rsc.ok || !(rsc.headers.get('content-type') || '').includes('text/x-component') || (await rsc.text()).startsWith('<!DOCTYPE')) throw new Error('Production client navigation failed.');
+          console.log('Verified production deployment: ' + deployed.commit);
+          NODE

@@ -1,3 +1,4 @@
+import {normalizeSupplyPlan, SupplyPlan} from './supply-plan';
 import {extractRequirement, mergeRequirementInput} from './requirement-input';
 import type {TradeWorkspace} from './trade-transaction';
 
@@ -15,6 +16,7 @@ export type FeedContext = {
 export type ComposerDraft = {
   version: 2; id: string; ownerId?: string; data: RequirementData; feed: FeedContext | null;
   messages: Array<{role: 'user' | 'assistant'; text: string}>;
+  supplyPlan?: SupplyPlan | null;
   input: string; notes: string; savedRequirementId?: string;
   reorder?: {transactionId: string; unit: string; testOnly: boolean};
 };
@@ -117,13 +119,13 @@ export function requirementPayload(draft: ComposerDraft): Record<string, unknown
   const quantity = quantityDetails(draft.data.quantity)!;
   const originalDestination = draft.feed?.destination;
   return {
-    ...draft.data, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
+    ...draft.data, idempotencyKey: draft.id, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
     containerCount: quantity.unit === 'FCL' ? quantity.amount : null,
     paymentPreference: draft.data.payment,
     ...(originalDestination && draft.data.destination === originalDestination.port ? {deliveryCountry: originalDestination.country, destinationCode: originalDestination.code} : {}),
     source: draft.feed ? 'PRODUCT_FEED' : 'AI_COMPOSER',
     sourceContext: draft.feed ? {...draft.feed, reviewedRequirement: draft.data} : {path: 'require'},
-    knownFacts: {...draft.data, notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},
+    knownFacts: {...draft.data, ...(draft.supplyPlan ? {supplyPlan: normalizeSupplyPlan(draft.supplyPlan, quantity)} : {}), notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},
   };
 }
 export function restoreComposerDraft(raw: string | null, ownerId?: string): ComposerDraft | null {
@@ -136,6 +138,7 @@ export function restoreComposerDraft(raw: string | null, ownerId?: string): Comp
       messages: Array.isArray(draft.messages) ? draft.messages.filter((x: any) => ['user','assistant'].includes(x?.role) && typeof x.text === 'string').slice(-100).map((x: any) => ({role:x.role,text:x.text.slice(0,4000)})) : [],
       input: typeof draft.input === 'string' ? draft.input.slice(0,4000) : '', notes: typeof draft.notes === 'string' ? draft.notes.slice(0,8000) : '',
       ...(typeof draft.reorder?.transactionId === 'string' && typeof draft.reorder.unit === 'string' ? {reorder: {transactionId: draft.reorder.transactionId, unit: draft.reorder.unit, testOnly: Boolean(draft.reorder.testOnly)}} : {}),
+      ...(draft.supplyPlan?.version === 1 && Array.isArray(draft.supplyPlan.batches) && draft.supplyPlan.batches.length >= 2 && draft.supplyPlan.batches.length <= 24 && draft.supplyPlan.batches.every((b: any) => b && typeof b.quantity === 'number' && typeof b.unit === 'string' && typeof b.plannedDate === 'string' && typeof b.notes === 'string') && typeof draft.supplyPlan.terms === 'string' && draft.supplyPlan.automaticPurchaseOrders === false ? {supplyPlan: draft.supplyPlan} : {}),
       ...(typeof draft.savedRequirementId === 'string' ? {savedRequirementId: draft.savedRequirementId} : {})};
   } catch { return null; }
 }
