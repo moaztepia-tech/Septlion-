@@ -1,0 +1,79 @@
+/* SEPTLION Customer Experience v2 — approved dark design language.
+   Visual override only: existing commercial behavior remains intact. */
+:root{
+  --v2-navy:#051945;--v2-deep:#030D26;--v2-light:#0A1838;--v2-steel:#3D5185;
+  --v2-sky:#8FA6D6;--v2-mist:#E9EDF5;--v2-success:#4ADE80;--v2-warning:#FBBF24;
+  --v2-danger:#F87171;--v2-info:#60A5FA;
+  --v2-edge:linear-gradient(180deg,#8FA6D6 0%,#3D5185 22%,#051945 50%,#3D5185 78%,#8FA6D6 100%);
+  --v2-shadow-sm:0 2px 6px rgb(0 0 0/.30);--v2-shadow-md:0 6px 16px rgb(0 0 0/.45);
+  --v2-shadow-lg:0 14px 30px rgb(0 0 0/.55);--v2-fast:150ms;--v2-base:250ms;--v2-slow:400ms;
+  --v2-shape:polygon(50% 0,100% 10px,100% calc(100% - 10px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 10px),0 10px);
+}
+.product-home{
+  --canvas:var(--v2-deep);--surface:#071536;--ink:var(--v2-mist);--muted:#aab7d4;--line:rgb(143 166 214/.18);
+  --brand-primary:var(--v2-sky);--brand-steel:var(--v2-sky);--brand-mist:rgb(143 166 214/.10);
+  min-height:100vh;color:var(--v2-mist);background:
+    radial-gradient(ellipse at 50% 0%,var(--v2-light) 0%,var(--v2-navy) 55%,var(--v2-deep) 100%);
+}
+.product-home .platform-header{background:rgb(3 13 38/.84);border-color:rgb(143 166 214/.14);backdrop-filter:blur(18px)}
+.product-home .platform-header-inner{min-height:76px}
+.product-home .platform-brand{background:var(--v2-mist);padding:6px 12px;clip-path:var(--v2-shape)}
+.product-home .platform-brand img{height:38px;width:132px}
+.product-home .platform-navigation a,.product-home .platform-action{color:#b8c5df}
+.product-home .platform-navigation a.active{color:var(--v2-mist)}
+.product-home .platform-navigation a.active::after{background:var(--v2-sky)}
+.product-home .primary-link,.product-home .secondary-link{
+  position:relative;border:1px solid rgb(143 166 214/.55);border-radius:0;color:var(--v2-mist);
+  background:linear-gradient(180deg,#304878,var(--v2-navy));box-shadow:var(--v2-shadow-sm);
+  clip-path:var(--v2-shape);transition:transform var(--v2-fast),filter var(--v2-base),background var(--v2-base)
+}
+.product-home .primary-link:hover,.product-home .secondary-link:hover{background:linear-gradient(180deg,#3d568c,#0a285d);filter:drop-shadow(0 0 10px rgb(143 166 214/.30))}
+.product-home .primary-link:active,.product-home .secondary-link:active{transform:scale(.985)}
+.product-home .product-hero{padding-block:64px 48px}
+.product-home .product-hero-copy{margin-inline:auto;text-align:center;max-width:780px;margin-bottom:32px}
+.product-home .product-hero-copy small{font-family:Inter,sans-serif;color:var(--v2-sky);letter-spacing:.18em;font-size:11px}
+.product-home .product-hero h1{color:var(--v2-mist);font-size:clamp(36px,5vw,64px);letter-spacing:-.03em;margin-bottom:8px}
+.product-home .product-hero-copy p{color:#aebbd7;font-size:15px}
+.product-home .home-composer-panel{
+  position:relative;isolation:isolate;border:1px solid rgb(143 166 214/.46);border-radius:0;padding:28px;
+  background:linear-gradient(180deg,rgb(10 24 56/.94),rgb(5 25 69/.90));box-shadow:var(--v2-shadow-lg);
+  clip-path:var(--v2-shape)
+}
+.product-home .home-composer-panel::before{content:"";position:absolute;inset:3px;z-index:-1;pointer-events:none;border:1px solid rgb(143 166 214/.18);clip-path:var(--v2-shape)}
+.product-home .home-commercial-fields{border-color:rgb(143 166 214/.14);gap:16px}
+.product-home .home-commercial-fields label>span,.product-home .home-volume-label{color:#c7d1e5;font-size:12px;font-weight:600}
+.product-home select,.product-home input,.product-home textarea{
+  color:var(--v2-mist);background:rgb(2 9 24/.68);border:1px solid rgb(143 166 214/.25);border-radius:0;clip-path:var(--v2-shape);
+  transition:border-color var(--v2-base),box-shadow var(--v2-base),background var(--v2-base)
+}
+.product-home select{color-scheme:dark}
+.product-home select:focus,.product-home input:focus,.product-home textarea:focus{border-color:rgb(143 166 214/.70);box-shadow:0 0 0 3px rgb(143 166 214/.10);background:rgb(2 9 24/.90)}
+.product-home .home-compose-input textarea{min-height:116px;padding:20px 22px;font-size:17px;resize:none}
+.product-home .home-volume-label small{color:var(--v2-sky)}
+.product-home .home-scale{background:rgb(143 166 214/.14)}
+.product-home .home-scale i{background:var(--v2-sky);box-shadow:0 0 10px rgb(143 166 214/.65)}
+.product-home .home-volume-counter button{color:var(--v2-sky);background:rgb(2 9 24/.60);border-color:rgb(143 166 214/.25);border-radius:0}
+.product-home .home-volume-counter input{clip-path:none;background:transparent;border:0;color:var(--v2-mist)}
+.product-home .home-composer-actions>span{color:#91a2c4;font-size:12px}
+.product-home .home-starts{color:#91a2c4}
+.product-home .home-starts button{color:#b9c8e5;background:rgb(143 166 214/.06);border:1px solid rgb(143 166 214/.16);border-radius:0;clip-path:polygon(50% 0,100% 4px,100% calc(100% - 4px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 4px),0 4px)}
+.product-home .home-starts button:hover{background:rgb(143 166 214/.12);color:var(--v2-mist)}
+.product-home .home-discover,.product-home .home-work{border-color:rgb(143 166 214/.13)}
+.product-home .home-empty,.product-home .home-recents>a{
+  background:rgb(10 24 56/.45);border:1px solid rgb(143 166 214/.16);border-radius:0;box-shadow:var(--v2-shadow-sm);clip-path:var(--v2-shape)
+}
+.product-home .home-empty b,.product-home .home-empty h2,.product-home .home-section-title h2,.product-home .home-recents b{color:var(--v2-mist)}
+.product-home .home-empty p,.product-home .home-recents p{color:#96a7c8}
+.product-home .home-section-title small,.product-home .home-section-title a,.product-home .home-recents small,.product-home .home-recents span{color:var(--v2-sky)}
+.product-home .product-footer{border-color:rgb(143 166 214/.13);color:#8798bb}
+.product-home .product-footer p{color:#8798bb}
+@media(max-width:600px){
+  .product-home .platform-header-inner{min-height:68px}
+  .product-home .platform-brand{padding:5px}.product-home .platform-brand img{width:34px;height:34px}
+  .product-home .product-hero{padding-block:36px 28px}.product-home .product-hero-copy{text-align:start;margin-bottom:24px}
+  .product-home .product-hero h1{font-size:36px}.product-home .home-composer-panel{padding:18px}
+  .product-home .home-commercial-fields{grid-template-columns:1fr 1fr;gap:14px 10px}
+  .product-home .home-compose-input textarea{font-size:15px;min-height:108px;padding:16px}
+  .product-home .home-composer-actions{gap:12px}.product-home .home-composer-actions .primary-link{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.product-home *{animation:none!important;transition-duration:.01ms!important}}
