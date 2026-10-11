@@ -1947,6 +1947,7 @@ textarea{resize:vertical;line-height:1.75}
 .ds-professional .btn:is(.primary-link,.header-start,.discover-primary,.chat-send):hover>.fill{background:var(--color-sky)}
 .ds-professional .btn[aria-pressed=true]>.fill,.ds-professional .btn.selected>.fill{background:rgba(143,166,214,.15)}
 .ds-professional .btn[aria-pressed=true]>.edge,.ds-professional .btn.selected>.edge{background:var(--color-sky)}
+.ds-professional .btn[aria-pressed=true]>.inner-edge,.ds-professional .btn.selected>.inner-edge{background:var(--color-navy-light)}
 .ds-professional .btn[aria-pressed=true]{color:var(--color-mist)}
 .ds-professional .chip{height:44px;width:auto;padding:8px 18px;font-size:var(--fs-sm);color:var(--color-sky)}
 .ds-professional .chip>.fill{background:transparent}
