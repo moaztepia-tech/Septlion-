@@ -9,14 +9,10 @@ The approved source is `Septlion_Brand_Master_Reference_v1.zip`, version 1, lock
 - Palette: #051945 / #030D26 / #0A1838 / #3D5185 / #8FA6D6 / #E9EDF5.
 - Arabic: Noto Sans Arabic. English and numeric data: Montserrat. Both served locally with licenses.
 - RTL and dark first; a 4px spacing grid, nine reference text sizes, four depth layers, and 150/250/400ms transitions.
+- One application container, at most 580px wide, including on desktop. Keep the supplied nine sizes (9/11/12/14/15/17/20/24/32px), 3px edge and 5px fill insets. Do not replace the seven-point contours with rounded rectangles or add an alternate desktop theme.
+- The root renders the shared fixed application frame and `app-full` container. The frame follows the reference `--shape-h` seven-vertex contour at the actual viewport size; it does not redraw or modify the brand mark. Discover remains visible in the header, with the four customer destinations in the bottom navigation.
 - Components use the reference edge, inner-edge, fill and sheen layers. Keep native form semantics, accessible labels, focus, and reduced motion.
 - The original navy logo remains on a light plate; do not recolor, redraw, crop or stretch it.
-
-## Responsive customer presentation
-
-The customer presentation keeps the supplied reference prefix, brand palette, local fonts and component layers in the same shared stylesheet. Depth is restrained: thin borders, calm surfaces, clear selected states and one prominent action per panel. Fields retain native semantics and visible focus.
-
-Desktop uses a 1120px content area and top navigation. Home pairs the request form with a concise journey explanation; Discover separates product information from request configuration. Phones use a single column, a compact brand header and bottom navigation. Native fields use 16px text, and interactive controls keep 44px targets. The home product feed uses the actual catalog definitions, without invented price or availability claims. All product entries continue through Product Details and Composer.
 
 ## Customer journey
 
@@ -42,4 +38,4 @@ SHA-256 of supplied assets used by the interface:
 
 ## Validation before publishing
 
-Run web TypeScript checks, the production Next build, `node --test tests/auth-session.test.mjs tests/offer-document.test.mjs tests/requirement-input.test.mjs`, then check home, discovery, requirement handoff and trade pages in the browser. Check the responsive layout at phone width as well as desktop width. Confirm that the Preview deployment finished successfully before describing the interface as published.
+Run web TypeScript checks, the production Next build, `node --test tests/auth-session.test.mjs tests/offer-document.test.mjs tests/requirement-input.test.mjs`, then package the isolated Preview. Packaging rejects any override of the approved shapes, text sizes and layer widths, and checks that all twelve customer pages contain the application frame and shared container. Check the deployed home, discovery, requirement handoff and trade pages in the browser. Confirm that the Preview deployment finished successfully before describing the interface as published.

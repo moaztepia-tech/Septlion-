@@ -13,6 +13,37 @@ const require = createRequire(path.join(web, 'package.json'));
 const ts = require('typescript');
 const printer = ts.createPrinter({newLine: ts.NewLineKind.LineFeed});
 
+// Presence checks are insufficient: a later selector can silently replace the
+// approved tokens. Reject that override, including inside media queries.
+export function verifyReferenceTokens(stylesheet) {
+  const css = require('postcss').parse(stylesheet);
+  const approved = {
+    '--color-navy': '#051945', '--color-navy-dark': '#030D26', '--color-navy-light': '#0A1838',
+    '--color-steel': '#3D5185', '--color-sky': '#8FA6D6', '--color-mist': '#E9EDF5',
+    '--fs-micro': '9px', '--fs-xs': '11px', '--fs-sm': '12px', '--fs-base': '14px',
+    '--fs-md': '15px', '--fs-lg': '17px', '--fs-xl': '20px', '--fs-2xl': '24px', '--fs-3xl': '32px',
+    '--edge-w': '3px', '--fill-w': '5px', '--apex-y': '15px',
+    '--shape-7': 'polygon(50% 0%,89.09% 18.83%,98.74% 61.13%,71.69% 95.05%,28.31% 95.05%,1.26% 61.13%,10.91% 18.83%)',
+    '--shape-h': 'polygon(50% 0,100% 10px,100% calc(100% - 10px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 10px),0 10px)',
+    '--shape-chip': 'polygon(50% 0,100% 4px,100% calc(100% - 4px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 4px),0 4px)',
+  };
+  const normalize = value => value.toLowerCase().replace(/(^|[\s,(])0(?:px|%)(?=[\s,)])/g, (_, before) => before + '0').replace(/\s+/g, '');
+  const seen = new Set();
+  css.walkDecls(declaration => {
+    const expected = approved[declaration.prop];
+    if (!expected) return;
+    seen.add(declaration.prop);
+    if (normalize(declaration.value) !== normalize(expected)) throw new Error('Approved reference token overridden: ' + declaration.prop);
+  });
+  for (const token of Object.keys(approved)) if (!seen.has(token)) throw new Error('Missing approved reference token: ' + token);
+  css.walkRules(rule => {
+    if (!/(?:^|[\s>+~,(])\.(?:app|app-full|customer-shell)(?![\w-])/.test(rule.selector)) return;
+    rule.walkDecls('max-width', declaration => {
+      if (declaration.value !== '580px') throw new Error('Approved application width overridden.');
+    });
+  });
+}
+
 export function scopedUrl(value) {
   if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return value;
   if (value === basePath || value.startsWith(basePath + '/') || value.startsWith(basePath + '?') || value.startsWith(basePath + '#')) return value;
@@ -181,6 +212,9 @@ ErrorDocument 404 ${basePath}/404.html
   const stylesheetLists = [];
   for (const route of ['index.html', 'discover/index.html', 'require/index.html', 'review/index.html', 'requests/index.html', 'product/index.html', 'my-septlion/index.html', 'company/index.html', 'request/index.html', 'offer/index.html', 'execution/index.html', 'documents/index.html']) {
     const html = await readFile(path.join(destination, route), 'utf8');
+    if (!html.includes('frame-svg customer-frame') || !html.includes('app-full customer-shell') || html.includes('ds-professional')) {
+      throw new Error('Customer page bypasses the approved application shell: ' + route);
+    }
     const stylesheets = [...html.matchAll(/<link\b[^>]*>/g)]
       .map(match => match[0]).filter(tag => tag.includes('rel="stylesheet"'))
       .map(tag => tag.match(/href="([^"]+)"/)[1]);
@@ -194,26 +228,16 @@ ErrorDocument 404 ${basePath}/404.html
     return readFile(path.join(destination, url.slice(basePath.length + 1)), 'utf8');
   }));
   const css = require('postcss').parse(stylesheets.join('\n'));
+  verifyReferenceTokens(stylesheets.join('\n'));
   for (const [selector, expected] of [['.discover-page', 'radial-gradient'], ['.discover-page .discover-product', 'linear-gradient']]) {
     let winner;
     css.walkRules(rule => {
-      // PostCSS splits only top-level selector commas; commas inside :is()
-      // must not create a false match for an unqualified legacy selector.
       if (rule.parent.type === 'atrule' || !rule.selectors.includes(selector)) return;
       rule.walkDecls('background', declaration => {
         if (!winner || declaration.important || !winner.important) winner = declaration;
       });
     });
     if (!winner?.value.includes(expected)) throw new Error('Legacy CSS hides the approved theme: ' + selector);
-  }
-  const homeHtml = await readFile(path.join(destination, 'index.html'), 'utf8');
-  if (homeHtml.includes('ds-professional')) {
-    let customerSurface;
-    css.walkRules(rule => {
-      if (rule.parent.type === 'atrule' || !rule.selectors.includes('.ds-professional :is(.product-home,.discover-page,.customer-composer,.buyer-app)')) return;
-      rule.walkDecls('background', declaration => { customerSurface = declaration.value; });
-    });
-    if (customerSurface !== 'var(--color-navy-dark)') throw new Error('Professional customer surface is missing the approved navy palette.');
   }
   console.log('Verified preview package: ' + routes.length + ' routes, scoped assets, RSC navigation and noindex.');
   for(const value of ['--color-navy:#051945','--color-navy-dark:#030D26','--fs-base:14px',"font-family:Montserrat",'.layer-4', '.btn .inner-edge']){const normalized=stylesheets.join('').replace(/\s+/g,'').toLowerCase();if(!normalized.includes(value.replace(/\s+/g,'').toLowerCase()))throw new Error('Missing approved Design System v1.0 value: '+value);}

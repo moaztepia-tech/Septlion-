@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {basePath, scopedUrl, transformSource} from '../scripts/hostinger-preview.mjs';
+import {basePath, scopedUrl, transformSource, verifyReferenceTokens} from '../scripts/hostinger-preview.mjs';
 
 test('scope only root-relative URLs once; preserve external and signed downloads', () => {
   assert.equal(scopedUrl('/request?id=123'), basePath + '/request?id=123');
@@ -38,4 +38,20 @@ test('preview publishing is restricted to the named branch and separate Hostinge
   assert.ok(workflow.includes('server-dir: /domains/septlion.com/public_html' + basePath + '/'));
   assert.ok(workflow.includes('dangerous-clean-slate: false'));
   assert.ok(!workflow.includes('server-dir: /domains/septlion.com/public_html/\n'));
+});
+
+test('the reference stylesheet passes with formatted and minified zero values', async () => {
+  const css = await readFile(new URL('../apps/web/app/septlion-design-system.css', import.meta.url), 'utf8');
+  assert.doesNotThrow(() => verifyReferenceTokens(css));
+  assert.doesNotThrow(() => verifyReferenceTokens(css.replace(/(^|[\s,(])0(?:px|%)(?=[\s,)])/g, (_, before) => before + '0')));
+});
+
+test('a later theme cannot hide reference tokens behind a new class or media query', async () => {
+  const css = await readFile(new URL('../apps/web/app/septlion-design-system.css', import.meta.url), 'utf8');
+  for (const override of [
+    '.replacement-theme { --fs-base:16px; }',
+    '@media(min-width:800px) { .replacement-theme { --shape-h:inset(0 round 12px); } }',
+    '.replacement-theme { --edge-w:1px!important; }',
+    '.app-full { max-width:1120px; }',
+  ]) assert.throws(() => verifyReferenceTokens(css + override), /overridden/);
 });

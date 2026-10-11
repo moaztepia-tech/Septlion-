@@ -1,4 +1,5 @@
 import './septlion-design-system.css';
+import {ApplicationFrame} from '../components/application-frame';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
@@ -27,5 +28,5 @@ export const metadata = {
 export const viewport = {themeColor:'#051945'};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body className="ds-customer ds-professional">{children}</body></html>;
+  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body className="ds-customer"><div className="app-full customer-shell"><ApplicationFrame/>{children}</div></body></html>;
 }
