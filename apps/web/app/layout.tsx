@@ -27,5 +27,5 @@ export const metadata = {
 export const viewport = {themeColor:'#051945'};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body className="ds-customer">{children}</body></html>;
+  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body className="ds-customer ds-professional">{children}</body></html>;
 }

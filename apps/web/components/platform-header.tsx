@@ -38,7 +38,7 @@ export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {
           <picture><source media="(max-width: 600px)" srcSet="/brand/septlion-symbol-navy.svg"/><img src="/brand/septlion-wordmark-navy.svg" width="144" height="52" alt="SEPTLION"/></picture>
         </Link>
         <nav className="platform-navigation" aria-label={lang === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'}>
-          {links.slice(0,3).map(link => <Link href={link.href} key={link.href} className={active(link.href) ? 'active' : undefined} aria-current={active(link.href) ? 'page' : undefined}>{link[lang]}</Link>)}
+          {links.map(link => <Link href={link.href} key={link.href} className={active(link.href) ? 'active' : undefined} aria-current={active(link.href) ? 'page' : undefined}>{link[lang]}</Link>)}
         </nav>
         <div className="platform-actions">
           <Link className="platform-action mobile-discover" href="/discover">{lang === 'ar' ? 'اكتشف' : 'Discover'}</Link>

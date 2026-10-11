@@ -197,12 +197,23 @@ ErrorDocument 404 ${basePath}/404.html
   for (const [selector, expected] of [['.discover-page', 'radial-gradient'], ['.discover-page .discover-product', 'linear-gradient']]) {
     let winner;
     css.walkRules(rule => {
-      if (rule.parent.type === 'atrule' || !rule.selector.split(',').includes(selector)) return;
+      // PostCSS splits only top-level selector commas; commas inside :is()
+      // must not create a false match for an unqualified legacy selector.
+      if (rule.parent.type === 'atrule' || !rule.selectors.includes(selector)) return;
       rule.walkDecls('background', declaration => {
         if (!winner || declaration.important || !winner.important) winner = declaration;
       });
     });
     if (!winner?.value.includes(expected)) throw new Error('Legacy CSS hides the approved theme: ' + selector);
+  }
+  const homeHtml = await readFile(path.join(destination, 'index.html'), 'utf8');
+  if (homeHtml.includes('ds-professional')) {
+    let customerSurface;
+    css.walkRules(rule => {
+      if (rule.parent.type === 'atrule' || !rule.selectors.includes('.ds-professional :is(.product-home,.discover-page,.customer-composer,.buyer-app)')) return;
+      rule.walkDecls('background', declaration => { customerSurface = declaration.value; });
+    });
+    if (customerSurface !== 'var(--color-navy-dark)') throw new Error('Professional customer surface is missing the approved navy palette.');
   }
   console.log('Verified preview package: ' + routes.length + ' routes, scoped assets, RSC navigation and noindex.');
   for(const value of ['--color-navy:#051945','--color-navy-dark:#030D26','--fs-base:14px',"font-family:Montserrat",'.layer-4', '.btn .inner-edge']){const normalized=stylesheets.join('').replace(/\s+/g,'').toLowerCase();if(!normalized.includes(value.replace(/\s+/g,'').toLowerCase()))throw new Error('Missing approved Design System v1.0 value: '+value);}
