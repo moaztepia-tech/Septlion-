@@ -1,5 +1,6 @@
 'use client';
 
+import {DesignLink} from './design-system';
 import type {ReactNode} from 'react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -22,14 +23,14 @@ export function PlatformIcon({name}: {name: IconName}) {
 const links = [
   {href: '/', ar: 'الرئيسية', en: 'Home', icon: 'home'},
   {href: '/discover', ar: 'اكتشف', en: 'Discover', icon: 'discover'},
-  {href: '/requests', ar: 'التجارة', en: 'Trade', icon: 'trade'},
-  {href: '/account', ar: 'الحساب', en: 'Account', icon: 'account'},
+  {href: '/my-septlion', ar: 'مساحتي', en: 'My Septlion', icon: 'trade'},
+  {href: '/company', ar: 'الشركة', en: 'Company', icon: 'account'},
 ] as const;
 const tradePaths = ['/request','/offer','/commit','/execution','/documents','/receive','/reorder'];
 
 export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {actions?: ReactNode; lang?: 'ar' | 'en'; showOperations?: boolean}) {
   const pathname = (usePathname() || '/').replace(/\/+$/, '') || '/';
-  const active = (href: string) => href === '/' ? pathname === '/' : href === '/requests' ? pathname === href || tradePaths.some(p => pathname === p || pathname.startsWith(p + '/')) : pathname === href || pathname.startsWith(href + '/');
+  const active = (href: string) => href === '/' ? pathname === '/' : href === '/my-septlion' ? pathname === href || pathname === '/requests' || tradePaths.some(p => pathname === p || pathname.startsWith(p + '/')) : pathname === href || pathname.startsWith(href + '/');
   return <>
     <header className="platform-header">
       <div className="platform-header-inner">
@@ -43,9 +44,9 @@ export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {
           <Link className="platform-action mobile-discover" href="/discover">{lang === 'ar' ? 'اكتشف' : 'Discover'}</Link>
           {actions ?? <>
             {showOperations && <Link className="platform-action" href="/operations" aria-label="العمليات"><PlatformIcon name="operations"/><span className="platform-action-label">العمليات</span></Link>}
-            <Link className="platform-action" href="/notifications" aria-label={lang === 'ar' ? 'التنبيهات' : 'Notifications'}><PlatformIcon name="bell"/><span className="platform-action-label">{lang === 'ar' ? 'التنبيهات' : 'Notifications'}</span></Link>
-            <Link className="platform-action" href="/account" aria-label={lang === 'ar' ? 'الحساب' : 'Account'}><PlatformIcon name="account"/><span className="platform-action-label">{lang === 'ar' ? 'الحساب' : 'Account'}</span></Link>
-            <Link className="primary-link header-start" href="/require">{lang === 'ar' ? 'ابدأ طلبًا' : 'Start a requirement'}</Link>
+            <DesignLink className="icon-btn platform-action" href="/notifications" aria-label={lang === 'ar' ? 'التنبيهات' : 'Notifications'}><PlatformIcon name="bell"/><span className="platform-action-label">{lang === 'ar' ? 'التنبيهات' : 'Notifications'}</span></DesignLink>
+            <DesignLink className="icon-btn platform-action" href="/account" aria-label={lang === 'ar' ? 'الحساب' : 'Account'}><PlatformIcon name="account"/><span className="platform-action-label">{lang === 'ar' ? 'الحساب' : 'Account'}</span></DesignLink>
+            <DesignLink className="primary-link header-start" href="/require">{lang === 'ar' ? 'ابدأ طلبًا' : 'Start a requirement'}</DesignLink>
           </>}
         </div>
       </div>

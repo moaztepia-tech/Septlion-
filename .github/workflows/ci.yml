@@ -37,16 +37,8 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Auth session and safe return-path regression tests
-        run: node --test tests/auth-session.test.mjs
-      - name: Offer validation, retry and PDF regression tests
-        run: node --test tests/offer-document.test.mjs
-      - name: Execution permissions, private documents and retry regression tests
-        run: node --test tests/trade-lifecycle.test.mjs
-      - name: Requirement input regression tests
-        run: node --test tests/requirement-input.test.mjs
-      - name: Customer draft, context, contact and acceptance regression tests
-        run: node --test tests/customer-experience.test.mjs
+      - name: Customer and runtime regression tests
+        run: node --test tests/*.test.mjs
       - name: Prisma validate
         working-directory: apps/api
         run: pnpm exec prisma validate

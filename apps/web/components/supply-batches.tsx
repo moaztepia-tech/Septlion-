@@ -1,0 +1,23 @@
+'use client';
+import {DesignField, DesignButton} from "./design-system";
+import {useEffect,useRef,useState} from 'react';
+import {edge} from '../lib/api';
+import {errorMessage,TradeWorkspace,TradeSupplyBatch,TradeDocument,TradeSide} from '../lib/trade-transaction';
+
+const names:Record<string,string>={WAITING:'بانتظار التجهيز',IN_EXECUTION:'قيد التجهيز',READY_TO_SHIP:'جاهزة للشحن',SHIPPED:'تم تسجيل الشحن',IN_TRANSIT:'قيد النقل',DELIVERED:'بانتظار مراجعة الاستلام',ACCEPTED:'تم تأكيد الاستلام',CLAIM_OPEN:'مطالبة قيد المعالجة'};
+const next:Record<string,string>={WAITING:'IN_EXECUTION',IN_EXECUTION:'READY_TO_SHIP',READY_TO_SHIP:'SHIPPED',SHIPPED:'IN_TRANSIT',IN_TRANSIT:'DELIVERED',CLAIM_OPEN:'CLAIM_RESOLVED'};
+export function SupplyBatches({workspace:w,side='BUYER',onChanged}:{workspace:TradeWorkspace;side?:TradeSide;onChanged:()=>Promise<void>}) {
+  const[bsy,setBusy]=useState(''),[notes,setNotes]=useState<Record<string,string>>({}),[proofs,setProofs]=useState<Record<string,string>>({}),[documents,setDocuments]=useState<TradeDocument[]>([]),[error,setError]=useState(''),[message,setMessage]=useState('');
+  const pending=useRef<{signature:string;key:string}|null>(null),guard=useRef(false);
+  useEffect(()=>{if(side==='OPERATOR'&&w.batches?.length)void edge<{items:TradeDocument[]}>('documents.list',{transactionId:w.item.id,side}).then(r=>setDocuments(r.items)).catch(e=>setError(errorMessage(e)));},[w.item.id,w.item.version,side,w.batches?.length]);
+  if(!w.batches?.length)return null;
+  async function change(b:TradeSupplyBatch,action:string){
+    if(guard.current)return;guard.current=true;setBusy(b.id);setError('');setMessage('');
+    try{const note=notes[b.id]?.trim()||'',documentId=proofs[b.id]||null;const signature=JSON.stringify([b.id,b.version,action,note,documentId]);if(pending.current?.signature!==signature)pending.current={signature,key:crypto.randomUUID()};await edge('batches.change',{side,transactionId:w.item.id,batchId:b.id,expectedVersion:b.version,batchAction:action,note,documentId,idempotencyKey:pending.current.key});pending.current=null;setNotes(n=>({...n,[b.id]:''}));setMessage('حُفظ تحديث الدفعة '+b.sequence+'.');await onChanged();}catch(e){setError(errorMessage(e));}finally{guard.current=false;setBusy('');}
+  }
+  return <section className="supply-batches" aria-label="دفعات التوريد"><h2>متابعة الدفعات · {w.batches.length}</h2><p>كل دفعة لها حالة واستلام ومطالبة مستقلة داخل هذه الصفقة.</p>{w.batches.map(b=>{
+    const action=side==='OPERATOR'?next[b.status]:undefined,needProof=!w.item.testOnly&&['SHIPPED','DELIVERED'].includes(action||''),kind=action==='SHIPPED'?'BILL_OF_LADING':'DELIVERY_PROOF';
+    const editable=(side==='OPERATOR'&&!!action)||(side==='BUYER'&&b.status==='DELIVERED');
+    return <article key={b.id} className="supply-batch-card"><div className="workspace-heading"><h3>الدفعة {b.sequence}</h3><b>{names[b.status]||b.status}</b></div><p><strong>{b.quantity} {b.unit}</strong> · الموعد المطلوب: <time>{b.plannedDate}</time></p>{b.notes&&<p>{b.notes}</p>}{b.claimNote&&<p>المطالبة: {b.claimNote}</p>}{b.claimResolution&&<p>المعالجة: {b.claimResolution}</p>}{b.receivedAt&&<p>تأكيد الاستلام: {new Date(b.receivedAt).toLocaleString('ar')}</p>}{editable&&<><label>{side==='BUYER'?'ملاحظة المراجعة أو وصف المشكلة':'مرجع تحديث الدفعة'}<DesignField multiline><textarea disabled={!!bsy} minLength={5} maxLength={2000} rows={2} value={notes[b.id]||''} onChange={e=>setNotes(n=>({...n,[b.id]:e.target.value}))}/></DesignField></label>{needProof&&<label>مستند إثبات هذه الدفعة<DesignField><select value={proofs[b.id]||''} disabled={!!bsy} onChange={e=>setProofs(p=>({...p,[b.id]:e.target.value}))}><option value="">اختر المستند بعد رفعه ومشاركته</option>{documents.filter(d=>d.own&&d.visibilityToCounterparty&&d.kind===kind).map(d=><option key={d.id} value={d.id}>{d.fileName}</option>)}</select></DesignField></label>}<div className="two-actions">{side==='OPERATOR'?<DesignButton className="primary-link" disabled={!!bsy||(notes[b.id]||'').trim().length<5||needProof&&!proofs[b.id]} onClick={()=>void change(b,action!)}>{bsy===b.id?'جارٍ الحفظ…':action==='CLAIM_RESOLVED'?'توثيق معالجة المطالبة':'تسجيل: '+names[action||'']}</DesignButton>:<><DesignButton className="primary-link" disabled={!!bsy||(notes[b.id]||'').trim().length<5} onClick={()=>void change(b,'ACCEPTED')}>تأكيد مطابقة الدفعة واستلامها</DesignButton><DesignButton className="secondary-link" disabled={!!bsy||(notes[b.id]||'').trim().length<5} onClick={()=>void change(b,'CLAIM_OPEN')}>فتح مطالبة لهذه الدفعة</DesignButton></>}</div></>}</article>;
+  })}{error&&<p role="alert" className="workspace-error">{error}</p>}{message&&<p role="status" className="workspace-success">{message}</p>}</section>;
+}
