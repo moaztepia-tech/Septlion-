@@ -1,0 +1,49 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {useRouter,useSearchParams} from 'next/navigation';
+import {catalogPreview} from '../../lib/catalog-preview';
+import {COMPOSER_DRAFT_KEY,draftFromFeed} from '../../lib/composer-draft';
+import {sessionUserId} from '../../lib/api';
+import {PlatformHeader} from '../../components/platform-header';
+
+export default function PreparePage(){
+ const router=useRouter(),params=useSearchParams();
+ const id=params.get('product');
+ const product=catalogPreview.find(p=>p.id===id);
+ const [destination,setDestination]=useState('');
+ const [incoterm,setIncoterm]=useState('CIF');
+ const [payment,setPayment]=useState('L/C');
+ const [count,setCount]=useState(1);
+ const [error,setError]=useState('');
+ useEffect(()=>{try{const raw=sessionStorage.getItem('septlion_order_preparation');if(!raw)return;const s=JSON.parse(raw);if(s.productId!==id)return;setDestination(s.destination||'');setIncoterm(s.incoterm||'CIF');setPayment(s.payment||'L/C');setCount(Number.isInteger(s.count)&&s.count>0?s.count:1);}catch{}},[id]);
+ function next(){
+  if(!product)return;
+  if(!destination.trim()){setError('حدد بلد الوجهة أولًا.');return;}
+  const context={
+   version:1,source:'product_feed' as const,createdAt:new Date().toISOString(),
+   product:{id:product.id,name:product.name,nameEn:product.en,packing:product.pack},
+   containerCount:count,septlionScale:'S-1',incoterm,
+   destination:{port:destination.trim(),country:destination.trim(),code:''},
+   paymentPreference:payment,
+   buyer:{name:'',company:'',whatsapp:'',email:null,whatsappStatus:'UNCONFIRMED'}
+  };
+  try{
+   sessionStorage.setItem('septlion_order_preparation',JSON.stringify({productId:id,destination,incoterm,payment,count}));
+   sessionStorage.setItem(COMPOSER_DRAFT_KEY,JSON.stringify({...draftFromFeed(context,crypto.randomUUID()),ownerId:sessionUserId()}));
+   sessionStorage.setItem('septlion_feed_context',JSON.stringify(context));
+   router.push('/require?source=feed');
+  }catch{setError('تعذر حفظ الاختيار. تحقق من إعدادات المتصفح ثم حاول مجددًا.');}
+ }
+ if(!product)return <main dir="rtl"><PlatformHeader/><section className="approved-empty"><h1>المنتج غير متاح</h1><a href="/discover">العودة إلى اكتشف</a></section></main>;
+ return <main dir="rtl" className="approved-prepare"><PlatformHeader/><div className="approved-prepare-inner">
+  <div className="approved-prepare-media"><div className="approved-bag"><small>ZOLLANA</small><strong>{product.name}</strong><span>{product.en}</span><em>{product.pack}</em></div></div>
+  <div className="approved-prepare-content"><h1>{product.name}</h1><p>{product.pack}</p>
+   <label>بلد الوجهة<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="مثال: السعودية" maxLength={120}/></label>
+   <label>شرط التسليم<select value={incoterm} onChange={e=>setIncoterm(e.target.value)}><option>CIF</option><option>CFR</option><option>FOB</option></select></label>
+   <label>طريقة الدفع<select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></label>
+   <div className="approved-quantity"><span>عدد الحاويات</span><div><button type="button" aria-label="تقليل" disabled={count===1} onClick={()=>setCount(c=>Math.max(1,c-1))}>−</button><input aria-label="عدد الحاويات" type="number" min="1" max="1000000000" value={count} onChange={e=>setCount(Math.min(1000000000,Math.max(1,Math.floor(Number(e.target.value)||1))))}/><button type="button" aria-label="زيادة" onClick={()=>setCount(c=>Math.min(1000000000,c+1))}>+</button></div></div>
+   {error&&<p role="alert" className="workspace-error">{error}</p>}
+   <button type="button" className="approved-next" onClick={next}>متابعة</button>
+  </div>
+ </div></main>;
+}
