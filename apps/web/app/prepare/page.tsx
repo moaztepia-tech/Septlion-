@@ -5,6 +5,7 @@ import {catalogPreview} from '../../lib/catalog-preview';
 import {COMPOSER_DRAFT_KEY,draftFromFeed} from '../../lib/composer-draft';
 import {sessionUserId} from '../../lib/api';
 import {PlatformHeader} from '../../components/platform-header';
+import {getSeptlionScale} from '../../lib/septlion-scale';
 
 export default function PreparePage(){
  const router=useRouter(),params=useSearchParams();
@@ -22,7 +23,7 @@ export default function PreparePage(){
   const context={
    version:1,source:'product_feed' as const,createdAt:new Date().toISOString(),
    product:{id:product.id,name:product.name,nameEn:product.en,packing:product.pack},
-   containerCount:count,septlionScale:'S-1',incoterm,
+   containerCount:count,septlionScale:getSeptlionScale(count),incoterm,
    destination:{port:destination.trim(),country:destination.trim(),code:''},
    paymentPreference:payment,
    buyer:{name:'',company:'',whatsapp:'',email:null,whatsappStatus:'UNCONFIRMED'}
