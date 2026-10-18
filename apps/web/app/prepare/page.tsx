@@ -43,21 +43,19 @@ function PrepareContent(){
   }catch{setError('تعذر حفظ الاختيار. تحقق من إعدادات المتصفح ثم حاول مجددًا.');}
  }
  if(!product)return <main dir="rtl"><PlatformHeader/><section className="approved-empty"><h1>المنتج غير متاح</h1><a href="/discover">العودة إلى اكتشف</a></section></main>;
- return <main dir="rtl" className="approved-prepare"><PlatformHeader/><div className="approved-prepare-inner">
-  <div className="approved-prepare-media"><div className="approved-bag"><small>ZOLLANA</small><strong>{product.name}</strong><span>{product.en}</span><em>{product.pack}</em></div></div>
-  <div className="approved-prepare-content"><h1>{product.name}</h1><p>{product.pack}</p>
-   <label>بلد الوجهة<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="مثال: السعودية" maxLength={120}/></label>
-   <label>شرط التسليم<select value={incoterm} onChange={e=>setIncoterm(e.target.value)}><option>CIF</option><option>CFR</option><option>FOB</option></select></label>
-   <label>طريقة الدفع<select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></label>
-   <fieldset className="approved-container-field"><legend>عدد الحاويات</legend>
-    <div className="approved-quantity"><span>العدد</span><div><button type="button" aria-label="تقليل عدد الحاويات" disabled={count===1} onClick={()=>setCount(c=>Math.max(1,c-1))}>−</button><input aria-label="عدد الحاويات" type="number" min="1" max="1000000000" value={count} onChange={e=>setCount(Math.min(1000000000,Math.max(1,Math.floor(Number(e.target.value)||1))))}/><button type="button" aria-label="زيادة عدد الحاويات" onClick={()=>setCount(c=>Math.min(1000000000,c+1))}>+</button></div></div>
-    <div className="approved-container-size" role="group" aria-label="مقاس الحاوية"><span>المقاس المفضل</span><div><button type="button" aria-pressed={containerSize==='20'} onClick={()=>setContainerSize('20')}>20 قدم</button><button type="button" aria-pressed={containerSize==='40'} onClick={()=>setContainerSize('40')}>40 قدم</button></div></div>
-    <p className="approved-container-hint">المقاس تفضيل أولي؛ يُراجع أثناء إعداد العرض.</p>
-   </fieldset>
-   {error&&<p role="alert" className="workspace-error">{error}</p>}
-   <button type="button" className="approved-next" onClick={next} disabled={!hydrated}>متابعة</button>
-  </div>
- </div></main>;
+ return <main dir="rtl" className="v3-prepare"><PlatformHeader/><div className="v3-prepare-shell">
+  <nav className="v3-breadcrumb" aria-label="مسار الصفحة"><a href="/discover">اكتشف</a><span>/</span><strong>{product.name}</strong></nav>
+  <header className="v3-prepare-heading"><span className="v3-section-index">SEPTLION / PRODUCT REQUEST</span><h1>لنجهّز طلبك</h1><p>اختر تفضيلاتك الأولية. سنساعدك على استكمال التفاصيل في محرّر الطلب الذكي.</p></header>
+  <div className="v3-prepare-grid">
+   <aside className="v3-prepare-summary"><div className="v3-prepare-art"><div className="v3-pack-visual" aria-hidden="true"><span className="v3-pack-brand">ZOLLANA</span><span className="v3-pack-line"/><strong>{product.name}</strong><small>{product.en}</small><span className="v3-pack-footer">FLOUR COLLECTION</span></div><span className="v3-art-disclaimer">تصور توضيحي وليس صورة العبوة المعتمدة</span></div><div className="v3-prepare-product"><span>المنتج المختار</span><h2>{product.name}</h2><p>{product.en}</p><dl><div><dt>التعبئة</dt><dd>{product.pack}</dd></div><div><dt>المواصفة</dt><dd>{product.note}</dd></div></dl></div></aside>
+   <section className="v3-prepare-form" aria-label="تفضيلات الطلب"><div className="v3-form-top"><span>01 / 02</span><h2>تفاصيل التوريد</h2><p>هذه تفضيلات أولية وليست شروطًا نهائية أو عرض سعر.</p></div>
+    <div className="v3-form-fields"><label>بلد الوجهة <span>مطلوب</span><input value={destination} onChange={e=>{setDestination(e.target.value);setError('');}} placeholder="مثال: تنزانيا" maxLength={120}/></label>
+     <div className="v3-form-pair"><label>شرط التسليم<select value={incoterm} onChange={e=>setIncoterm(e.target.value)}><option>CIF</option><option>CFR</option><option>FOB</option></select></label><label>طريقة الدفع<select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></label></div>
+     <fieldset className="v3-container-field"><legend>الحاويات</legend><div className="v3-quantity"><span>العدد</span><div><button type="button" aria-label="تقليل العدد" disabled={count===1} onClick={()=>setCount(c=>Math.max(1,c-1))}>−</button><input aria-label="عدد الحاويات" type="number" min="1" max="1000000000" value={count} onChange={e=>setCount(Math.min(1000000000,Math.max(1,Math.floor(Number(e.target.value)||1))))}/><button type="button" aria-label="زيادة العدد" onClick={()=>setCount(c=>Math.min(1000000000,c+1))}>+</button></div></div><div className="v3-container-sizes"><span>المقاس المفضل</span><div><button type="button" aria-pressed={containerSize==='20'} onClick={()=>setContainerSize('20')}>20 قدم</button><button type="button" aria-pressed={containerSize==='40'} onClick={()=>setContainerSize('40')}>40 قدم</button></div></div><p>يُراجع المقاس النهائي وفق المنتج والوجهة.</p></fieldset>
+    </div>{error&&<p role="alert" className="v3-form-error">{error}</p>}
+    <div className="v3-form-actions"><span>التالي: محرّر الطلب الذكي</span><button type="button" disabled={!hydrated} onClick={next}>متابعة إلى طلبك <span>←</span></button></div>
+   </section>
+  </div></div></main>;
 }
 
 export default function PreparePage(){return <Suspense fallback={<main dir="rtl"><PlatformHeader/><p>جارٍ تحميل المنتج…</p></main>}><PrepareContent/></Suspense>;}
