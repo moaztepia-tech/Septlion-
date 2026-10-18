@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {Suspense,useEffect,useState} from 'react';
 import {useRouter,useSearchParams} from 'next/navigation';
 import {catalogPreview} from '../../lib/catalog-preview';
 import {COMPOSER_DRAFT_KEY,draftFromFeed} from '../../lib/composer-draft';
@@ -7,7 +7,7 @@ import {sessionUserId} from '../../lib/api';
 import {PlatformHeader} from '../../components/platform-header';
 import {getSeptlionScale} from '../../lib/septlion-scale';
 
-export default function PreparePage(){
+function PrepareContent(){
  const router=useRouter(),params=useSearchParams();
  const id=params.get('product');
  const product=catalogPreview.find(p=>p.id===id);
@@ -48,3 +48,5 @@ export default function PreparePage(){
   </div>
  </div></main>;
 }
+
+export default function PreparePage(){return <Suspense fallback={<main dir="rtl"><PlatformHeader/><p>جارٍ تحميل المنتج…</p></main>}><PrepareContent/></Suspense>;}
