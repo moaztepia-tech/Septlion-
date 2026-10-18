@@ -23,12 +23,12 @@ export default function DiscoverPage(){
   <div className="approved-discover-inner">
    <div className="approved-discover-tools">
     <div className="approved-sector-row" aria-label="القطاعات">{sectors.map(s=><button key={s} type="button" className={s===sector?'active':''} aria-pressed={s===sector} onClick={()=>setSector(s)}>{s}</button>)}</div>
-    <button type="button" className="approved-search-trigger" aria-label="بحث" onClick={()=>setSearchOpen(v=>!v)}>⌕</button>
+    <button type="button" className="approved-search-trigger" aria-label="بحث" aria-expanded={searchOpen} onClick={()=>{setSearchOpen(v=>!v);setSearch('');}}>⌕</button>
    </div>
    {searchOpen&&<label className="approved-search"><span className="sr-only">ابحث عن منتج</span><input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث عن منتج…"/></label>}
    <section className="approved-feed" aria-label="المنتجات">
     {products.map(p=><article className="approved-product" key={p.id}>
-      <div className="approved-media" aria-label={'صور '+p.name}>
+      <div className="approved-media" aria-label={'عرض توضيحي لمنتج '+p.name}>
        <div className="approved-bag" aria-hidden="true"><small>ZOLLANA</small><strong>{p.name}</strong><span>{p.en}</span><em>{p.pack}</em></div>
        <span className="approved-media-notice">صورة توضيحية مؤقتة — ليست صورة المنتج الفعلية</span>
       </div>
