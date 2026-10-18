@@ -1,41 +1,33 @@
 'use client';
 import {useRouter} from 'next/navigation';
 import {useState} from 'react';
+import Link from 'next/link';
 import {PlatformHeader} from '../../components/platform-header';
 import {catalogPreview} from '../../lib/catalog-preview';
-import {DesignButton} from '../../components/design-system';
-import Link from 'next/link';
 
 const sectors=['الكل','الأغذية والمشروبات','التغليف','البناء والتشييد','الطاقة','المنسوجات','المعدات والآلات'];
 export default function DiscoverPage(){
  const router=useRouter();
  const [sector,setSector]=useState('الكل');
  const [search,setSearch]=useState('');
- const [searchOpen,setSearchOpen]=useState(false);
  const food=sector==='الكل'||sector==='الأغذية والمشروبات';
- const products=food?catalogPreview.filter(p=>(p.name+' '+p.en).toLowerCase().includes(search.trim().toLowerCase())):[];
- function select(id:string){
-   try {sessionStorage.setItem('septlion_selected_product',id);router.push('/prepare?product='+encodeURIComponent(id));}
-   catch {router.push('/prepare?product='+encodeURIComponent(id));}
- }
- return <main dir="rtl" className="approved-discover">
+ const products=food?catalogPreview.filter(p=>(p.name+' '+p.en+' '+p.pack).toLowerCase().includes(search.trim().toLowerCase())):[];
+ function select(id:string){try{sessionStorage.setItem('septlion_selected_product',id);}catch{}router.push('/prepare?product='+encodeURIComponent(id));}
+ return <main dir="rtl" className="v3-discover">
   <PlatformHeader/>
-  <div className="approved-discover-inner">
-   <div className="approved-discover-tools">
-    <div className="approved-sector-row" aria-label="القطاعات">{sectors.map(s=><button key={s} type="button" className={s===sector?'active':''} aria-pressed={s===sector} onClick={()=>setSector(s)}>{s}</button>)}</div>
-    <button type="button" className="approved-search-trigger" aria-label="بحث" aria-expanded={searchOpen} onClick={()=>{setSearchOpen(v=>!v);setSearch('');}}>⌕</button>
-   </div>
-   {searchOpen&&<label className="approved-search"><span className="sr-only">ابحث عن منتج</span><input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث عن منتج…"/></label>}
-   <section className="approved-feed" aria-label="المنتجات">
-    {products.map(p=><article className="approved-product" key={p.id}>
-      <div className="approved-media" aria-label={'عرض توضيحي لمنتج '+p.name}>
-       <div className="approved-bag" aria-hidden="true"><small>ZOLLANA</small><strong>{p.name}</strong><span>{p.en}</span><em>{p.pack}</em></div>
-       <span className="approved-media-notice">صورة توضيحية مؤقتة — ليست صورة المنتج الفعلية</span>
-      </div>
-      <div className="approved-product-info"><small>{p.eyebrow}</small><h2>{p.name}</h2><p>{p.en}</p><dl><div><dt>التعبئة</dt><dd>{p.pack}</dd></div><div><dt>المواصفة</dt><dd>{p.note}</dd></div></dl><DesignButton className="approved-order" onClick={()=>select(p.id)}>اطلب هذا المنتج</DesignButton></div>
+  <div className="v3-discover-shell">
+   <div className="v3-breadcrumb"><Link href="/">الرئيسية</Link><span>/</span><strong>اكتشف</strong></div>
+   <header className="v3-discover-head"><div><span className="v3-section-index">SEPTLION / DISCOVER</span><h1>اكتشف فرص التوريد</h1><p>منتجات محددة بوضوح. وطلباتك لا تتوقف عند حدود المعروض.</p></div><Link className="v3-discover-cta" href="/require">لدي احتياج مختلف <span>←</span></Link></header>
+   <div className="v3-discover-toolbar"><div className="v3-search-field"><span aria-hidden="true">⌕</span><label className="sr-only" htmlFor="v3-search">البحث في المنتجات</label><input id="v3-search" type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث عن منتج أو تعبئة…"/></div><span className="v3-result-count">{products.length} منتجات معروضة</span></div>
+   <nav className="v3-sectors" aria-label="القطاعات">{sectors.map(s=><button key={s} type="button" className={sector===s?'active':''} aria-pressed={sector===s} onClick={()=>setSector(s)}>{s}</button>)}</nav>
+   <section className="v3-catalog" aria-label="كتالوج المنتجات">
+    {products.map((p,i)=><article className="v3-product" key={p.id}>
+     <div className="v3-product-art"><span className="v3-product-category">ZOLLANA / FLOUR</span><div className="v3-pack-visual" aria-hidden="true"><span className="v3-pack-brand">ZOLLANA</span><span className="v3-pack-line"/><strong>{p.name}</strong><small>{p.en}</small><span className="v3-pack-footer">FLOUR COLLECTION</span></div><span className="v3-art-disclaimer">تصور بصري توضيحي، وليس صورة عبوة معتمدة</span></div>
+     <div className="v3-product-body"><div className="v3-product-meta"><span>منتجات زولانا</span><span>0{i+1} / 03</span></div><h2>{p.name}</h2><p className="v3-product-en">{p.en}</p><div className="v3-product-spec"><span>خيارات التعبئة</span><strong>{p.pack}</strong></div><p className="v3-product-note">{p.note}</p><button type="button" onClick={()=>select(p.id)}>ابدأ طلب هذا المنتج <span>←</span></button></div>
     </article>)}
-    {!products.length&&<div className="approved-empty"><p>لا توجد منتجات معروضة لهذه الفئة حاليًا.</p><Link href="/require">صف احتياجك وسنتولى البحث عنه ←</Link></div>}
    </section>
+   {!products.length&&<div className="v3-no-results"><span>لا توجد نتائج مطابقة في الكتالوج المعروض</span><h2>احتياجك لا يتوقف هنا.</h2><p>قدّم طلبك وسنعمل على دراسة إمكانات تلبيته دون الوعد بتوفر غير مؤكد.</p><Link href="/require">صف احتياجك <span>←</span></Link></div>}
+   <aside className="v3-custom-request"><div><span className="v3-section-index">BEYOND THE CATALOG</span><h2>لم تجد ما تبحث عنه؟</h2><p>أخبرنا بالمنتج أو الخدمة أو المواصفات المطلوبة. نقطة البداية هي احتياجك، وليس ما يظهر في الكتالوج.</p></div><Link href="/require">قدّم طلب توريد <span>←</span></Link></aside>
   </div>
  </main>;
 }
