@@ -18,3 +18,11 @@
 .approved-product .approved-order{margin-top:auto}
 .approved-trade-packing{font-size:13px;color:#66758b;margin:0 0 10px}
 @media(max-width:500px){.approved-product{min-height:640px;grid-template-rows:minmax(390px,7fr) minmax(215px,3fr)}.approved-product .approved-media{min-height:390px}}
+
+/* One fourth field for both container count and preferred size. */
+.approved-container-field{border:1px solid #dce3ed;border-radius:14px;padding:12px 14px 10px;margin:4px 0 22px;min-width:0}
+.approved-container-field legend{font-weight:700;padding:0 7px;color:#102744}
+.approved-container-field .approved-quantity{margin:4px 0 12px}
+.approved-container-field .approved-container-size{margin:0 0 9px;flex-wrap:wrap}
+.approved-container-field .approved-container-hint{margin:0!important;line-height:1.5}
+@media(max-width:370px){.approved-container-field .approved-quantity{flex-wrap:wrap}.approved-container-field .approved-container-size button{padding:8px 11px}}
