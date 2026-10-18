@@ -11,7 +11,6 @@ export default function DiscoverPage(){
  const [sector,setSector]=useState('الكل');
  const [search,setSearch]=useState('');
  const [searchOpen,setSearchOpen]=useState(false);
- const [media,setMedia]=useState<Record<string,number>>({});
  const food=sector==='الكل'||sector==='الأغذية والمشروبات';
  const products=food?catalogPreview.filter(p=>(p.name+' '+p.en).toLowerCase().includes(search.trim().toLowerCase())):[];
  function select(id:string){
@@ -30,7 +29,7 @@ export default function DiscoverPage(){
     {products.map(p=><article className="approved-product" key={p.id}>
       <div className="approved-media" aria-label={'صور '+p.name}>
        <div className="approved-bag" aria-hidden="true"><small>ZOLLANA</small><strong>{p.name}</strong><span>{p.en}</span><em>{p.pack}</em></div>
-       <div className="approved-media-controls"><button type="button" aria-label="الصورة السابقة" onClick={()=>setMedia(v=>({...v,[p.id]:Math.max(0,(v[p.id]||0)-1)}))}>‹</button><span>{(media[p.id]||0)+1} / 1</span><button type="button" aria-label="الصورة التالية" disabled>›</button></div>
+       <span className="approved-media-notice">صورة توضيحية مؤقتة — ليست صورة المنتج الفعلية</span>
       </div>
       <div className="approved-product-info"><small>{p.eyebrow}</small><h2>{p.name}</h2><p>{p.en}</p><dl><div><dt>التعبئة</dt><dd>{p.pack}</dd></div><div><dt>المواصفة</dt><dd>{p.note}</dd></div></dl><DesignButton className="approved-order" onClick={()=>select(p.id)}>اطلب هذا المنتج</DesignButton></div>
     </article>)}
