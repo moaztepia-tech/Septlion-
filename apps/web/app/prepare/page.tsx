@@ -17,10 +17,11 @@ function PrepareContent(){
  const [count,setCount]=useState(1);
  const [containerSize,setContainerSize]=useState<'20'|'40'>('40');
  const [error,setError]=useState('');
- useEffect(()=>{try{const raw=sessionStorage.getItem('septlion_order_preparation');if(!raw)return;const s=JSON.parse(raw);if(s.productId!==id)return;setDestination(s.destination||'');setIncoterm(s.incoterm||'CIF');setPayment(s.payment||'L/C');setCount(Number.isInteger(s.count)&&s.count>0?s.count:1);setContainerSize(s.containerSize==='20'?'20':'40');}catch{}},[id]);
+ useEffect(()=>{try{const raw=sessionStorage.getItem('septlion_order_preparation');if(!raw)return;const s=JSON.parse(raw);if(s.productId!==id)return;setDestination(typeof s.destination==='string'?s.destination.slice(0,120):'');setIncoterm(s.incoterm||'CIF');setPayment(s.payment||'L/C');setCount(Number.isInteger(s.count)&&s.count>0?Math.min(1000000000,s.count):1);setContainerSize(s.containerSize==='20'?'20':'40');}catch{}},[id]);
  function next(){
   if(!product)return;
   if(!destination.trim()){setError('حدد بلد الوجهة أولًا.');return;}
+  if(!Number.isInteger(count)||count<1||count>1000000000){setError('راجع عدد الحاويات.');return;}
   const context={
    version:1,source:'product_feed' as const,createdAt:new Date().toISOString(),
    product:{id:product.id,name:product.name,nameEn:product.en,packing:product.pack},
