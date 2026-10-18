@@ -25,7 +25,7 @@ function PrepareContent(){
    version:1,source:'product_feed' as const,createdAt:new Date().toISOString(),
    product:{id:product.id,name:product.name,nameEn:product.en,packing:product.pack},
    containerCount:count,containerSize,septlionScale:getSeptlionScale(count),incoterm,
-   destination:{port:destination.trim(),country:destination.trim(),code:''},
+   destination:{port:'',country:destination.trim(),code:''},
    paymentPreference:payment,
    buyer:{name:'',company:'',whatsapp:'',email:null,whatsappStatus:'UNCONFIRMED'}
   };
