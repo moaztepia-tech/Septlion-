@@ -1,4 +1,5 @@
 import './septlion-design-system.css';
+import './approved-customer.css';
 import {ApplicationFrame} from '../components/application-frame';
 
 export const metadata = {

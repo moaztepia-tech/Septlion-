@@ -30,15 +30,18 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     try {
       const feedRaw = sessionStorage.getItem('septlion_feed_context');
       const seed = sessionStorage.getItem('septlion_requirement_seed');
+      const restored = restoreComposerDraft(sessionStorage.getItem(COMPOSER_DRAFT_KEY),ownerId);
       if (feedRaw) {
         const feed = JSON.parse(feedRaw);
-        if (isFeedContext(feed)) next = draftFromFeed(feed,id);
+        if (isFeedContext(feed)) {
+          // The preparation page already persisted this draft; do not overwrite later edits.
+          next = restored?.feed?.product.id === feed.product.id ? restored : draftFromFeed(feed,id);
+        } else if (restored) next = restored;
       } else if (seed) {
         let context = {};
         try {context = JSON.parse(sessionStorage.getItem('septlion_requirement_context') || '{}');} catch {}
         next = answerRequirement({...next,data:context},seed,'ar');
       } else {
-        const restored = restoreComposerDraft(sessionStorage.getItem(COMPOSER_DRAFT_KEY),ownerId);
         if (restored) next = restored;
         else {
           const pending = JSON.parse(sessionStorage.getItem('septlion_pending_requirement') || 'null');
@@ -72,7 +75,7 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     setUndo(draft); setDraft({...emptyComposerDraft(crypto.randomUUID()),ownerId:sessionUserId(),composerVisited:!reviewOnly});setSaveError('');
   }
   async function save() {
-    if (!reviewOnly || !draft.composerVisited || busy.current || !ready || draft.savedRequirementId) return;
+    if (!reviewOnly || !hydrated || storageError || !draft.composerVisited || busy.current || !ready || draft.savedRequirementId) return;
     busy.current=true;setSaving(true);setSaveError('');
     try {
       let input:Record<string,unknown>=draft.reorder?reorderPayload(draft):requirementPayload(draft);
@@ -95,25 +98,26 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
   return <main className="chat-ai customer-composer" dir={ar?'rtl':'ltr'} lang={lang}>
     <PlatformHeader lang={lang} actions={<><DesignButton className="secondary-link" disabled={saving} onClick={reset}>{ar?'طلب جديد':'New request'}</DesignButton><DesignButton className="platform-action" onClick={()=>setLang(ar?'en':'ar')} aria-label={ar?'Switch to English':'التبديل إلى العربية'}>{ar?'EN':'ع'}</DesignButton></>}/>
     <section className={'chat-stage '+(draft.messages.length?'has-chat':'')} aria-labelledby="composer-title">
-      <div className="composer-status"><span>{storageError?(ar?'تعذر حفظ المسودة على هذا الجهاز':'Draft storage unavailable'):(ar?'مسودتك محفوظة في هذا التبويب':'Draft saved in this tab')}</span><span>{reviewOnly?(ar?'مراجعة الطلب':'Request review'):(ar?'محرّر طلب التوريد':'Supply request · Composer')}</span></div>
+      <div className="composer-status"><span>{storageError?(ar?'تعذر حفظ المسودة على هذا الجهاز':'Draft storage unavailable'):(ar?'مسودتك محفوظة في هذا التبويب':'Draft saved in this tab')}</span><span>{reviewOnly?(ar?'مراجعة الطلب':'Request review'):(ar?'طلب التوريد':'Supply request')}</span></div>
       {undo&&<p className="composer-undo" role="status">{ar?'بدأت طلبًا جديدًا.':'New request started.'} <DesignButton onClick={()=>{setDraft(undo);setUndo(null);}}>{ar?'استعادة الطلب السابق':'Restore previous request'}</DesignButton></p>}
       {reviewOnly&&!draft.composerVisited&&hydrated?<div className="empty-state"><h1>ابدأ من محرّر الطلب</h1><p>كل طلب يمر عبر المحرّر قبل المراجعة والإرسال.</p><DesignLink className="primary-link" href="/require">فتح محرّر الطلب</DesignLink></div>:<div className="intent-canvas"><div className="chat-thread">
         <div className="chat-welcome"><h1 id="composer-title">{reviewOnly?(ar?'مراجعة طلب التوريد':'Review your request'):draft.reorder?(ar?'مراجعة إعادة الطلب':'Review reorder'):draft.feed?(ar?'نكمل طلبك من هنا':'Continue your request'):(ar?'ماذا تحتاج؟':'What do you need?')}</h1><p>{ar?'أخبرنا باحتياجك، ثم راجع تفاصيله قبل إرساله لإعداد عرض Septlion.':'Describe your need, then review the details before requesting a Septlion offer.'}</p></div>
         {draft.reorder&&<p className={draft.reorder.testOnly?'test-notice':'workspace-muted'}>{draft.reorder.testOnly?'TEST — إعادة طلب لمحاكاة غير تجارية. ':''}{ar?'ستحتفظ هذه الإعادة بالتكوين المعتمد مع إمكانية تعديل الكمية. السعر والتوفر وموعد الشحن تُراجع في عرض جديد.':'This reorder preserves the approved configuration. You can change the quantity. Price, availability and shipping date will be checked in a new offer.'}</p>}
-        {draft.feed&&<div className="feed-context-card"><div><small>{ar?'منتج اخترته من اكتشف':'Selected in Discover'} · {draft.feed.buyer.company}</small><b>{draft.feed.product.name}</b></div><span>{ar?'معلومات اختيارك مرفقة، والتعديلات أدناه هي تفاصيل الطلب الذي سيُرسل.':'Your selection is attached. The edited details below will be sent.'}</span></div>}
+        {draft.feed&&<div className="feed-context-card"><div><small>{ar?'منتج اخترته من اكتشف':'Selected in Discover'}{draft.feed.buyer.company ? ' · '+draft.feed.buyer.company : ''}</small><b>{draft.feed.product.name}</b>{draft.feed.containerSize&&<small>{ar?'مقاس الحاوية المفضل: ':'Preferred container size: '}{draft.feed.containerSize} {ar?'قدم':'ft'}</small>}</div><span>{ar?'معلومات اختيارك مرفقة، والتعديلات أدناه هي تفاصيل الطلب الذي سيُرسل.':'Your selection is attached. The edited details below will be sent.'}</span></div>}
         {!reviewOnly&&<div className="composer-conversation" role="log" aria-label={ar?'محادثة الطلب':'Request conversation'}>
           {draft.feed&&!draft.messages.length&&missing.length>0&&<div className="chat-msg assistant"><div>{requirementQuestion(missing[0],lang,draft.feed)}</div></div>}
           {draft.messages.map((message,i)=><div key={i} className={'chat-msg '+message.role}><div>{message.text}</div></div>)}
         </div>}
         <span className="sr-only" aria-live="polite">{lastReply}</span>
-        {Object.keys(draft.data).length>0&&<section className="composer-review layer-4" aria-labelledby="review-title"><DesignLayers sheen/><div className="card-content">
+        {hydrated&&Object.keys(draft.data).length>0&&!reviewOnly&&<div className="composer-inline-summary" aria-label={ar?'ملخص الطلب':'Request summary'}><div><strong>{ar?'ما عرفناه عن طلبك':'What we know so far'}</strong><span>{ready?(ar?'الأساسيات مكتملة':'Essentials complete'):(ar?missing.length+' تفاصيل متبقية':missing.length+' details remaining')}</span></div><dl>{requirementFields.filter(k=>!!draft.data[k]).map(k=><div key={k}><dt>{labels[lang][k]}</dt><dd>{draft.data[k]}</dd></div>)}</dl>{storageError?<p role="alert" className="workspace-error">{ar?'تعذر حفظ المسودة؛ لا تنتقل قبل حل مشكلة التخزين.':'Could not save your draft; resolve storage before continuing.'}</p>:<DesignLink className="primary-link" href="/review">{ar?'مراجعة التفاصيل وإرسال الطلب':'Review details and send request'}</DesignLink>}</div>}
+        {hydrated&&Object.keys(draft.data).length>0&&reviewOnly&&<section className="composer-review layer-4" aria-labelledby="review-title"><DesignLayers sheen/><div className="card-content">
           <div className="composer-review-head"><div><small>{ar?'تفاصيل الطلب':'REQUEST DETAILS'}</small><h2 id="review-title">{ar?'راجع ما سنرسله':'Review what we will send'}</h2></div><span>{ready?(ar?'الأساسيات مكتملة':'Essentials complete'):(ar?missing.length+' معلومات متبقية':missing.length+' details remaining')}</span></div>
           <p>{draft.reorder?(ar?'يمكنك تعديل الكمية بوحدة '+draft.reorder.unit+'. لبقية التغييرات، ابدأ طلبًا جديدًا.':'Change the quantity in '+draft.reorder.unit+'. Start a new request for other changes.'):(ar?'يمكنك تعديل أي حقل مباشرة. التعبئة غير المحددة تبقى للمناقشة، ولا نعتمد مواصفة نيابةً عنك.':'Edit any field directly. Unconfirmed packing remains to be agreed with you.')}</p>
           <div className="composer-field-grid">{requirementFields.filter(k=>k!=='application'||(!draft.reorder&&/flour|دقيق/i.test(draft.data.product||''))).map(field=><label key={field}><span>{labels[lang][field]}{missing.includes(field)&&<small>{ar?' مطلوب':' required'}</small>}</span>{!draft.reorder&&(field==='incoterm'||field==='payment')?<DesignField><select disabled={saving||!!draft.savedRequirementId} value={draft.data[field]||''} onChange={e=>edit(field,e.target.value)}><option value="">{ar?'اختر':'Choose'}</option>{(field==='incoterm'?[['CIF','CIF'],['CFR','CFR'],['FOB','FOB']]:[['L/C',ar?'L/C — اعتماد مستندي':'L/C'],['T/T',ar?'T/T — تحويل بنكي':'T/T'],['OTHER',ar?'تُناقش في العرض':'Discuss in the offer']]).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></DesignField>:<DesignField><input disabled={saving||!!draft.savedRequirementId||!!draft.reorder&&field!=='quantity'} value={draft.data[field]||''} onChange={e=>edit(field,e.target.value)} placeholder={field==='quantity'?(ar?'مثل: 5 FCL أو 40 MT':'e.g. 5 FCL or 40 MT'):field==='packing'?(ar?'مثل: 50 كجم أو تُحدد مع Septlion':'e.g. 50 kg or agree with Septlion'):''} maxLength={2000} autoComplete="off"/></DesignField>}</label>)}</div>
           {!draft.reorder&&<label className="composer-notes"><span>{ar?'ملاحظات المواصفة والتوريد — اختياري':'Specification and supply notes — optional'}</span><DesignField multiline><textarea disabled={saving||!!draft.savedRequirementId} value={draft.notes} onChange={e=>setDraft(d=>({...d,notes:e.target.value}))} maxLength={8000} rows={3} placeholder={ar?'أضف متطلبات الجودة أو التعبئة أو أي تفصيل مهم لعرضك…':'Add quality, packaging or other requirements for your offer…'}/></DesignField></label>}
           {!draft.reorder&&<SupplyPlanEditor plan={draft.supplyPlan||null} onChange={supplyPlan=>setDraft(d=>({...d,supplyPlan}))} unit={quantityDetails(draft.data.quantity)?.unit||'FCL'} disabled={saving||!!draft.savedRequirementId} ar={ar}/>}
           {planError&&<p className="workspace-error" role="alert">{planError}</p>}
-          {draft.savedRequirementId?<DesignLink className="primary-link" href={'/request?id='+encodeURIComponent(draft.savedRequirementId)}>{ar?'فتح الطلب الذي أُرسل':'Open submitted request'}</DesignLink>:<div className="composer-review-actions"><p>{ready?(ar?'الإرسال يطلب إعداد عرض؛ تثبيت الشروط يتم عند قبول العرض لاحقًا.':'Sending requests an offer. Terms are locked when you accept the offer later.'):missing.length?requirementQuestion(missing[0],lang,draft.feed):planError}</p>{reviewOnly?<DesignButton className="primary-link" disabled={!hydrated||!ready||saving} onClick={()=>void save()}>{saving?(ar?'جارٍ الإرسال…':'Sending…'):(ar?'إرسال الطلب لإعداد العرض':'Request a Septlion offer')}</DesignButton>:<DesignLink className="primary-link" href="/review">{ar?'متابعة إلى مراجعة الطلب':'Continue to request review'}</DesignLink>}</div>}
+          {draft.savedRequirementId?<DesignLink className="primary-link" href={'/request?id='+encodeURIComponent(draft.savedRequirementId)}>{ar?'فتح الطلب الذي أُرسل':'Open submitted request'}</DesignLink>:<div className="composer-review-actions"><p>{ready?(ar?'الإرسال يطلب إعداد عرض؛ تثبيت الشروط يتم عند قبول العرض لاحقًا.':'Sending requests an offer. Terms are locked when you accept the offer later.'):missing.length?requirementQuestion(missing[0],lang,draft.feed):planError}</p>{reviewOnly?<DesignButton className="primary-link" disabled={!hydrated||storageError||!ready||saving} onClick={()=>void save()}>{saving?(ar?'جارٍ الإرسال…':'Sending…'):(ar?'إرسال الطلب لإعداد العرض':'Request a Septlion offer')}</DesignButton>:<DesignLink className="primary-link" href="/review">{ar?'متابعة إلى مراجعة الطلب':'Continue to request review'}</DesignLink>}</div>}
           {saveError&&<p className="workspace-error" role="alert">{saveError}</p>}
         </div></section>}
         <div ref={end}/>

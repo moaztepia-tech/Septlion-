@@ -9,7 +9,7 @@ export type RequirementData = Partial<Record<RequirementField, string>>;
 export type FeedContext = {
   source: 'product_feed'; createdAt?: string;
   product: {id: string; name: string; nameEn: string; packing: string};
-  containerCount: number; septlionScale: string; incoterm: string;
+  containerCount: number; containerSize?: '20' | '40'; septlionScale: string; incoterm: string;
   destination: {port: string; country: string; code: string}; paymentPreference: string;
   buyer: {name: string; company: string; whatsapp: string; email: string | null; whatsappStatus: string};
 };
@@ -27,6 +27,7 @@ export function isFeedContext(value: unknown): value is FeedContext {
   return feed.source === 'product_feed' && Number.isInteger(feed.containerCount) && feed.containerCount > 0
     && !!feed.product && ['id','name','nameEn','packing'].every(key => typeof feed.product[key as keyof FeedContext['product']] === 'string')
     && !!feed.destination && ['port','country','code'].every(key => typeof feed.destination[key as keyof FeedContext['destination']] === 'string')
+    && (feed.containerSize === undefined || feed.containerSize === '20' || feed.containerSize === '40')
     && typeof feed.incoterm === 'string' && typeof feed.paymentPreference === 'string' && !!feed.buyer && typeof feed.buyer.company === 'string';
 }
 
@@ -39,7 +40,7 @@ export function draftFromFeed(feed: FeedContext, id: string): ComposerDraft {
     // A list of available packs is not a buyer's selected pack.
     ...(!feed.product.packing.includes('·') ? {packing: feed.product.packing} : {}),
     ...(feed.product.id === 'flour-bakery' ? {application: 'Bakery'} : {}),
-    destination: feed.destination.port, incoterm: feed.incoterm,
+    destination: feed.destination.port || feed.destination.country, incoterm: feed.incoterm,
     ...(feed.paymentPreference !== 'UNSPECIFIED' ? {payment: feed.paymentPreference} : {}),
   }};
 }
@@ -123,7 +124,7 @@ export function requirementPayload(draft: ComposerDraft): Record<string, unknown
     ...draft.data, idempotencyKey: draft.id, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
     containerCount: quantity.unit === 'FCL' ? quantity.amount : null,
     paymentPreference: draft.data.payment,
-    ...(originalDestination && draft.data.destination === originalDestination.port ? {deliveryCountry: originalDestination.country, destinationCode: originalDestination.code} : {}),
+    ...(originalDestination && draft.data.destination === (originalDestination.port || originalDestination.country) ? {deliveryCountry: originalDestination.country, ...(originalDestination.code ? {destinationCode: originalDestination.code} : {})} : {}),
     source: draft.feed ? 'PRODUCT_FEED' : 'AI_COMPOSER',
     sourceContext: draft.feed ? {...draft.feed, reviewedRequirement: draft.data} : {path: 'require'},
     knownFacts: {...draft.data, ...(draft.supplyPlan ? {supplyPlan: normalizeSupplyPlan(draft.supplyPlan, quantity)} : {}), notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},

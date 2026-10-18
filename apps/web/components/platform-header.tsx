@@ -41,7 +41,7 @@ export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {
           {links.slice(0,3).map(link => <Link href={link.href} key={link.href} className={active(link.href) ? 'active' : undefined} aria-current={active(link.href) ? 'page' : undefined}>{link[lang]}</Link>)}
         </nav>
         <div className="platform-actions">
-          <Link className="platform-action mobile-discover" href="/discover">{lang === 'ar' ? 'اكتشف' : 'Discover'}</Link>
+          <Link className="platform-action" href="/discover" aria-label={lang === 'ar' ? 'بحث واستكشاف المنتجات' : 'Search products'}><PlatformIcon name="discover"/></Link>
           {actions ?? <>
             {showOperations && <Link className="platform-action" href="/operations" aria-label="العمليات"><PlatformIcon name="operations"/><span className="platform-action-label">العمليات</span></Link>}
             <DesignLink className="icon-btn platform-action" href="/notifications" aria-label={lang === 'ar' ? 'التنبيهات' : 'Notifications'}><PlatformIcon name="bell"/><span className="platform-action-label">{lang === 'ar' ? 'التنبيهات' : 'Notifications'}</span></DesignLink>
@@ -51,8 +51,5 @@ export function PlatformHeader({actions, lang = 'ar', showOperations = false}: {
         </div>
       </div>
     </header>
-    <nav className="platform-mobile-nav" aria-label={lang === 'ar' ? 'التنقل على الهاتف' : 'Mobile navigation'}>
-      {links.map(link => <Link href={link.href} key={link.href} className={active(link.href) ? 'active' : undefined} aria-current={active(link.href) ? 'page' : undefined}><PlatformIcon name={link.icon}/><span>{link[lang]}</span></Link>)}
-    </nav>
   </>;
 }
