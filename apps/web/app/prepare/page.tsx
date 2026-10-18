@@ -30,6 +30,9 @@ function PrepareContent(){
    buyer:{name:'',company:'',whatsapp:'',email:null,whatsappStatus:'UNCONFIRMED'}
   };
   try{
+   sessionStorage.removeItem('septlion_requirement_seed');
+   sessionStorage.removeItem('septlion_requirement_context');
+   sessionStorage.removeItem('septlion_pending_requirement');
    sessionStorage.setItem('septlion_order_preparation',JSON.stringify({productId:id,destination,incoterm,payment,count,containerSize}));
    sessionStorage.setItem(COMPOSER_DRAFT_KEY,JSON.stringify({...draftFromFeed(context,crypto.randomUUID()),ownerId:sessionUserId()}));
    sessionStorage.setItem('septlion_feed_context',JSON.stringify(context));
