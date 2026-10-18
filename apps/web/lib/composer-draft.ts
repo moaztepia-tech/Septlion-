@@ -9,7 +9,7 @@ export type RequirementData = Partial<Record<RequirementField, string>>;
 export type FeedContext = {
   source: 'product_feed'; createdAt?: string;
   product: {id: string; name: string; nameEn: string; packing: string};
-  containerCount: number; septlionScale: string; incoterm: string;
+  containerCount: number; containerSize?: '20' | '40'; septlionScale: string; incoterm: string;
   destination: {port: string; country: string; code: string}; paymentPreference: string;
   buyer: {name: string; company: string; whatsapp: string; email: string | null; whatsappStatus: string};
 };
@@ -27,6 +27,7 @@ export function isFeedContext(value: unknown): value is FeedContext {
   return feed.source === 'product_feed' && Number.isInteger(feed.containerCount) && feed.containerCount > 0
     && !!feed.product && ['id','name','nameEn','packing'].every(key => typeof feed.product[key as keyof FeedContext['product']] === 'string')
     && !!feed.destination && ['port','country','code'].every(key => typeof feed.destination[key as keyof FeedContext['destination']] === 'string')
+    && (feed.containerSize === undefined || feed.containerSize === '20' || feed.containerSize === '40')
     && typeof feed.incoterm === 'string' && typeof feed.paymentPreference === 'string' && !!feed.buyer && typeof feed.buyer.company === 'string';
 }
 
