@@ -48,9 +48,11 @@ function PrepareContent(){
    <label>بلد الوجهة<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="مثال: السعودية" maxLength={120}/></label>
    <label>شرط التسليم<select value={incoterm} onChange={e=>setIncoterm(e.target.value)}><option>CIF</option><option>CFR</option><option>FOB</option></select></label>
    <label>طريقة الدفع<select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></label>
-   <div className="approved-container-size" role="group" aria-label="مقاس الحاوية"><span>مقاس الحاوية</span><div><button type="button" aria-pressed={containerSize==='20'} onClick={()=>setContainerSize('20')}>20 قدم</button><button type="button" aria-pressed={containerSize==='40'} onClick={()=>setContainerSize('40')}>40 قدم</button></div></div>
-   <div className="approved-quantity"><span>عدد الحاويات</span><div><button type="button" aria-label="تقليل" disabled={count===1} onClick={()=>setCount(c=>Math.max(1,c-1))}>−</button><input aria-label="عدد الحاويات" type="number" min="1" max="1000000000" value={count} onChange={e=>setCount(Math.min(1000000000,Math.max(1,Math.floor(Number(e.target.value)||1))))}/><button type="button" aria-label="زيادة" onClick={()=>setCount(c=>Math.min(1000000000,c+1))}>+</button></div></div>
-   <p className="approved-container-hint">مقاس الحاوية تفضيل أولي؛ يُراجع أثناء إعداد العرض.</p>
+   <fieldset className="approved-container-field"><legend>عدد الحاويات</legend>
+    <div className="approved-quantity"><span>العدد</span><div><button type="button" aria-label="تقليل عدد الحاويات" disabled={count===1} onClick={()=>setCount(c=>Math.max(1,c-1))}>−</button><input aria-label="عدد الحاويات" type="number" min="1" max="1000000000" value={count} onChange={e=>setCount(Math.min(1000000000,Math.max(1,Math.floor(Number(e.target.value)||1))))}/><button type="button" aria-label="زيادة عدد الحاويات" onClick={()=>setCount(c=>Math.min(1000000000,c+1))}>+</button></div></div>
+    <div className="approved-container-size" role="group" aria-label="مقاس الحاوية"><span>المقاس المفضل</span><div><button type="button" aria-pressed={containerSize==='20'} onClick={()=>setContainerSize('20')}>20 قدم</button><button type="button" aria-pressed={containerSize==='40'} onClick={()=>setContainerSize('40')}>40 قدم</button></div></div>
+    <p className="approved-container-hint">المقاس تفضيل أولي؛ يُراجع أثناء إعداد العرض.</p>
+   </fieldset>
    {error&&<p role="alert" className="workspace-error">{error}</p>}
    <button type="button" className="approved-next" onClick={next}>متابعة</button>
   </div>
