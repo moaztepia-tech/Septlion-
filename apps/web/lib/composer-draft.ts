@@ -40,7 +40,7 @@ export function draftFromFeed(feed: FeedContext, id: string): ComposerDraft {
     // A list of available packs is not a buyer's selected pack.
     ...(!feed.product.packing.includes('·') ? {packing: feed.product.packing} : {}),
     ...(feed.product.id === 'flour-bakery' ? {application: 'Bakery'} : {}),
-    destination: feed.destination.port, incoterm: feed.incoterm,
+    destination: feed.destination.port || feed.destination.country, incoterm: feed.incoterm,
     ...(feed.paymentPreference !== 'UNSPECIFIED' ? {payment: feed.paymentPreference} : {}),
   }};
 }
@@ -124,7 +124,7 @@ export function requirementPayload(draft: ComposerDraft): Record<string, unknown
     ...draft.data, idempotencyKey: draft.id, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
     containerCount: quantity.unit === 'FCL' ? quantity.amount : null,
     paymentPreference: draft.data.payment,
-    ...(originalDestination && draft.data.destination === originalDestination.port ? {deliveryCountry: originalDestination.country, destinationCode: originalDestination.code} : {}),
+    ...(originalDestination && draft.data.destination === (originalDestination.port || originalDestination.country) ? {deliveryCountry: originalDestination.country, ...(originalDestination.code ? {destinationCode: originalDestination.code} : {})} : {}),
     source: draft.feed ? 'PRODUCT_FEED' : 'AI_COMPOSER',
     sourceContext: draft.feed ? {...draft.feed, reviewedRequirement: draft.data} : {path: 'require'},
     knownFacts: {...draft.data, ...(draft.supplyPlan ? {supplyPlan: normalizeSupplyPlan(draft.supplyPlan, quantity)} : {}), notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},
