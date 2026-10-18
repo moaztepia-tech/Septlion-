@@ -15,8 +15,9 @@ function PrepareContent(){
  const [incoterm,setIncoterm]=useState('CIF');
  const [payment,setPayment]=useState('L/C');
  const [count,setCount]=useState(1);
+ const [containerSize,setContainerSize]=useState<'20'|'40'>('40');
  const [error,setError]=useState('');
- useEffect(()=>{try{const raw=sessionStorage.getItem('septlion_order_preparation');if(!raw)return;const s=JSON.parse(raw);if(s.productId!==id)return;setDestination(s.destination||'');setIncoterm(s.incoterm||'CIF');setPayment(s.payment||'L/C');setCount(Number.isInteger(s.count)&&s.count>0?s.count:1);}catch{}},[id]);
+ useEffect(()=>{try{const raw=sessionStorage.getItem('septlion_order_preparation');if(!raw)return;const s=JSON.parse(raw);if(s.productId!==id)return;setDestination(s.destination||'');setIncoterm(s.incoterm||'CIF');setPayment(s.payment||'L/C');setCount(Number.isInteger(s.count)&&s.count>0?s.count:1);setContainerSize(s.containerSize==='20'?'20':'40');}catch{}},[id]);
  function next(){
   if(!product)return;
   if(!destination.trim()){setError('حدد بلد الوجهة أولًا.');return;}
@@ -29,7 +30,7 @@ function PrepareContent(){
    buyer:{name:'',company:'',whatsapp:'',email:null,whatsappStatus:'UNCONFIRMED'}
   };
   try{
-   sessionStorage.setItem('septlion_order_preparation',JSON.stringify({productId:id,destination,incoterm,payment,count}));
+   sessionStorage.setItem('septlion_order_preparation',JSON.stringify({productId:id,destination,incoterm,payment,count,containerSize}));
    sessionStorage.setItem(COMPOSER_DRAFT_KEY,JSON.stringify({...draftFromFeed(context,crypto.randomUUID()),ownerId:sessionUserId()}));
    sessionStorage.setItem('septlion_feed_context',JSON.stringify(context));
    router.push('/require?source=feed');
@@ -42,7 +43,9 @@ function PrepareContent(){
    <label>بلد الوجهة<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="مثال: السعودية" maxLength={120}/></label>
    <label>شرط التسليم<select value={incoterm} onChange={e=>setIncoterm(e.target.value)}><option>CIF</option><option>CFR</option><option>FOB</option></select></label>
    <label>طريقة الدفع<select value={payment} onChange={e=>setPayment(e.target.value)}><option value="L/C">L/C — اعتماد مستندي</option><option value="T/T">T/T — تحويل بنكي</option><option value="OTHER">تُناقش في العرض</option></select></label>
+   <div className="approved-container-size" role="group" aria-label="مقاس الحاوية"><span>مقاس الحاوية</span><div><button type="button" aria-pressed={containerSize==='20'} onClick={()=>setContainerSize('20')}>20 قدم</button><button type="button" aria-pressed={containerSize==='40'} onClick={()=>setContainerSize('40')}>40 قدم</button></div></div>
    <div className="approved-quantity"><span>عدد الحاويات</span><div><button type="button" aria-label="تقليل" disabled={count===1} onClick={()=>setCount(c=>Math.max(1,c-1))}>−</button><input aria-label="عدد الحاويات" type="number" min="1" max="1000000000" value={count} onChange={e=>setCount(Math.min(1000000000,Math.max(1,Math.floor(Number(e.target.value)||1))))}/><button type="button" aria-label="زيادة" onClick={()=>setCount(c=>Math.min(1000000000,c+1))}>+</button></div></div>
+   <p className="approved-container-hint">مقاس الحاوية تفضيل أولي؛ يُراجع أثناء إعداد العرض.</p>
    {error&&<p role="alert" className="workspace-error">{error}</p>}
    <button type="button" className="approved-next" onClick={next}>متابعة</button>
   </div>
