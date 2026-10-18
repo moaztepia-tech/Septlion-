@@ -30,15 +30,18 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     try {
       const feedRaw = sessionStorage.getItem('septlion_feed_context');
       const seed = sessionStorage.getItem('septlion_requirement_seed');
+      const restored = restoreComposerDraft(sessionStorage.getItem(COMPOSER_DRAFT_KEY),ownerId);
       if (feedRaw) {
         const feed = JSON.parse(feedRaw);
-        if (isFeedContext(feed)) next = draftFromFeed(feed,id);
+        if (isFeedContext(feed)) {
+          // The preparation page already persisted this draft; do not overwrite later edits.
+          next = restored?.feed?.product.id === feed.product.id ? restored : draftFromFeed(feed,id);
+        } else if (restored) next = restored;
       } else if (seed) {
         let context = {};
         try {context = JSON.parse(sessionStorage.getItem('septlion_requirement_context') || '{}');} catch {}
         next = answerRequirement({...next,data:context},seed,'ar');
       } else {
-        const restored = restoreComposerDraft(sessionStorage.getItem(COMPOSER_DRAFT_KEY),ownerId);
         if (restored) next = restored;
         else {
           const pending = JSON.parse(sessionStorage.getItem('septlion_pending_requirement') || 'null');
