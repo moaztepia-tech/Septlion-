@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {PlatformHeader} from '../../components/platform-header';
 import {catalogPreview} from '../../lib/catalog-preview';
 import {DesignButton} from '../../components/design-system';
+import Link from 'next/link';
 
 const sectors=['الكل','الأغذية والمشروبات','التغليف','البناء والتشييد','الطاقة','المنسوجات','المعدات والآلات'];
 export default function DiscoverPage(){
@@ -33,7 +34,7 @@ export default function DiscoverPage(){
       </div>
       <div className="approved-product-info"><small>{p.eyebrow}</small><h2>{p.name}</h2><p>{p.en}</p><dl><div><dt>التعبئة</dt><dd>{p.pack}</dd></div><div><dt>المواصفة</dt><dd>{p.note}</dd></div></dl><DesignButton className="approved-order" onClick={()=>select(p.id)}>اطلب هذا المنتج</DesignButton></div>
     </article>)}
-    {!products.length&&<div className="approved-empty"><p>لا توجد منتجات معروضة لهذه الفئة حاليًا.</p><a href="/require">صف احتياجك وسنتولى البحث عنه ←</a></div>}
+    {!products.length&&<div className="approved-empty"><p>لا توجد منتجات معروضة لهذه الفئة حاليًا.</p><Link href="/require">صف احتياجك وسنتولى البحث عنه ←</Link></div>}
    </section>
   </div>
  </main>;
