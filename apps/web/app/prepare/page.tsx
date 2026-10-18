@@ -24,7 +24,7 @@ function PrepareContent(){
   const context={
    version:1,source:'product_feed' as const,createdAt:new Date().toISOString(),
    product:{id:product.id,name:product.name,nameEn:product.en,packing:product.pack},
-   containerCount:count,septlionScale:getSeptlionScale(count),incoterm,
+   containerCount:count,containerSize,septlionScale:getSeptlionScale(count),incoterm,
    destination:{port:destination.trim(),country:destination.trim(),code:''},
    paymentPreference:payment,
    buyer:{name:'',company:'',whatsapp:'',email:null,whatsappStatus:'UNCONFIRMED'}
