@@ -44,6 +44,8 @@ Status: **NOT RELEASED**. This checklist is a release contract, not evidence tha
 - Only then request merge, deployment and smoke tests.
 
 ## Current evidence
-- Initial review-only UI exists on feature branch `feat/unified-command-center-20261026`.
-- There is no evidence yet of passing build/integration tests or working catalog mutations.
-- Do not label the command center production-ready.
+- The feature branch now includes server-verified command-center access, guarded catalog/sector mutations and live published-catalog retrieval.
+- Customer requirements retain explicit packing SKU IDs and stable retry keys. Existing operations own offers and execution.
+- Implementation details, reproducible tests and limitations are in [COMMAND-CENTER-IMPLEMENTATION.md](COMMAND-CENTER-IMPLEMENTATION.md).
+- Production remains blocked pending staging migration/Edge deployment verification and a Node.js-capable hosting path. Static export cannot enforce the new server gate.
+- These changes do not add WhatsApp ownership verification or imply inventory/price verification from publication alone.

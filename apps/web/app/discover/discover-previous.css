@@ -315,7 +315,7 @@
   border: 1px solid var(--v1-line);
   border-radius: 15px;
   display: grid;
-  grid-template-columns: 54px 1fr 54px;
+  grid-template-columns: 1fr;
   align-items: center;
   margin-top: 10px
 }
@@ -343,6 +343,7 @@
   margin: 12px 0 7px
 }
 .discover-page .discover-scale {
+  direction: ltr;
   height: 8px;
   position: relative;
   margin: 0 4px

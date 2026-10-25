@@ -30,6 +30,10 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Security and integration gates
+        run: |
+          pnpm audit --audit-level high
+          pnpm test
       - name: Build website
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
@@ -38,6 +42,10 @@ jobs:
 
       - name: Prepare static deployment
         run: |
+          if test -f apps/web/.next/server/app/api/command-session/route.js; then
+            echo "Server authorization requires a Node.js runtime. Static Hostinger deployment is blocked; deploy the full Next.js app to staging first." >&2
+            exit 1
+          fi
           rm -rf deploy
           mkdir -p deploy/_next deploy/discover deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
           cp apps/web/.next/server/app/index.html deploy/index.html

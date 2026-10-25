@@ -11,7 +11,7 @@ const lifecycleUrl=url(await source('lifecycle-input.ts')),documentUrl=url(await
 const lifecycle=await import(lifecycleUrl),documents=await import(documentUrl);
 const apiUrl=url((await source('lifecycle-api.ts')).replace("'./lifecycle-input.ts'",JSON.stringify(lifecycleUrl)).replace("'./document-input.ts'",JSON.stringify(documentUrl)));
 const offerUrl=url(await source('offer-input.ts'));
-const prepared=(await source('index.ts')).replace('import "jsr:@supabase/functions-js/edge-runtime.d.ts";','').replace('import { createClient } from "npm:@supabase/supabase-js@2";','const createClient=()=>globalThis.__tradeDb;').replace('"./offer-input.ts"',JSON.stringify(offerUrl)).replace('"./lifecycle-api.ts"',JSON.stringify(apiUrl)).replace('Deno.serve(async(req)=>{','export const handler=async(req)=>{').replace(/\}\);\s*$/,'};');
+const prepared=(await source('index.ts')).replace('import "jsr:@supabase/functions-js/edge-runtime.d.ts";','').replace('"./catalog-api.ts"',JSON.stringify('data:text/javascript;base64,'+Buffer.from(transpile(await readFile(new URL('../supabase/functions/trade-api/catalog-api.ts',import.meta.url),'utf8'))).toString('base64'))).replace('import { createClient } from "npm:@supabase/supabase-js@2";','const createClient=()=>globalThis.__tradeDb;').replace('"./offer-input.ts"',JSON.stringify(offerUrl)).replace('"./lifecycle-api.ts"',JSON.stringify(apiUrl)).replace('Deno.serve(async(req)=>{','export const handler=async(req)=>{').replace(/\}\);\s*$/,'};');
 globalThis.Deno={env:{get:()=> 'fixture-server-config'}};
 // Secret map must be JSON; no network or live tokens are used in these tests.
 globalThis.Deno.env.get=name=>name==='SUPABASE_SECRET_KEYS'?'{}':'fixture-server-config';

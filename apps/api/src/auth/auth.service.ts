@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { accessTokenTtl } from './access-token-ttl';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
@@ -19,7 +20,7 @@ export class AuthService {
   }
 
   private async issue(userId: string, organizationId: string, role: any, sessionVersion: number) {
-    const accessToken = await this.jwt.signAsync({ sub: userId, organizationId, role, sessionVersion }, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: process.env.ACCESS_TOKEN_TTL || '15m' });
+    const accessToken = await this.jwt.signAsync({ sub: userId, organizationId, role, sessionVersion }, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: accessTokenTtl(process.env.ACCESS_TOKEN_TTL) });
     const refreshToken = randomBytes(48).toString('base64url');
     const ttl = Number(process.env.REFRESH_TOKEN_TTL_DAYS || 30);
     const expiresAt = new Date(Date.now() + ttl * 86400000);
@@ -49,7 +50,7 @@ export class AuthService {
       await tx.refreshSession.create({ data: { userId: user.id, organizationId: session.organizationId, tokenHash: this.hashRefresh(newToken), expiresAt: new Date(Date.now() + ttl * 86400000) } });
       return newToken;
     });
-    const accessToken = await this.jwt.signAsync({ sub: user.id, organizationId: session.organizationId, role: membership.role, sessionVersion: user.sessionVersion }, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: process.env.ACCESS_TOKEN_TTL || '15m' });
+    const accessToken = await this.jwt.signAsync({ sub: user.id, organizationId: session.organizationId, role: membership.role, sessionVersion: user.sessionVersion }, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: accessTokenTtl(process.env.ACCESS_TOKEN_TTL) });
     return { accessToken, refreshToken: result };
   }
 

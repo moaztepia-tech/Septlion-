@@ -117,7 +117,7 @@ export function requirementPayload(draft: ComposerDraft): Record<string, unknown
   const quantity = quantityDetails(draft.data.quantity)!;
   const originalDestination = draft.feed?.destination;
   return {
-    ...draft.data, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
+    ...draft.data, idempotencyKey: draft.id, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
     containerCount: quantity.unit === 'FCL' ? quantity.amount : null,
     paymentPreference: draft.data.payment,
     ...(originalDestination && draft.data.destination === originalDestination.port ? {deliveryCountry: originalDestination.country, destinationCode: originalDestination.code} : {}),
