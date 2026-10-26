@@ -5,7 +5,7 @@ declare
  admin_id text:=gen_random_uuid()::text; buyer_id text:=gen_random_uuid()::text;
  buyer_org text:=gen_random_uuid()::text; sector_id text:=gen_random_uuid()::text;
  product_id text; sku_id text; media_id text; req jsonb; replay jsonb; payload jsonb;
- draft jsonb; stamp text; request_key text:=gen_random_uuid()::text;
+ draft jsonb; stamp text; offer jsonb; accepted jsonb; request_key text:=gen_random_uuid()::text;
 begin
  insert into core."Organization"(id,name,"organizationType",status,"updatedAt") values('septlion-operator','TEST operator','BOTH','ACTIVE',now()),(buyer_org,'TEST buyer','BUYER','ACTIVE',now());
  insert into core."Sector"(id,code,name,"updatedAt") values(sector_id,'TEST-STAGING','TEST sector',now()),('sector-general-trade','GENERAL','TEST General',now());
@@ -31,6 +31,10 @@ begin
  replay:=core.create_buyer_requirement_v2(buyer_org,buyer_id,payload,request_key);
  if replay->>'idempotent'<>'true' or replay->>'requirementId'<>req->>'requirementId' then raise exception 'request replay failed';end if;
  if (select count(*) from core."RFQItem" where "rfqId"=req->>'rfqId' and "skuId"=sku_id and quantity=2)<>1 then raise exception 'selected packing lost';end if;
+ offer:=core.issue_septlion_offer(req->>'rfqId',admin_id,jsonb_build_object('testOnly',true,'items',jsonb_build_array(jsonb_build_object('description','TEST item','quantity',2,'unit','FCL','unitPrice',1)),'terms',jsonb_build_object('incoterm','CIF','payment','LC')),'USD',(now()+interval '1 day')::timestamp);
+ accepted:=core.accept_trade_offer_v3(offer->>'offerId',buyer_org,buyer_id,1,'TEST');
+ if accepted->>'transactionId' is null then raise exception 'acceptance failed';end if;
+ perform core.save_buyer_account_profile(buyer_org,buyer_id,jsonb_build_object('name','TEST Buyer','company','TEST Company','whatsapp','+201012345678','email',''));
  if has_table_privilege('service_role','core."Media"','DELETE') or has_table_privilege('service_role','core."RFQItem"','DELETE') then raise exception 'unnecessary delete privilege';end if;
 end $$;
 rollback;

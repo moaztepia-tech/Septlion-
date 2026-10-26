@@ -54,6 +54,7 @@ export async function createEdgePostgres(authGetUser){
  await pg.exec(await file('supabase/migrations/20261026001643_catalog_product_media.sql'));
  await pg.exec(await file('supabase/migrations/20261026172856_preserve_catalog_and_rfq_history.sql'));
  await pg.exec(await file('supabase/migrations/20261026190036_grant_buyer_profile_runtime_reads.sql'));
+ await pg.exec(await file('supabase/migrations/20261026190919_grant_trade_invoker_runtime.sql'));
  await pg.exec(`insert into core."Organization"(id,name,"organizationType",status,"updatedAt") values('septlion-operator','TEST Septlion','BOTH','ACTIVE',now());insert into core."User"(id,email,"passwordHash","updatedAt") values('actor-admin','admin@fixture.invalid','TEST',now());insert into core."Membership"(id,"userId","organizationId",role) values('member-admin','actor-admin','septlion-operator','ADMIN');insert into core."Sector"(id,code,name,"updatedAt") values('food','FOOD','الأغذية',now()),('sector-general-trade','GENERAL','General trade',now());`);
  await pg.exec('set role service_role');
  const client={schema:()=>client,auth:{getUser:async token=>({data:{user:authGetUser(token)},error:null})},from:table=>new Query(pg,table),rpc:async(name,args={})=>{

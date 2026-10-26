@@ -6,6 +6,8 @@ This integration merges `design/global-customer-experience-v3` at `b4a730627ab84
 
 Customer screens now use the retained V3 design system, original brand artwork, home/discovery/preparation/Composer/review and My Septlion pages. Discovery and preparation read the real published catalog rather than substituting static preview products. Selected SKU/container allocations survive preparation and review. Phone ownership is verified inside review without a forced account-page detour. Company/profile and scheduled-delivery functionality from the UI branch remain integrated.
 
-Validation recorded so far: native Next production build passed; 112 Node/API/PostgreSQL regressions passed. The browser golden path now follows the retained preparation/Composer/review routes; publication must wait for its CI result. No production deployment is authorized by this source alignment.
+Validation recorded so far: native Next production build passed; 113 Node/API/PostgreSQL regressions passed. The browser golden path now follows the retained preparation/Composer/review routes; publication must wait for its CI result. No production deployment is authorized by this source alignment.
 
 Hosted profile/contact reads now have explicit server-role SELECT grants with no browser-role grants. Browser CI uses runner-provided Chrome to avoid the blocked browser-download step; it still executes the full real Edge/PostgreSQL journey.
+
+Hosted service-role acceptance/profile verification also passed after adding the explicit invoker runtime grants. No browser table privileges were added; grants are restricted to the server role and required columns where possible.

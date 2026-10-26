@@ -32,6 +32,7 @@ before(async()=>{
  await db.exec(await file('supabase/migrations/20261026001643_catalog_product_media.sql'));
  await db.exec(await file('supabase/migrations/20261026172856_preserve_catalog_and_rfq_history.sql'));
  await db.exec(await file('supabase/migrations/20261026190036_grant_buyer_profile_runtime_reads.sql'));
+ await db.exec(await file('supabase/migrations/20261026190919_grant_trade_invoker_runtime.sql'));
  await db.exec(`insert into core."Organization"(id,name,"organizationType",status,"updatedAt") values ('septlion-operator','TEST Septlion','BOTH','ACTIVE',now()),('buyer-org','TEST buyer','BUYER','ACTIVE',now()),('foreign-org','TEST foreign','BUYER','ACTIVE',now());
  insert into core."User"(id,email,"passwordHash","updatedAt") values ('admin','admin@fixture.invalid','TEST',now()),('sales','sales@fixture.invalid','TEST',now()),('buyer','buyer@fixture.invalid','TEST',now()),('foreign','foreign@fixture.invalid','TEST',now());
  insert into core."Membership"(id,"userId","organizationId",role) values ('ma','admin','septlion-operator','ADMIN'),('ms','sales','septlion-operator','SALES'),('mb','buyer','buyer-org','BUYER'),('mf','foreign','foreign-org','BUYER');
@@ -140,4 +141,14 @@ test('company profile reads are server-only',async()=>{
   assert.equal(await scalar("select has_table_privilege('service_role',$1,'SELECT')",['core."'+table+'"']),true);
   for(const role of ['anon','authenticated'])assert.equal(await scalar("select has_table_privilege($1,$2,'SELECT')",[role,'core."'+table+'"']),false);
  }
+});
+
+test('service_role can complete V3 acceptance and save its own company profile without browser grants',async()=>{
+ await db.exec('set role service_role');
+ try{
+  const accepted=await scalar("select core.accept_trade_offer_v3($1,'buyer-org','buyer',1,'TEST')",[offer.offerId]);
+  assert.equal(accepted.transactionId,transaction.transactionId);assert.equal(accepted.idempotent,true);
+  const saved=await scalar("select core.save_buyer_account_profile('buyer-org','buyer',$1::jsonb)",[JSON.stringify({name:'TEST Buyer',company:'TEST Company',whatsapp:'+201012345678',email:''})]);assert.ok(saved.profileId);
+  await assert.rejects(scalar("select core.save_buyer_account_profile('foreign-org','buyer',$1::jsonb)",[JSON.stringify({name:'Forged',company:'Forged',whatsapp:'+201012345678'})]),/access_denied/);
+ }finally{await db.exec('reset role')}
 });
