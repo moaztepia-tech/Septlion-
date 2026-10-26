@@ -1,3 +1,4 @@
+import {normalizeSupplyPlan, SupplyPlan} from './supply-plan';
 import {extractRequirement, mergeRequirementInput} from './requirement-input';
 import type {TradeWorkspace} from './trade-transaction';
 
@@ -6,15 +7,17 @@ export const requirementFields = ['product', 'application', 'quantity', 'packing
 export type RequirementField = typeof requirementFields[number];
 export type RequirementData = Partial<Record<RequirementField, string>>;
 export type FeedContext = {
-  source: 'product_feed'; createdAt?: string;
+  source: 'product_feed'; createdAt?: string; catalogProductId?:string; variants?:{skuId:string;containers:number}[];
   product: {id: string; name: string; nameEn: string; packing: string};
-  containerCount: number; septlionScale: string; incoterm: string;
+  containerCount: number; containerSize?: '20' | '40'; septlionScale: string; incoterm: string;
   destination: {port: string; country: string; code: string}; paymentPreference: string;
   buyer: {name: string; company: string; whatsapp: string; email: string | null; whatsappStatus: string};
 };
 export type ComposerDraft = {
+  composerVisited?: boolean;
   version: 2; id: string; ownerId?: string; data: RequirementData; feed: FeedContext | null;
   messages: Array<{role: 'user' | 'assistant'; text: string}>;
+  supplyPlan?: SupplyPlan | null;
   input: string; notes: string; savedRequirementId?: string;
   reorder?: {transactionId: string; unit: string; testOnly: boolean};
 };
@@ -24,6 +27,7 @@ export function isFeedContext(value: unknown): value is FeedContext {
   return feed.source === 'product_feed' && Number.isInteger(feed.containerCount) && feed.containerCount > 0
     && !!feed.product && ['id','name','nameEn','packing'].every(key => typeof feed.product[key as keyof FeedContext['product']] === 'string')
     && !!feed.destination && ['port','country','code'].every(key => typeof feed.destination[key as keyof FeedContext['destination']] === 'string')
+    && (feed.containerSize === undefined || feed.containerSize === '20' || feed.containerSize === '40')
     && typeof feed.incoterm === 'string' && typeof feed.paymentPreference === 'string' && !!feed.buyer && typeof feed.buyer.company === 'string';
 }
 
@@ -36,7 +40,7 @@ export function draftFromFeed(feed: FeedContext, id: string): ComposerDraft {
     // A list of available packs is not a buyer's selected pack.
     ...(!feed.product.packing.includes('·') ? {packing: feed.product.packing} : {}),
     ...(feed.product.id === 'flour-bakery' ? {application: 'Bakery'} : {}),
-    destination: feed.destination.port, incoterm: feed.incoterm,
+    destination: feed.destination.port || feed.destination.country, incoterm: feed.incoterm,
     ...(feed.paymentPreference !== 'UNSPECIFIED' ? {payment: feed.paymentPreference} : {}),
   }};
 }
@@ -117,13 +121,14 @@ export function requirementPayload(draft: ComposerDraft): Record<string, unknown
   const quantity = quantityDetails(draft.data.quantity)!;
   const originalDestination = draft.feed?.destination;
   return {
-    ...draft.data, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
+    ...draft.data, idempotencyKey: draft.id, quantity: quantity.amount + ' ' + quantity.unit, unit: quantity.unit,
     containerCount: quantity.unit === 'FCL' ? quantity.amount : null,
     paymentPreference: draft.data.payment,
-    ...(originalDestination && draft.data.destination === originalDestination.port ? {deliveryCountry: originalDestination.country, destinationCode: originalDestination.code} : {}),
+    ...(originalDestination && draft.data.destination === (originalDestination.port || originalDestination.country) ? {deliveryCountry: originalDestination.country, ...(originalDestination.code ? {destinationCode: originalDestination.code} : {})} : {}),
+    ...(draft.feed?.catalogProductId?{catalogProductId:draft.feed.catalogProductId,variants:draft.feed.variants?.length===1?[{...draft.feed.variants[0],containers:quantity.amount}]:draft.feed.variants}:{}),
     source: draft.feed ? 'PRODUCT_FEED' : 'AI_COMPOSER',
     sourceContext: draft.feed ? {...draft.feed, reviewedRequirement: draft.data} : {path: 'require'},
-    knownFacts: {...draft.data, notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},
+    knownFacts: {...draft.data, ...(draft.feed?.catalogProductId?{catalogProductId:draft.feed.catalogProductId,variants:draft.feed.variants?.length===1?[{...draft.feed.variants[0],containers:quantity.amount}]:draft.feed.variants}:{}), ...(draft.supplyPlan ? {supplyPlan: normalizeSupplyPlan(draft.supplyPlan, quantity)} : {}), notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},
   };
 }
 export function restoreComposerDraft(raw: string | null, ownerId?: string): ComposerDraft | null {
@@ -132,10 +137,11 @@ export function restoreComposerDraft(raw: string | null, ownerId?: string): Comp
     if (draft?.version !== 2 || typeof draft.id !== 'string' || !draft.data || Array.isArray(draft.data) || (draft.ownerId && draft.ownerId !== ownerId)) return null;
     const data: RequirementData = {};
     for (const key of requirementFields) if (typeof draft.data[key] === 'string') data[key] = draft.data[key].slice(0,2000);
-    return {...emptyComposerDraft(draft.id), data, ...(typeof draft.ownerId === 'string' ? {ownerId: draft.ownerId} : {}), feed: isFeedContext(draft.feed) ? draft.feed : null,
+    return {...emptyComposerDraft(draft.id), ...(draft.composerVisited === true ? {composerVisited:true} : {}), data, ...(typeof draft.ownerId === 'string' ? {ownerId: draft.ownerId} : {}), feed: isFeedContext(draft.feed) ? draft.feed : null,
       messages: Array.isArray(draft.messages) ? draft.messages.filter((x: any) => ['user','assistant'].includes(x?.role) && typeof x.text === 'string').slice(-100).map((x: any) => ({role:x.role,text:x.text.slice(0,4000)})) : [],
       input: typeof draft.input === 'string' ? draft.input.slice(0,4000) : '', notes: typeof draft.notes === 'string' ? draft.notes.slice(0,8000) : '',
       ...(typeof draft.reorder?.transactionId === 'string' && typeof draft.reorder.unit === 'string' ? {reorder: {transactionId: draft.reorder.transactionId, unit: draft.reorder.unit, testOnly: Boolean(draft.reorder.testOnly)}} : {}),
+      ...(draft.supplyPlan?.version === 1 && Array.isArray(draft.supplyPlan.batches) && draft.supplyPlan.batches.length >= 2 && draft.supplyPlan.batches.length <= 24 && draft.supplyPlan.batches.every((b: any) => b && typeof b.quantity === 'number' && typeof b.unit === 'string' && typeof b.plannedDate === 'string' && typeof b.notes === 'string') && typeof draft.supplyPlan.terms === 'string' && draft.supplyPlan.automaticPurchaseOrders === false ? {supplyPlan: draft.supplyPlan} : {}),
       ...(typeof draft.savedRequirementId === 'string' ? {savedRequirementId: draft.savedRequirementId} : {})};
   } catch { return null; }
 }

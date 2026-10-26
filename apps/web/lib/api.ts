@@ -1,6 +1,7 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 const SESSION_KEY = 'septlion_session';
+const PHONE_CHALLENGE_KEY = 'septlion_phone_challenge';
 const SIGN_IN_REQUIRED = 'انتهت جلسة الدخول. سجل الدخول مجددًا للمتابعة.';
 const SESSION_CHANGED = 'تغيرت جلسة الدخول. أعد المحاولة من الحساب الحالي.';
 
@@ -147,12 +148,66 @@ export async function edge<T>(action: string, payload: Record<string, unknown> =
   if (b === null) throw new Error('تعذر قراءة نتيجة الطلب.');
   return b as T;
 }
-export function saveSession(s: Session) { storeSession(s, crypto.randomUUID()); }
+function revokeCommandCookie(){
+ if(typeof window!=='undefined'&&window.location?.origin)void fetch('/api/command-session',{method:'DELETE',keepalive:true}).catch(()=>{});
+}
+export function saveSession(s: Session) { storeSession(s, crypto.randomUUID());window.localStorage.removeItem(PHONE_CHALLENGE_KEY);revokeCommandCookie(); }
 export function accessToken() { return readSession()?.access_token || null; }
 export function clearSession() {
   if (typeof window === 'undefined') return;
-  for (const key of [SESSION_KEY, 'septlion_access', 'septlion_refresh']) window.localStorage.removeItem(key);
+  for (const key of [SESSION_KEY, 'septlion_access', 'septlion_refresh', PHONE_CHALLENGE_KEY]) window.localStorage.removeItem(key);
+  revokeCommandCookie();
 }
 export function hasSession() { const s = readSession(); return Boolean(s?.access_token || s?.refresh_token); }
 // Only scopes local UI drafts. The API independently verifies organization access.
 export function sessionUserId() { return readSession()?.user?.id; }
+
+export type PhoneChallenge = {phone:string; type:'sms'|'phone_change'; sessionKey:string|null; nonce:string};
+function phoneNumber(value:string) {
+ const digits=value.replace(/[٠-٩]/g,n=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(n))).replace(/[\s()-]/g,'');
+ if(!/^\+[1-9]\d{7,14}$/.test(digits))throw new Error('أدخل رقم واتساب مع رمز الدولة.');
+ return digits;
+}
+async function authUserRequest(method:'GET'|'PUT', body?:Record<string,unknown>) {
+ configured();const initial=readSession();if(!initial)throw new Error(SIGN_IN_REQUIRED);
+ let token=needsRefresh(initial)?await refreshSession(initial):initial.access_token;
+ const send=()=>fetch(`${SUPABASE_URL}/auth/v1/user`,{method,headers:headers(token),...(body?{body:JSON.stringify(body)}:{})});
+ let r=await send();let b=await responseBody(r);
+ currentSession(initial.session_key);
+ if(r.status===401){token=await refreshSession(initial,token);r=await send();b=await responseBody(r);currentSession(initial.session_key);}
+ if(!r.ok)throw new Error(message(b,'تعذر التحقق من رقم التواصل.'));
+ return b;
+}
+export async function verifiedPhone():Promise<string|null> {
+ if(!hasSession())return null;
+ const user=await authUserRequest('GET');
+ return user?.phone_confirmed_at&&typeof user.phone==='string'&&/^[1-9]\d{7,14}$/.test(user.phone.replace(/^\+/,''))?'+'+user.phone.replace(/^\+/,''):null;
+}
+export async function requestPhoneVerification(value:string):Promise<PhoneChallenge> {
+ configured();const phone=phoneNumber(value),initial=readSession(),nonce=crypto.randomUUID();
+ window.localStorage.setItem(PHONE_CHALLENGE_KEY,nonce);
+ const currentChallenge=()=>{if(window.localStorage.getItem(PHONE_CHALLENGE_KEY)!==nonce)throw new Error(SESSION_CHANGED)};
+ if(initial){await authUserRequest('PUT',{phone,channel:'whatsapp'});currentChallenge();return{phone,type:'phone_change',sessionKey:initial.session_key,nonce};}
+ const r=await fetch(`${SUPABASE_URL}/auth/v1/otp`,{method:'POST',headers:headers(),body:JSON.stringify({phone,channel:'whatsapp',create_user:true})});
+ const b=await responseBody(r);
+ currentChallenge();if(readSession())throw new Error(SESSION_CHANGED);
+ if(!r.ok)throw new Error(message(b,'تعذر إرسال رمز واتساب. احتفظ بمسودتك وحاول لاحقًا.'));
+ return{phone,type:'sms',sessionKey:null,nonce};
+}
+export async function confirmPhoneVerification(challenge:PhoneChallenge,code:string):Promise<string> {
+ configured();const phone=phoneNumber(challenge.phone);
+ if(!/^\d{6,10}$/.test(code))throw new Error('أدخل رمز التحقق كما وصلك.');
+ const before=readSession();
+ if(window.localStorage.getItem(PHONE_CHALLENGE_KEY)!==challenge.nonce)throw new Error(SESSION_CHANGED);
+ if((before?.session_key||null)!==challenge.sessionKey)throw new Error(SESSION_CHANGED);
+ const r=await fetch(`${SUPABASE_URL}/auth/v1/verify`,{method:'POST',headers:headers(before?.access_token),body:JSON.stringify({phone,token:code,type:challenge.type})});
+ const b=await responseBody(r);
+ const current=readSession();if(window.localStorage.getItem(PHONE_CHALLENGE_KEY)!==challenge.nonce)throw new Error(SESSION_CHANGED);if((current?.session_key||null)!==challenge.sessionKey)throw new Error(SESSION_CHANGED);
+ if(!r.ok)throw new Error(message(b,'الرمز غير صحيح أو انتهت صلاحيته.'));
+ const user=b?.user;
+ if(!user?.phone_confirmed_at||'+'+String(user.phone||'').replace(/^\+/,'')!==phone)throw new Error('لم يؤكد الخادم ملكية الرقم. أعد المحاولة.');
+ if(before?.user?.id&&user.id!==before.user.id)throw new Error(SESSION_CHANGED);
+ if(b.access_token&&b.refresh_token){storeSession(b,before?.session_key||crypto.randomUUID());if(!before)revokeCommandCookie();}
+ else if(!before)throw new Error('تعذر إنشاء جلسة رقم التواصل.');
+ const verified=await verifiedPhone();if(verified!==phone)throw new Error('تعذر تأكيد الرقم الحالي.');window.localStorage.removeItem(PHONE_CHALLENGE_KEY);return verified;
+}

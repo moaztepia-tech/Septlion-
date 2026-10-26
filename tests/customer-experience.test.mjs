@@ -9,11 +9,28 @@ async function moduleUrl(name,imports={}) {
  return 'data:text/javascript;base64,'+Buffer.from(js).toString('base64');
 }
 const inputUrl=await moduleUrl('requirement-input');
-const draft=await import(await moduleUrl('composer-draft',{'./requirement-input':inputUrl}));
+const supplyUrl=await moduleUrl('supply-plan');
+const draft=await import(await moduleUrl('composer-draft',{'./requirement-input':inputUrl,'./supply-plan':supplyUrl}));
 const contact=await import(await moduleUrl('buyer-contact'));
 const journey=await import(await moduleUrl('customer-journey'));
+const catalog=await import(await moduleUrl('catalog-preview'));
 const feed={source:'product_feed',product:{id:'flour-bakery',name:'دقيق خبازو',nameEn:'Bakery Flour',packing:'50 كجم · 25 كجم'},containerCount:5,septlionScale:'S-1',incoterm:'CIF',destination:{port:'Dar es Salaam',country:'Tanzania',code:'TZDAR'},paymentPreference:'L/C',buyer:{name:'Fixture buyer',company:'Fixture company',whatsapp:'+255712345678',email:null,whatsappStatus:'UNCONFIRMED'}};
 const complete=()=>({...draft.draftFromFeed(feed,'draft-fixture'),data:{...draft.draftFromFeed(feed,'draft-fixture').data,packing:'50kg'}});
+
+test('Product Details preserves only a matching valid Discover selection',()=>{
+ const raw=JSON.stringify({active:1,count:8,incoterm:'CFR',payment:'L/C',destinationCode:'TZDAR'});
+ assert.deepEqual(catalog.restoreCatalogSelection('flour-basic',raw),{quantity:'8 FCL',incoterm:'CFR',payment:'L/C',destination:'Dar es Salaam'});
+ assert.deepEqual(catalog.restoreCatalogSelection('flour-bakery',raw),{});
+ for(const value of ['{','null',JSON.stringify({active:1,count:-5,incoterm:'invalid',payment:'invalid',destinationCode:'unknown'})])assert.deepEqual(catalog.restoreCatalogSelection('flour-basic',value),{});
+});
+test('the Composer visit and scheduled deliveries survive review and authentication handoff',()=>{
+ const d={...complete(),composerVisited:true,ownerId:'buyer-1',supplyPlan:{version:1,batches:[{sequence:1,quantity:2,unit:'FCL',plannedDate:'2026-11-01',notes:''},{sequence:2,quantity:3,unit:'FCL',plannedDate:'2026-12-01',notes:''}],terms:'',automaticPurchaseOrders:false}};
+ const restored=draft.restoreComposerDraft(JSON.stringify(d),'buyer-1');
+ assert.equal(restored.composerVisited,true);assert.deepEqual(restored.supplyPlan,d.supplyPlan);
+ assert.equal(draft.requirementPayload(restored).idempotencyKey,d.id);
+ assert.equal(draft.restoreComposerDraft(JSON.stringify(d),'buyer-2'),null);
+ assert.equal(draft.restoreComposerDraft(JSON.stringify({...d,composerVisited:'yes'}),'buyer-1').composerVisited,undefined);
+});
 
 test('Feed preserves all selected details and asks only for the pack choice',()=>{
  const result=draft.draftFromFeed(feed,'fixture');
@@ -134,4 +151,12 @@ test('reorder preserves original unit semantics and supports non-container quant
   const d=draft.draftFromReorder(w,'retry-key');
   assert.equal(d.reorder.unit,unit);assert.equal(d.data.quantity,quantity+' '+unit);assert.equal(draft.reorderPayload(d).quantity,quantity);
  }
+});
+
+test('selected live SKU survives restored preparation, quantity review and persisted request facts',()=>{
+ const context={...feed,catalogProductId:'published-product',variants:[{skuId:'selected-sku',containers:5}]};
+ const initial={...draft.draftFromFeed(context,'catalog-fixture'),data:{...draft.draftFromFeed(context,'catalog-fixture').data,packing:'50kg',quantity:'8 FCL'}};
+ const restored=draft.restoreComposerDraft(JSON.stringify(initial));const payload=draft.requirementPayload(restored);
+ assert.equal(payload.catalogProductId,'published-product');assert.deepEqual(payload.variants,[{skuId:'selected-sku',containers:8}]);
+ assert.deepEqual(payload.knownFacts.variants,payload.variants);assert.equal(payload.knownFacts.catalogProductId,payload.catalogProductId);
 });

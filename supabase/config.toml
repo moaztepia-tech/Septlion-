@@ -1,0 +1,6 @@
+project_id = "septlion"
+
+# Public catalog reads are intentional. Every private action validates Auth via
+# getUser and verifies active core membership inside the handler/RPC.
+[functions.trade-api]
+verify_jwt = false
