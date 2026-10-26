@@ -29,6 +29,7 @@ before(async()=>{
  await db.exec(await file('supabase/migrations/20261025215236_command_center_catalog.sql'));
  await db.exec(await file('supabase/migrations/20261026000151_atomic_phone_identity.sql'));
  await db.exec(await file('supabase/migrations/20261026001643_catalog_product_media.sql'));
+ await db.exec(await file('supabase/migrations/20261026172856_preserve_catalog_and_rfq_history.sql'));
  await db.exec(`insert into core."Organization"(id,name,"organizationType",status,"updatedAt") values ('septlion-operator','TEST Septlion','BOTH','ACTIVE',now()),('buyer-org','TEST buyer','BUYER','ACTIVE',now()),('foreign-org','TEST foreign','BUYER','ACTIVE',now());
  insert into core."User"(id,email,"passwordHash","updatedAt") values ('admin','admin@fixture.invalid','TEST',now()),('sales','sales@fixture.invalid','TEST',now()),('buyer','buyer@fixture.invalid','TEST',now()),('foreign','foreign@fixture.invalid','TEST',now());
  insert into core."Membership"(id,"userId","organizationId",role) values ('ma','admin','septlion-operator','ADMIN'),('ms','sales','septlion-operator','SALES'),('mb','buyer','buyer-org','BUYER'),('mf','foreign','foreign-org','BUYER');
@@ -119,4 +120,15 @@ test('draft packing image URLs are saved with audit, reject unsafe schemes and d
  const id=(await mutate('admin','catalog.save',input)).id;assert.equal(await scalar('select count(*)::int from core."Media" m join core."SKU" s on s.id=m."skuId" where s."productId"=$1',[id]),1);
  await assert.rejects(mutate('admin','catalog.save',{...input,id,expectedUpdatedAt:await version(id),skus:[{...input.skus[0],imageUrl:'javascript:alert(1)'}]}),/invalid_image_url/);
  assert.equal(await scalar('select url from core."Media" m join core."SKU" s on s.id=m."skuId" where s."productId"=$1',[id]),'https://assets.fixture.invalid/pack.jpg');
+});
+
+test('changing or clearing a draft image preserves its media identity',async()=>{
+ const input={...productInput(),slug:'stable-image-product',skus:[{...productInput().skus[0],skuCode:'STABLE-IMAGE',imageUrl:'https://assets.fixture.invalid/first.jpg'}]};
+ const id=(await mutate('admin','catalog.save',input)).id;
+ const media=async()=>(await db.query('select m.id,m.url from core."Media" m join core."SKU" s on s.id=m."skuId" where s."productId"=$1',[id])).rows;
+ const original=(await media())[0];
+ for(const imageUrl of ['https://assets.fixture.invalid/second.jpg','']){
+  await mutate('admin','catalog.save',{...input,id,expectedUpdatedAt:await version(id),skus:[{...input.skus[0],imageUrl}]});
+  assert.deepEqual(await media(),[{id:original.id,url:imageUrl}]);
+ }
 });

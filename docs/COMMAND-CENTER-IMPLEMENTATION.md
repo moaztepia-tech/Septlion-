@@ -44,7 +44,7 @@ All checks below ran locally on 2026-10-26. No production credentials, writes or
 
 | Check | Result |
 | --- | --- |
-| Node regression/API/PostgreSQL tests | 95 passed, 0 failed |
+| Node regression/API/PostgreSQL tests | 96 passed, 0 failed |
 | Mobile browser scenario | 1 passed locally: real Edge/PostgreSQL full customer/operator scenario at 360px |
 | Web TypeScript | Passed |
 | API TypeScript and Nest build | Passed |
@@ -57,3 +57,5 @@ All checks below ran locally on 2026-10-26. No production credentials, writes or
 Browser verification also exposed and fixed a delayed autofocus race in contact entry and a CSS theme collision that rendered pale text on a light discovery surface. The original supplied logo assets remain unchanged. The discovery scale track now shares the left-to-right direction of its fixed labels.
 
 Reproduce with the pinned pnpm version: `pnpm install --frozen-lockfile`, `pnpm test`, `pnpm db:generate`, `pnpm --filter @septlion/api typecheck`, `pnpm --filter @septlion/api build`, `pnpm typecheck`, `pnpm build`, `pnpm audit --audit-level high`. For the UI contract scenario: `pnpm exec playwright install chromium`, then `pnpm test:browser`. Local sandbox browser checks used an unpacked Chromium executable; CI installs the standard Playwright browser. CI results on GitHub are separate from these recorded local results.
+
+Hosted database verification and remaining external gates: [STAGING-EXECUTION-2026-10-26.md](STAGING-EXECUTION-2026-10-26.md). The later history-preserving migration retains RFQ item/media row identities and removes unnecessary DELETE privileges.
