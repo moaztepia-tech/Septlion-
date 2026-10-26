@@ -128,7 +128,7 @@ export function requirementPayload(draft: ComposerDraft): Record<string, unknown
     ...(draft.feed?.catalogProductId?{catalogProductId:draft.feed.catalogProductId,variants:draft.feed.variants?.length===1?[{...draft.feed.variants[0],containers:quantity.amount}]:draft.feed.variants}:{}),
     source: draft.feed ? 'PRODUCT_FEED' : 'AI_COMPOSER',
     sourceContext: draft.feed ? {...draft.feed, reviewedRequirement: draft.data} : {path: 'require'},
-    knownFacts: {...draft.data, ...(draft.supplyPlan ? {supplyPlan: normalizeSupplyPlan(draft.supplyPlan, quantity)} : {}), notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},
+    knownFacts: {...draft.data, ...(draft.feed?.catalogProductId?{catalogProductId:draft.feed.catalogProductId,variants:draft.feed.variants?.length===1?[{...draft.feed.variants[0],containers:quantity.amount}]:draft.feed.variants}:{}), ...(draft.supplyPlan ? {supplyPlan: normalizeSupplyPlan(draft.supplyPlan, quantity)} : {}), notes: draft.notes.trim(), conversation: draft.messages.filter(x => x.role === 'user').map(x => x.text)},
   };
 }
 export function restoreComposerDraft(raw: string | null, ownerId?: string): ComposerDraft | null {

@@ -152,3 +152,11 @@ test('reorder preserves original unit semantics and supports non-container quant
   assert.equal(d.reorder.unit,unit);assert.equal(d.data.quantity,quantity+' '+unit);assert.equal(draft.reorderPayload(d).quantity,quantity);
  }
 });
+
+test('selected live SKU survives restored preparation, quantity review and persisted request facts',()=>{
+ const context={...feed,catalogProductId:'published-product',variants:[{skuId:'selected-sku',containers:5}]};
+ const initial={...draft.draftFromFeed(context,'catalog-fixture'),data:{...draft.draftFromFeed(context,'catalog-fixture').data,packing:'50kg',quantity:'8 FCL'}};
+ const restored=draft.restoreComposerDraft(JSON.stringify(initial));const payload=draft.requirementPayload(restored);
+ assert.equal(payload.catalogProductId,'published-product');assert.deepEqual(payload.variants,[{skuId:'selected-sku',containers:8}]);
+ assert.deepEqual(payload.knownFacts.variants,payload.variants);assert.equal(payload.knownFacts.catalogProductId,payload.catalogProductId);
+});
