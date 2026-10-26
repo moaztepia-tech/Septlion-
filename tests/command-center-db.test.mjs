@@ -31,6 +31,7 @@ before(async()=>{
  await db.exec(await file('supabase/migrations/20261026000151_atomic_phone_identity.sql'));
  await db.exec(await file('supabase/migrations/20261026001643_catalog_product_media.sql'));
  await db.exec(await file('supabase/migrations/20261026172856_preserve_catalog_and_rfq_history.sql'));
+ await db.exec(await file('supabase/migrations/20261026190036_grant_buyer_profile_runtime_reads.sql'));
  await db.exec(`insert into core."Organization"(id,name,"organizationType",status,"updatedAt") values ('septlion-operator','TEST Septlion','BOTH','ACTIVE',now()),('buyer-org','TEST buyer','BUYER','ACTIVE',now()),('foreign-org','TEST foreign','BUYER','ACTIVE',now());
  insert into core."User"(id,email,"passwordHash","updatedAt") values ('admin','admin@fixture.invalid','TEST',now()),('sales','sales@fixture.invalid','TEST',now()),('buyer','buyer@fixture.invalid','TEST',now()),('foreign','foreign@fixture.invalid','TEST',now());
  insert into core."Membership"(id,"userId","organizationId",role) values ('ma','admin','septlion-operator','ADMIN'),('ms','sales','septlion-operator','SALES'),('mb','buyer','buyer-org','BUYER'),('mf','foreign','foreign-org','BUYER');
@@ -131,5 +132,12 @@ test('changing or clearing a draft image preserves its media identity',async()=>
  for(const imageUrl of ['https://assets.fixture.invalid/second.jpg','']){
   await mutate('admin','catalog.save',{...input,id,expectedUpdatedAt:await version(id),skus:[{...input.skus[0],imageUrl}]});
   assert.deepEqual(await media(),[{id:original.id,url:imageUrl}]);
+ }
+});
+
+test('company profile reads are server-only',async()=>{
+ for(const table of ['BuyerProfile','BuyerContact']){
+  assert.equal(await scalar("select has_table_privilege('service_role',$1,'SELECT')",['core."'+table+'"']),true);
+  for(const role of ['anon','authenticated'])assert.equal(await scalar("select has_table_privilege($1,$2,'SELECT')",[role,'core."'+table+'"']),false);
  }
 });
