@@ -5,6 +5,8 @@ import { handleLifecycle } from "./lifecycle-api.ts";
 import { handleCatalog } from "./catalog-api.ts";
 import { verifiedBuyerContact } from "./phone-input.ts";
 const allowedOrigins=new Set(["https://septlion.com","https://www.septlion.com"]);
+// This fallback is scoped to the isolated staging project, never production.
+if(Deno.env.get("SUPABASE_URL")==="https://vludcbongjozfvpysnuh.supabase.co")allowedOrigins.add("https://septlion-command-staging.moaztepia.chatgpt.site");
 for(const value of (Deno.env.get("SEPTLION_ALLOWED_ORIGINS")||"").split(",")){try{const u=new URL(value.trim());if(u.protocol==="https:"&&u.origin===value.trim())allowedOrigins.add(u.origin)}catch{}}
 const corsFor=(req:Request)=>{const origin=req.headers.get("Origin")||"";return{"Access-Control-Allow-Origin":allowedOrigins.has(origin)?origin:"https://septlion.com","Vary":"Origin","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST,OPTIONS","Content-Type":"application/json"}};
 const numberFrom=(v:unknown)=>{const m=String(v||"").match(/\d+(?:[.,]\d+)?/);return m?Number(m[0].replace(",",".")):null};
