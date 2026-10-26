@@ -1,11 +1,9 @@
-import './design-tokens.css';
-import './globals.css';
-import './platform-v1.css';
-import './intelligence.css';
-import './offer-workspace.css';
-import './trade-workspace.css';
-import './customer-experience.css';
-import './septlion-v2.css';
+import './septlion-design-system.css';
+import './approved-customer.css';
+import './customer-v3.css';
+import './prepare-v3.css';
+import './composer-v3.css';
+import {ApplicationFrame} from '../components/application-frame';
 
 export const metadata = {
   metadataBase: new URL('https://www.septlion.com'),
@@ -34,5 +32,5 @@ export const metadata = {
 export const viewport = {themeColor:'#051945'};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body>{children}</body></html>;
+  return <html lang="ar" dir="rtl"><head><link rel="preload" href="/fonts/NotoSansArabic-Regular.woff" as="font" type="font/woff" crossOrigin="anonymous"/></head><body className="ds-customer"><div className="app-full customer-shell"><ApplicationFrame/>{children}</div></body></html>;
 }

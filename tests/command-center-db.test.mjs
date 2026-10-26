@@ -26,6 +26,7 @@ before(async()=>{
  // lifecycle, authorization, document or mutation function is replaced.
  lifecycle=lifecycle.replace(/create or replace function core.platform_health_snapshot_v2\(\)[\s\S]*?\$\$;/,'');
  await db.exec(lifecycle);
+ await db.exec(await file('supabase/migrations/20261010225937_finalize_customer_requests_and_delivery_batches.sql'));
  await db.exec(await file('supabase/migrations/20261025215236_command_center_catalog.sql'));
  await db.exec(await file('supabase/migrations/20261026000151_atomic_phone_identity.sql'));
  await db.exec(await file('supabase/migrations/20261026001643_catalog_product_media.sql'));

@@ -1,4 +1,5 @@
 'use client';
+import {DesignLink, DesignButton} from "./design-system";
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {edge,hasSession} from '../lib/api';
 import {TradeSide,TradeWorkspace,statusNames,errorMessage} from '../lib/trade-transaction';
@@ -21,11 +22,11 @@ export function useTradeWorkspace(side:TradeSide='BUYER',selectedId?:string) {
 export function TestNotice({testOnly}:{testOnly:boolean}) {return testOnly?<p className="test-notice"><b>TEST — محاكاة غير تجارية</b><br/>هذه الحالة لا تمثل بيعًا أو دفعًا أو تجهيزًا أو شحنًا أو استلامًا فعليًا. جميع أحداثها مسجلة للاختبار فقط.</p>:null;}
 export function WorkspaceFallback({loading,error,onReload}:{loading:boolean;error:string;onReload:()=>void}) {
  const next=typeof window==='undefined'?'/requests':window.location.pathname+window.location.search;
- return loading?<p role="status" className="workspace-loading">جارٍ تحميل الصفقة المحفوظة…</p>:<div className="empty-state"><b role={error?'alert':undefined}>{error||'لا توجد صفقة محددة'}</b><div className="two-actions">{error&&(hasSession()?<button type="button" className="secondary-link" onClick={onReload}>إعادة المحاولة</button>:<a className="secondary-link" href={'/account?next='+encodeURIComponent(next)}>تسجيل الدخول والمتابعة</a>)}<a className="primary-link" href="/requests">طلباتي</a></div></div>;
+ return loading?<p role="status" className="workspace-loading">جارٍ تحميل الصفقة المحفوظة…</p>:<div className="empty-state"><b role={error?'alert':undefined}>{error||'لا توجد صفقة محددة'}</b><div className="two-actions">{error&&(hasSession()?<DesignButton type="button" className="secondary-link" onClick={onReload}>إعادة المحاولة</DesignButton>:<DesignLink className="secondary-link" href={'/account?next='+encodeURIComponent(next)}>تسجيل الدخول والمتابعة</DesignLink>)}<DesignLink className="primary-link" href="/requests">طلباتي</DesignLink></div></div>;
 }
 export function BuyerNextAction({data}:{data:TradeWorkspace}) {
  const next=buyerNextAction(data);
- return <section className="customer-next-action" aria-label="الخطوة التالية"><div><small>المتابعة لدى: {next.owner}</small><h2>{next.title}</h2><p>{next.detail}</p></div><a className="primary-link" href={next.href}>{next.label}</a></section>;
+ return <section className="customer-next-action" aria-label="الخطوة التالية"><div><small>المتابعة لدى: {next.owner}</small><h2>{next.title}</h2><p>{next.detail}</p></div><DesignLink className="primary-link" href={next.href}>{next.label}</DesignLink></section>;
 }
 export function TransactionTimeline({data}:{data:TradeWorkspace}) {
  return <div className="transaction-progress"><div className="workspace-summary"><b>{statusNames[data.item.status]||data.item.status}</b><span>نسخة {data.item.version} · {new Date(data.item.updatedAt).toLocaleString('ar')}</span></div><ol className="transaction-timeline">{data.milestones.map(m=><li key={m.code} className={m.status==='COMPLETED'?'is-complete':m.status==='IN_PROGRESS'?'is-running':''}><span aria-hidden="true">{m.status==='COMPLETED'?'✓':'•'}</span><div><b>{m.label}</b><small>{m.status==='COMPLETED'?'مكتملة':m.status==='IN_PROGRESS'?'قيد التنفيذ':'بانتظار المرحلة'}{m.completedAt?' · '+new Date(m.completedAt).toLocaleString('ar'):''}</small></div></li>)}</ol></div>;

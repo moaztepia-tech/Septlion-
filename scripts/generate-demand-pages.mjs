@@ -25,7 +25,7 @@ const qtyLabel=(c)=>{
 };
 
 // Consume the approved brand source used by the React interface.
-const brandTokens=await readFile(new URL('../apps/web/app/design-tokens.css',import.meta.url),'utf8');
+const brandTokens=await readFile(new URL('../apps/web/app/septlion-design-system.css',import.meta.url),'utf8');
 const shellCss=brandTokens+`
 *{box-sizing:border-box}body{margin:0;font:400 16px/1.75 var(--font-ui);color:var(--ink);background:var(--canvas)}
 a{color:inherit;text-decoration:none}:focus-visible{outline:3px solid var(--brand-steel);outline-offset:3px}.shell{width:min(var(--page-width),calc(100% - 64px));margin:auto}.nav{min-height:88px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line)}

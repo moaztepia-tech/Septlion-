@@ -48,6 +48,7 @@ export async function createEdgePostgres(authGetUser){
  lifecycle=lifecycle.replace(/create or replace function core.platform_health_snapshot_v2\(\)[\s\S]*?\$\$;/,'');
  await pg.exec(await file('supabase/migrations/20261006162903_grant_trade_api_runtime_table_access.sql'));
  await pg.exec(lifecycle);await pg.exec(await file('tests/fixtures/existing-edge-runtime.sql'));
+ await pg.exec(await file('supabase/migrations/20261010225937_finalize_customer_requests_and_delivery_batches.sql'));
  await pg.exec(await file('supabase/migrations/20261025215236_command_center_catalog.sql'));
  await pg.exec(await file('supabase/migrations/20261026000151_atomic_phone_identity.sql'));
  await pg.exec(await file('supabase/migrations/20261026001643_catalog_product_media.sql'));

@@ -5,7 +5,9 @@ import {test} from 'node:test';
 let transpile;
 try { const {default:ts}=await import('typescript');transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText; }
 catch { if(!nodeModule.stripTypeScriptTypes)throw new Error('Use workspace TypeScript or Node 22.13+.');transpile=s=>nodeModule.stripTypeScriptTypes(s,{mode:'strip'}); }
-const load=s=>import('data:text/javascript;base64,'+Buffer.from(transpile(s)).toString('base64'));
+const sharedSupply=await readFile(new URL('../supabase/functions/trade-api/supply-plan.ts',import.meta.url),'utf8');
+const supplyUrl='data:text/javascript;base64,'+Buffer.from(transpile(sharedSupply)).toString('base64');
+const load=s=>import('data:text/javascript;base64,'+Buffer.from(transpile(s.replace(/from ['"][^'"]*supply-plan(?:\.ts)?['"]/g,'from '+JSON.stringify(supplyUrl)))).toString('base64'));
 const helpers=await load(await readFile(new URL('../supabase/functions/trade-api/offer-input.ts',import.meta.url),'utf8'));
 const documentApi=await load(await readFile(new URL('../apps/web/lib/offer-document.ts',import.meta.url),'utf8'));
 const now=Date.parse('2026-10-06T12:00:00Z');
@@ -55,7 +57,7 @@ function fixture({operator=true,buyer='buyer-1',supplier='septlion-operator',val
  return{db,tables};
 }
 const edgeSource=await readFile(new URL('../supabase/functions/trade-api/index.ts',import.meta.url),'utf8');
-const moduleUrl=s=>'data:text/javascript;base64,'+Buffer.from(transpile(s)).toString('base64');
+const moduleUrl=s=>'data:text/javascript;base64,'+Buffer.from(transpile(s.replace(/from ['"][^'"]*supply-plan(?:\.ts)?['"]/g,'from '+JSON.stringify(supplyUrl)))).toString('base64');
 const lifecycleUrl=moduleUrl(await readFile(new URL('../supabase/functions/trade-api/lifecycle-input.ts',import.meta.url),'utf8'));
 const uploadUrl=moduleUrl(await readFile(new URL('../supabase/functions/trade-api/document-input.ts',import.meta.url),'utf8'));
 const lifecycleApiUrl=moduleUrl((await readFile(new URL('../supabase/functions/trade-api/lifecycle-api.ts',import.meta.url),'utf8')).replace("'./lifecycle-input.ts'",JSON.stringify(lifecycleUrl)).replace("'./document-input.ts'",JSON.stringify(uploadUrl)));
