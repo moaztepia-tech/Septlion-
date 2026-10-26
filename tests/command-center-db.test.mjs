@@ -27,6 +27,8 @@ before(async()=>{
  lifecycle=lifecycle.replace(/create or replace function core.platform_health_snapshot_v2\(\)[\s\S]*?\$\$;/,'');
  await db.exec(lifecycle);
  await db.exec(await file('supabase/migrations/20261025215236_command_center_catalog.sql'));
+ await db.exec(await file('supabase/migrations/20261026000151_atomic_phone_identity.sql'));
+ await db.exec(await file('supabase/migrations/20261026001643_catalog_product_media.sql'));
  await db.exec(`insert into core."Organization"(id,name,"organizationType",status,"updatedAt") values ('septlion-operator','TEST Septlion','BOTH','ACTIVE',now()),('buyer-org','TEST buyer','BUYER','ACTIVE',now()),('foreign-org','TEST foreign','BUYER','ACTIVE',now());
  insert into core."User"(id,email,"passwordHash","updatedAt") values ('admin','admin@fixture.invalid','TEST',now()),('sales','sales@fixture.invalid','TEST',now()),('buyer','buyer@fixture.invalid','TEST',now()),('foreign','foreign@fixture.invalid','TEST',now());
  insert into core."Membership"(id,"userId","organizationId",role) values ('ma','admin','septlion-operator','ADMIN'),('ms','sales','septlion-operator','SALES'),('mb','buyer','buyer-org','BUYER'),('mf','foreign','foreign-org','BUYER');
@@ -102,4 +104,19 @@ test('full existing lifecycle SQL verifies execution, documents, receipt, claims
 test('least-privileged service_role can run the catalog transaction using migration grants',async()=>{
  await db.exec('set role service_role');
  try{const result=await mutate('admin','sectors.save',{code:'RUNTIME',name:'TEST runtime grants'});assert.ok(result.id)}finally{await db.exec('reset role')}
+});
+
+test('first-contact identity creates one BUYER organization under concurrent retries and never grants operator rights',async()=>{
+ await db.exec('set role service_role');
+ try{const result=await Promise.all(Array.from({length:4},()=>scalar('select core.provision_trade_identity($1,$2)',['phone-new-user',null])));assert.equal(new Set(result.map(r=>r.membership.organizationId)).size,1);assert.ok(result.every(r=>r.membership.role==='BUYER'));}finally{await db.exec('reset role')}
+ assert.equal(await scalar('select count(*)::int from core."Membership" where "userId"=$1',['phone-new-user']),1);
+ assert.equal(await scalar('select count(*)::int from core."AuditLog" where "entityType"=$1 and "entityId"=$2',['BuyerIdentity','phone-new-user']),1);
+ await db.exec(`update core."User" set "isActive"=false where id='phone-new-user'`);await assert.rejects(scalar('select core.provision_trade_identity($1,$2)',['phone-new-user',null]),/access_denied/);
+});
+
+test('draft packing image URLs are saved with audit, reject unsafe schemes and do not mutate archived history',async()=>{
+ const input={...productInput(),slug:'image-product',skus:[{...productInput().skus[0],skuCode:'IMAGE-SKU',imageUrl:'https://assets.fixture.invalid/pack.jpg'}]};
+ const id=(await mutate('admin','catalog.save',input)).id;assert.equal(await scalar('select count(*)::int from core."Media" m join core."SKU" s on s.id=m."skuId" where s."productId"=$1',[id]),1);
+ await assert.rejects(mutate('admin','catalog.save',{...input,id,expectedUpdatedAt:await version(id),skus:[{...input.skus[0],imageUrl:'javascript:alert(1)'}]}),/invalid_image_url/);
+ assert.equal(await scalar('select url from core."Media" m join core."SKU" s on s.id=m."skuId" where s."productId"=$1',[id]),'https://assets.fixture.invalid/pack.jpg');
 });

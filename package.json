@@ -10,7 +10,8 @@
     "db:migrate": "pnpm --filter @septlion/api prisma:migrate",
     "db:seed": "pnpm --filter @septlion/api prisma:seed",
     "test": "node --test tests/*.test.mjs",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "release:preflight": "node scripts/staging-preflight.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

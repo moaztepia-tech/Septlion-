@@ -3,9 +3,9 @@ import {FormEvent,useEffect,useRef,useState} from 'react';
 import {edge} from '../../lib/api';
 import './command-center.css';
 type Sector={id:string;code:string;name:string;description?:string;updatedAt:string};
-type Sku={skuCode:string;name:string;unit:string;minimumOrderQty:number|string;currency:string;packing:string};
-type Product={id:string;name:string;slug:string;description?:string;sectorId:string;status:string;visibility:string;updatedAt:string;skus:(Omit<Sku,'packing'>&{specifications?:{packing?:string}})[]};
-const emptySku=():Sku=>({skuCode:'',name:'',unit:'MT',minimumOrderQty:1,currency:'USD',packing:''});
+type Sku={skuCode:string;name:string;unit:string;minimumOrderQty:number|string;currency:string;packing:string;imageUrl:string};
+type Product={id:string;name:string;slug:string;description?:string;sectorId:string;status:string;visibility:string;updatedAt:string;skus:(Omit<Sku,'packing'|'imageUrl'>&{specifications?:{packing?:string};media?:{url:string;type:string;sortOrder:number}[]})[]};
+const emptySku=():Sku=>({skuCode:'',name:'',unit:'MT',minimumOrderQty:1,currency:'USD',packing:'',imageUrl:''});
 const emptyProduct=()=>({id:'',name:'',slug:'',description:'',sectorId:'',expectedUpdatedAt:'',skus:[emptySku()]});
 const emptySector=()=>({id:'',name:'',code:'',description:'',expectedUpdatedAt:''});
 export default function CatalogManager({role,mode}:{role:'ADMIN'|'SALES';mode:string}){
@@ -28,7 +28,7 @@ export default function CatalogManager({role,mode}:{role:'ADMIN'|'SALES';mode:st
  }
  async function saveProduct(e:FormEvent){e.preventDefault();if(await mutate('catalog.save',product))setProduct(emptyProduct())}
  async function saveSector(e:FormEvent){e.preventDefault();if(await mutate('sectors.save',sector))setSector(emptySector())}
- function editProduct(p:Product){setProduct({id:p.id,name:p.name,slug:p.slug,description:p.description||'',sectorId:p.sectorId,expectedUpdatedAt:p.updatedAt,skus:p.skus.map(s=>({skuCode:s.skuCode,name:s.name,unit:s.unit,minimumOrderQty:s.minimumOrderQty,currency:s.currency,packing:s.specifications?.packing||''}))});setTab('product')}
+ function editProduct(p:Product){setProduct({id:p.id,name:p.name,slug:p.slug,description:p.description||'',sectorId:p.sectorId,expectedUpdatedAt:p.updatedAt,skus:p.skus.map(s=>({skuCode:s.skuCode,name:s.name,unit:s.unit,minimumOrderQty:s.minimumOrderQty,currency:s.currency,packing:s.specifications?.packing||'',imageUrl:s.media?.find(m=>m.type==='IMAGE'&&m.sortOrder===0)?.url||''}))});setTab('product')}
  function changeSku(i:number,field:keyof Sku,value:string){setProduct(p=>({...p,skus:p.skus.map((s,n)=>n===i?{...s,[field]:value}:s)}))}
  return <section className="command-data" aria-label="إدارة الكتالوج والقطاعات">
   <h2>الكتالوج والقطاعات</h2><p>صلاحيتك: {admin?'إدارة':'مبيعات · قراءة الكتالوج ومتابعة العمليات'}</p>
@@ -46,6 +46,7 @@ export default function CatalogManager({role,mode}:{role:'ADMIN'|'SALES';mode:st
     <label>رمز الصنف<input required readOnly={Boolean(product.id&&products.find(p=>p.id===product.id)?.skus.some(s=>s.skuCode===sku.skuCode))} pattern="(?:[A-Z0-9_]|-){2,60}" value={sku.skuCode} onChange={e=>changeSku(i,'skuCode',e.target.value)}/></label>
     <label>اسم التعبئة<input required maxLength={200} value={sku.name} onChange={e=>changeSku(i,'name',e.target.value)}/></label>
     <label>مواصفة التعبئة<input required maxLength={200} placeholder="50 كجم / شوال منسوج" value={sku.packing} onChange={e=>changeSku(i,'packing',e.target.value)}/></label>
+    <label>رابط صورة العبوة — اختياري<input type="url" maxLength={2048} dir="ltr" placeholder="https://…" value={sku.imageUrl} onChange={e=>changeSku(i,'imageUrl',e.target.value)}/></label>
     <label>الوحدة<select value={sku.unit} onChange={e=>changeSku(i,'unit',e.target.value)}>{['MT','KG','UNIT','FCL','CARTON'].map(x=><option key={x}>{x}</option>)}</select></label>
     <label>الحد الأدنى<input required type="number" step="0.0001" min="0.0001" max="1000000000" value={sku.minimumOrderQty} onChange={e=>changeSku(i,'minimumOrderQty',e.target.value)}/></label>
     <label>العملة<input required pattern="[A-Z]{3}" value={sku.currency} onChange={e=>changeSku(i,'currency',e.target.value)}/></label>

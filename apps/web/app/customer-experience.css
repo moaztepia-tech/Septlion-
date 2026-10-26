@@ -57,3 +57,10 @@
 .notification-row { display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px;border:1px solid var(--line);border-radius:var(--radius-card);background:var(--surface);color:var(--ink); }
 .notification-row p { line-height:1.8;color:var(--muted);margin:8px 0; }
 .notification-row time { display:block;font-size:13px;color:var(--muted);margin-top:8px; }
+
+.phone-verification{min-inline-size:0;border:1px solid var(--line,#d9dee7);border-radius:12px;padding:14px;display:grid;gap:12px;margin-block:14px}
+.phone-verification legend{font-size:14px;padding-inline:6px}
+.phone-verification p{font-size:14px;line-height:1.8;margin:0}
+.phone-verification label{display:grid;gap:8px}
+.phone-verification input{inline-size:100%;min-block-size:44px;box-sizing:border-box;font:inherit}
+.phone-verification button{min-block-size:44px;white-space:normal}

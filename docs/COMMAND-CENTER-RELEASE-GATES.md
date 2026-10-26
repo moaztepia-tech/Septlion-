@@ -5,7 +5,7 @@ Status: **NOT RELEASED**. This checklist is a release contract, not evidence tha
 ## Architecture
 - Customer frontend: existing Next.js application.
 - Commercial system of record: existing API and tenant-scoped database.
-- Demand intelligence Supabase project is **not** assumed to be the commercial database.
+- Read-only inspection confirmed that the connected Supabase project contains the existing commercial `core` schema; staging must use an isolated branch, never production records.
 - Internal command center must not write to the database directly from the browser.
 
 ## Required authorization
@@ -48,4 +48,5 @@ Status: **NOT RELEASED**. This checklist is a release contract, not evidence tha
 - Customer requirements retain explicit packing SKU IDs and stable retry keys. Existing operations own offers and execution.
 - Implementation details, reproducible tests and limitations are in [COMMAND-CENTER-IMPLEMENTATION.md](COMMAND-CENTER-IMPLEMENTATION.md).
 - Production remains blocked pending staging migration/Edge deployment verification and a Node.js-capable hosting path. Static export cannot enforce the new server gate.
-- These changes do not add WhatsApp ownership verification or imply inventory/price verification from publication alone.
+- WhatsApp ownership verification is implemented against Auth server evidence. Actual delivery remains blocked by disabled phone Auth/provider configuration; it has not been demonstrated live. Publication does not verify inventory or price.
+- Current local Node/API/PostgreSQL result: 95 passed. Consult the PR CI jobs for the latest browser/build result. Staging resource creation, migration and cloud acceptance remain pending.

@@ -47,8 +47,8 @@ jobs:
         run: node --test tests/requirement-input.test.mjs
       - name: Customer draft, context, contact and acceptance regression tests
         run: node --test tests/customer-experience.test.mjs
-      - name: Command center authorization and PostgreSQL integration
-        run: node --test tests/command-center-api.test.mjs tests/command-center-db.test.mjs tests/access-token-ttl.test.mjs
+      - name: Command center, verified contact and PostgreSQL integration
+        run: node --test tests/command-center-api.test.mjs tests/command-center-db.test.mjs tests/access-token-ttl.test.mjs tests/phone-verification.test.mjs tests/staging-config.test.mjs
       - name: Dependency security gate
         run: pnpm audit --audit-level high
       - name: Prisma validate

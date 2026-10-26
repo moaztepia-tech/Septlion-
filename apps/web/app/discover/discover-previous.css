@@ -109,6 +109,12 @@
   background: var(--sl-deep)!important;
   color: #fff!important
 }
+.discover-page .discover-product-image {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  display: block;
+}
 .discover-page .discover-bag {
   background: var(--sl-navy)!important;
   color: #fff!important;

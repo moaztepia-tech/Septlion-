@@ -23,7 +23,7 @@ export const metadata = {
     siteName: 'SEPTLION',
     type: 'website',
   },
-  robots: { index: true, follow: true },
+  robots: process.env.SEPTLION_DEPLOYMENT==='staging'?{index:false,follow:false}:{index:true,follow:true},
   icons: {
     icon: [{url:'/favicon.ico'}, {url:'/brand/app-icon-rounded.svg',type:'image/svg+xml'}],
     shortcut: '/favicon.ico',

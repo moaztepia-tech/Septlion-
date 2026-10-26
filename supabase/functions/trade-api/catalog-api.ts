@@ -9,7 +9,7 @@ export async function handleCatalog(action: string, body: Record<string, any>, c
   if (!role) return out({error: 'Operator access required'}, 403);
   if (action === 'catalog.list') {
     const {data, error} = await db.from('Product')
-      .select('id,name,slug,description,sectorId,status,visibility,updatedAt,skus:SKU(id,skuCode,name,unit,minimumOrderQty,currency,specifications)')
+      .select('id,name,slug,description,sectorId,status,visibility,updatedAt,skus:SKU(id,skuCode,name,unit,minimumOrderQty,currency,specifications,media:Media(url,type,sortOrder))')
       .eq('organizationId', 'septlion-operator').order('updatedAt', {ascending: false}).limit(200);
     return error ? out({error: 'تعذر قراءة المنتجات'}, 503) : out({items: data || []});
   }

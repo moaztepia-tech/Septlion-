@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import './discover-previous.css';
 import {publicCatalog,CatalogProduct} from '../../lib/catalog-data';
 import {createTradeRequirement} from '../../lib/trade-data';
-import {hasSession} from '../../lib/api';
+import {PhoneVerification} from '../../components/phone-verification';
 import {useRouter} from 'next/navigation';
 import {SCALE_RANGES,getSeptlionScale,scaleProgress} from '../../lib/septlion-scale';
 import {buyerContactProblem,normalizePhone} from '../../lib/buyer-contact';
@@ -38,7 +38,9 @@ export default function DiscoverPage(){
  const[destination,setDestination]=useState<Destination|null>(null),[sheet,setSheet]=useState(false),[query,setQuery]=useState('');
  const[identity,setIdentity]=useState(false),[name,setName]=useState(''),[company,setCompany]=useState(''),[email,setEmail]=useState(''),[phone,setPhone]=useState(''),[error,setError]=useState('');
  const[category,setCategory]=useState('الكل'),[restored,setRestored]=useState(false);
+ const[failedImage,setFailedImage]=useState('');
  const handingOff=useRef(false);
+ const[verifiedContact,setVerifiedContact]=useState('');
  useEffect(()=>{try{const saved=JSON.parse(sessionStorage.getItem('septlion_discover_config')||'null');if(saved){if(saved.variants&&typeof saved.variants==='object')setVariants(saved.variants);if(saved.contact){setName(saved.contact.name||'');setCompany(saved.contact.company||'');setPhone(saved.contact.phone||'');setEmail(saved.contact.email||'')}if(Number.isInteger(saved.active)&&saved.active>=0)setActive(saved.active);if(Number.isInteger(saved.count)&&saved.count>0&&saved.count<=1000000000)setCount(saved.count);if(['CIF','CFR','FOB'].includes(saved.incoterm))setIncoterm(saved.incoterm);if(['L/C','T/T','OTHER'].includes(saved.payment))setPayment(saved.payment);setDestination(destinations.find(d=>d.code===saved.destinationCode)||null)}const raw=sessionStorage.getItem('septlion_discover_product');if(raw!==null){const n=Number(raw);if(Number.isInteger(n)&&n>=0&&n<100)setActive(n);sessionStorage.removeItem('septlion_discover_product')}}catch{}setRestored(true)},[]);
  useEffect(()=>{if(restored){try{sessionStorage.setItem('septlion_discover_config',JSON.stringify({active,count,incoterm,payment,destinationCode:destination?.code,variants,contact:{name,company,phone,email}}))}catch{}}},[active,count,incoterm,payment,destination,restored,variants,name,company,phone,email]);
  useEffect(()=>{
@@ -60,6 +62,7 @@ export default function DiscoverPage(){
   return()=>{document.body.style.overflow=previousOverflow;document.removeEventListener('keydown',keys);previous?.focus()};
  },[sheet,identity,saving]);
  const product=products[active]||products[0],record=records[active]||records[0],scale=getSeptlionScale(count),progress=scaleProgress(count);
+ const primaryImage=record?.skus.flatMap(s=>s.media||[]).filter(m=>m.type==='IMAGE'&&/^https:\/\//.test(m.url)).sort((a,b)=>a.sortOrder-b.sortOrder)[0]?.url||'';
  const filtered=useMemo(()=>destinations.filter(d=>(d.port+' '+d.country+' '+d.code).toLowerCase().includes(query.toLowerCase())),[query]);
 
  function startIdentity(){
@@ -75,8 +78,8 @@ export default function DiscoverPage(){
   if(!destination||!payment){setError('أكمل الوجهة وطريقة الدفع قبل بيانات التواصل.');return}
   const selected=Object.entries(variants).filter(([id,n])=>record?.skus.some(s=>s.id===id)&&Number.isInteger(n)&&n>0).map(([skuId,containers])=>({skuId,containers}));
   if(!selected.length){setError('اختر تعبئة واحدة على الأقل وحدّد حاوياتها.');return}
-  if(!hasSession()){setError('سجل الدخول لإرسال الطلب؛ يمكنك أيضًا متابعة الاحتياج في Composer.');return}
-  const input={product:product.name,catalogProductId:product.id,variants:selected,quantity:count+' FCL',unit:'FCL',containerCount:count,destination:destination.port,deliveryCountry:destination.country,destinationCode:destination.code,incoterm,paymentPreference:payment,source:'PRODUCT_FEED',buyer:{name,company,whatsapp:normalizePhone(phone),email:email||null,whatsappStatus:'UNCONFIRMED'}};
+  if(verifiedContact!==normalizePhone(phone)){setError('أكد رقم واتساب أولًا حتى نربط الطلب بك.');return}
+  const input={product:product.name,catalogProductId:product.id,variants:selected,quantity:count+' FCL',unit:'FCL',containerCount:count,destination:destination.port,deliveryCountry:destination.country,destinationCode:destination.code,incoterm,paymentPreference:payment,source:'PRODUCT_FEED',buyer:{name,company,whatsapp:normalizePhone(phone),email:email||null,whatsappStatus:verifiedContact===normalizePhone(phone)?'VERIFIED':'UNCONFIRMED'}};
   const signature=JSON.stringify(input);if(lastPayload.current!==signature){try{const saved=JSON.parse(sessionStorage.getItem('septlion_discover_retry')||'null');requestKey.current=saved?.signature===signature?saved.key:crypto.randomUUID();sessionStorage.setItem('septlion_discover_retry',JSON.stringify({signature,key:requestKey.current}))}catch{requestKey.current=crypto.randomUUID()}lastPayload.current=signature}
   setSaving(true);setError('');handingOff.current=true;
   try{const result=await createTradeRequirement({...input,idempotencyKey:requestKey.current});setReceived('تم استلام طلب عرض السعر · '+result.item.id);setIdentity(false);setSheet(false);requestKey.current='';lastPayload.current='';try{sessionStorage.removeItem('septlion_discover_retry')}catch{}}catch(e){setError(e instanceof Error?e.message:'تعذر إرسال الطلب')}finally{setSaving(false);handingOff.current=false}
@@ -88,7 +91,7 @@ export default function DiscoverPage(){
    product:{id:product.id,name:product.name,nameEn:product.en,packing:product.pack},
    containerCount:count,septlionScale:scale,incoterm,
    destination,paymentPreference:payment,
-   buyer:{name:name.trim(),company:company.trim(),whatsapp:normalizePhone(phone),email:email.trim()||null,whatsappStatus:'UNCONFIRMED'},
+   buyer:{name:name.trim(),company:company.trim(),whatsapp:normalizePhone(phone),email:email.trim()||null,whatsappStatus:verifiedContact===normalizePhone(phone)?'VERIFIED':'UNCONFIRMED'},
    sourceContext:{path:'discover',campaignId:new URLSearchParams(window.location.search).get('campaign_id'),utmSource:new URLSearchParams(window.location.search).get('utm_source')}
   };
   try{
@@ -104,7 +107,7 @@ export default function DiscoverPage(){
   <section className="discover-feed">
    <div className="discover-section-head"><div><small>DISCOVER</small><h1>اكتشف ما يتحرك في السوق.</h1></div><span>ابدأ من إشارة طلب أو منتج مناسب، ثم حوّله مباشرة إلى احتياج تجاري قابل للتنفيذ.</span></div>
    {received&&<p role="status">{received}</p>}{catalogLoading&&<p role="status">جارٍ تحميل المنتجات…</p>}{catalogError&&<p role="alert">{catalogError}</p>}{product?<article className="discover-product">
-    <div className="discover-product-visual"><div className="discover-visual-meta"><span>01</span><small>{product.eyebrow}</small></div><div className="discover-bag"><span>{product.eyebrow}</span><b>{product.name}</b><small>{product.en}</small><em>{product.pack}</em></div><div className="discover-pager">{products.map((_,i)=><button key={i} aria-label={'عرض '+products[i].name} aria-pressed={i===active} className={i===active?'active':''} onClick={()=>{setActive(i);setCount(1);setVariants({})}}/> )}</div></div>
+    <div className="discover-product-visual"><div className="discover-visual-meta"><span>01</span><small>{product.eyebrow}</small></div>{primaryImage&&primaryImage!==failedImage?<img className="discover-product-image" src={primaryImage} alt={product.name} onError={()=>setFailedImage(primaryImage)}/>:(<div className="discover-bag"><span>{product.eyebrow}</span><b>{product.name}</b><small>{product.en}</small><em>{product.pack}</em></div>)}<div className="discover-pager">{products.map((_,i)=><button key={i} aria-label={'عرض '+products[i].name} aria-pressed={i===active} className={i===active?'active':''} onClick={()=>{setActive(i);setCount(1);setVariants({})}}/> )}</div></div>
     <div className="discover-product-copy"><small>{product.eyebrow}</small><h2>{product.name}</h2><p>{product.en}</p><dl><div><dt>التعبئة</dt><dd>{product.pack}</dd></div><div><dt>التوريد</dt><dd>{product.note}</dd></div></dl></div>
 
     <div className="discover-config-head"><small>YOUR REQUIREMENT</small><b>حدّد الأساسيات</b><span>سنكمل التفاصيل داخل الطلب.</span></div><div className="discover-config">
@@ -133,15 +136,16 @@ export default function DiscoverPage(){
 
   {identity&&<div className="discover-overlay identity"><section className="discover-sheet discover-identity" role="dialog" aria-modal="true" aria-labelledby="contact-title" aria-describedby="contact-hint"><div className="discover-grab"/><div className="discover-sheet-head"><div><small>خطوة أخيرة</small><h3 id="contact-title">بيانات التواصل</h3><p>سنرفق بياناتك بطلب عرض السعر.</p></div><button data-close-contact aria-label="إغلاق بيانات التواصل" disabled={saving} onClick={()=>setIdentity(false)}>×</button></div>
    <form onSubmit={e=>{e.preventDefault();void handoff()}}>
-   <label>الاسم<input id="buyer-name" required maxLength={120} value={name} onChange={e=>{setName(e.target.value);setError('')}} autoComplete="name" enterKeyHint="next"/></label>
-   <label>الشركة<input required maxLength={200} value={company} onChange={e=>{setCompany(e.target.value);setError('')}} autoComplete="organization" enterKeyHint="next"/></label>
-   <label>البريد الإلكتروني <small>اختياري</small><input type="email" maxLength={254} value={email} onChange={e=>{setEmail(e.target.value);setError('')}} autoComplete="email" enterKeyHint="next" dir="ltr"/></label>
-   <label>رقم WhatsApp مع رمز الدولة<input type="tel" required inputMode="tel" maxLength={30} value={phone} onChange={e=>{setPhone(e.target.value);setError('')}} placeholder="+966 5X XXX XXXX" autoComplete="tel" enterKeyHint="done" aria-describedby="contact-hint" dir="ltr"/></label>
-   <button className="discover-primary" disabled={saving}>{saving?'جارٍ الإرسال…':'طلب عرض سعر'}</button>
-   {!hasSession()&&<a href="/account?next=/discover">تسجيل الدخول لإرسال الطلب</a>}<button type="button" disabled={saving} onClick={composerHandoff}>متابعة تخصيص الاحتياج</button>
+   <label>الاسم<input id="buyer-name" disabled={saving} required maxLength={120} value={name} onChange={e=>{setName(e.target.value);setError('')}} autoComplete="name" enterKeyHint="next"/></label>
+   <label>الشركة<input required maxLength={200} value={company} onChange={e=>{setCompany(e.target.value);setError('')}} autoComplete="organization" disabled={saving} enterKeyHint="next"/></label>
+   <label>البريد الإلكتروني <small>اختياري</small><input type="email" maxLength={254} value={email} onChange={e=>{setEmail(e.target.value);setError('')}} autoComplete="email" disabled={saving} enterKeyHint="next" dir="ltr"/></label>
+   <label>رقم WhatsApp مع رمز الدولة<input type="tel" disabled={saving} required inputMode="tel" maxLength={30} value={phone} onChange={e=>{setPhone(e.target.value);setError('')}} placeholder="+966 5X XXX XXXX" autoComplete="tel" enterKeyHint="done" aria-describedby="contact-hint" dir="ltr"/></label>
+   <PhoneVerification phone={phone} onVerified={setVerifiedContact} disabled={saving}/>
+   <button className="discover-primary" disabled={saving||!verifiedContact||verifiedContact!==normalizePhone(phone)}>{saving?'جارٍ الإرسال…':'طلب عرض سعر'}</button>
+   <button type="button" disabled={saving} onClick={composerHandoff}>متابعة تخصيص الاحتياج</button>
    </form>
    {error&&<p className="discover-error" role="alert">{error}</p>}
-   <p id="contact-hint" className="discover-auto-note">بعد إرسال الطلب تواصل التصفح من الموضع نفسه. إدخال رقم WhatsApp لا يعني أنه تم التحقق منه.</p>
+   <p id="contact-hint" className="discover-auto-note">بعد تأكيد الرقم وإرسال الطلب تواصل التصفح من الموضع نفسه. البريد الإلكتروني اختياري.</p>
   </section></div>}
  </main>
 }

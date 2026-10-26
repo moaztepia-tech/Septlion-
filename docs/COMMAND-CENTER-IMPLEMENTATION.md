@@ -25,12 +25,18 @@ Apply `supabase/migrations/20261025215236_command_center_catalog.sql` to an isol
 
 - `tests/command-center-api.test.mjs`: executes the real Edge handler with an isolated database adapter, checking authentication, role enforcement, explicit publication, actor spoofing and public catalog filtering.
 - `tests/command-center-db.test.mjs`: actual PostgreSQL via pinned PGlite, bootstrapped from the repository Prisma schema, existing runtime definitions and real migrations. It checks rollback, audit, replay/conflict, stale versions, duplicate SKU, multiple variants, RFQ→offer→acceptance links, archive integrity and service-role grants. It also executes the existing lifecycle SQL test, including execution, documents, receipt, claims and reorder.
-- `tests/browser/*.spec.mjs`: 360px browser tests against a local HTTP contract fixture. They verify the real Next.js server gate, cookie settings, draft/publication interaction and Discovery submission/closure. The HTTP fixture is not evidence of a deployed Supabase integration; database and Edge contracts are covered separately above.
+- `tests/browser/*.spec.mjs`: 360px browser scenario runs the real Next.js application, real Edge handler and actual PostgreSQL RPCs through a local adapter. Only external Auth/WhatsApp delivery is simulated. It covers server gating, publication, guest phone confirmation, Discovery and Composer RFQs, operator offer issuance, buyer acceptance, execution preparation, early receipt denial and logout. This does not prove external provider delivery or a deployed Supabase integration.
 - CI runs the new tests, web/API typechecks/builds and dependency audit. The security upgrade moves Next.js to patched 15.5.28 and Nest to the supported 11.x line and locks vulnerable transitive dependencies to patched versions.
 
 ## Remaining release checks
 
-No claim of production readiness: apply/verify migrations in staging, deploy the Edge function there, complete the flow against that deployed backend, confirm backups and choose a Node.js-capable host for the protected command center. WhatsApp ownership verification is not implemented by this change: entered numbers remain explicitly UNCONFIRMED. Anonymous visitors can browse and draft; sending a persisted commercial request still uses the existing authenticated account flow. Product media upload and a product revision workflow for already-published products are separate capabilities; current archival preserves historical records.
+Phone ownership is now checked against Supabase Auth `phone` and `phone_confirmed_at`, never user metadata. Guest WhatsApp OTP and signed-in phone-change confirmation run inside Discovery/Composer; no account-page detour is required. Expired, incorrect, mismatched and cancelled challenges cannot create a verified session. Server-side contact normalization binds the submitted number to the verified identity. Auth delivery must be enabled separately: the connected project's public Auth settings reported `phone_enabled:false` on 2026-10-26. Actual WhatsApp delivery has not been tested.
+
+Apply migrations in order after the catalog migration: `20261026000151_atomic_phone_identity.sql` (advisory-lock serialized, audited buyer provisioning) and `20261026001643_catalog_product_media.sql` (optional HTTPS primary SKU image, with admin/audit/version protections). Draft image editing uses a URL; file uploads and editing published product revisions remain separate capabilities.
+
+`render.yaml` prepares a free, manually deployed staging Node service; `Dockerfile.web` provides a full Next runtime alternative. `/api/health`, staging noindex headers and `pnpm release:preflight` support verification. Staging configuration refuses the known production Supabase project and server secrets as browser keys. Set `SEPTLION_DEPLOYMENT=staging`, isolated public Supabase credentials, and server-only `SEPTLION_ALLOWED_ORIGINS` on the staging Edge deployment. The preflight is read-only; it checks Auth configuration, public catalog, CORS and the Next health endpoint.
+
+External release gates remain open: no isolated Supabase branch was created (connector confirmation requests failed), Railway remains unauthorized, and Render requires an explicit workspace selection before resource creation. No production data, Auth settings, domains, deployments or secrets were changed. A staging migration, Edge deployment, real WhatsApp delivery and operator acceptance run are still required. Docker image execution and cloud deployment are not claimed by local tests.
 
 ## Recorded results
 
@@ -38,13 +44,14 @@ All checks below ran locally on 2026-10-26. No production credentials, writes or
 
 | Check | Result |
 | --- | --- |
-| Node regression/API/PostgreSQL tests | 85 passed, 0 failed |
-| Mobile browser scenario | 1 passed: server gate, draft/publish, buyer RFQ, sheet closure, 360px width and scale-marker direction |
+| Node regression/API/PostgreSQL tests | 95 passed, 0 failed |
+| Mobile browser scenario | 1 passed locally: real Edge/PostgreSQL full customer/operator scenario at 360px |
 | Web TypeScript | Passed |
 | API TypeScript and Nest build | Passed |
 | Next.js 15.5.28 production build | Passed; protected page and session bridge are dynamic |
 | Prisma validation and formatting | Passed; schema unchanged |
 | pnpm dependency audit | 0 low, moderate, high or critical advisories across 575 dependencies |
+| Render Blueprint official JSON schema | Passed; resource not created |
 | Whitespace/diff checks | Passed |
 
 Browser verification also exposed and fixed a delayed autofocus race in contact entry and a CSS theme collision that rendered pale text on a light discovery surface. The original supplied logo assets remain unchanged. The discovery scale track now shares the left-to-right direction of its fixed labels.
