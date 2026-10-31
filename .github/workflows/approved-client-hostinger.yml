@@ -1,0 +1,60 @@
+name: Publish approved SEPTLION client to Hostinger
+
+on:
+  push:
+    branches: [deploy/approved-client-20261101]
+    paths:
+      - .github/workflows/approved-client-hostinger.yml
+      - scripts/publish-approved-client.py
+      - deploy/approved-client-manifest.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: septlion-production
+  cancel-in-progress: false
+
+jobs:
+  publish-approved-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Fetch and validate the exact approved client files
+        run: python3 scripts/publish-approved-client.py prepare
+
+      - name: Check client JavaScript syntax
+        run: |
+          node - <<'JS'
+          const fs = require('fs'), vm = require('vm');
+          const html = fs.readFileSync('release-output/index.html', 'utf8');
+          for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+            if (!/application\/json/.test(match[1])) new vm.Script(match[2]);
+          }
+          console.log('Approved client JavaScript syntax passed');
+          JS
+
+      - name: Back up target files and publish using existing Hostinger FTPS credentials
+        env:
+          HOSTINGER_FTP_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          HOSTINGER_FTP_USERNAME: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        run: python3 scripts/publish-approved-client.py publish
+
+      - name: Verify the public domain serves the approved files
+        run: python3 scripts/publish-approved-client.py verify
+
+      - name: Retain the previous versions of replaced files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: septlion-before-approved-client-${{ github.run_id }}
+          path: release-backup/
+          if-no-files-found: ignore
+          retention-days: 14

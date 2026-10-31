@@ -1,0 +1,43 @@
+{
+  "source_origin": "https://septlion-client-moaz-20261101.moaztepia.chatgpt.site",
+  "target_origin": "https://www.septlion.com",
+  "approved_index_sha256": "7ba34af28b30d130c447562ac1d10fdc280e8f27bf2c95de3062440f063eac9b",
+  "files": [
+    {
+      "path": "data/products.json",
+      "sha256": "62ee222b640d846652f48a6b71245cdca1c6b7b07828c6c6e32a4d8b1fe5c025"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "2c118133479bfd12d87369a9dc89836f92528b95f6153ae9d55544745f3e690a"
+    },
+    {
+      "path": "favicon.svg",
+      "sha256": "715819f4ff09a6d1f059834730ae87297d1d67df7914af517fe62c6c8dd15e76"
+    },
+    {
+      "path": "icons/apple-touch-icon-180.png",
+      "sha256": "e0f03800632a2a93ac6d826c5512d804895f02da3df7bf5a8952cb11be547f88"
+    },
+    {
+      "path": "icons/icon-192.png",
+      "sha256": "db52e9040dabcfe9c2bacaf9818e487f6c66e75444285adfb40c5f7c811b648b"
+    },
+    {
+      "path": "icons/icon-512.png",
+      "sha256": "61fd20283374afad3edd34daa32773bc124aa2f2629707bcc20b2e195c2785ae"
+    },
+    {
+      "path": "icons/icon-maskable-512.png",
+      "sha256": "61fd20283374afad3edd34daa32773bc124aa2f2629707bcc20b2e195c2785ae"
+    },
+    {
+      "path": "index.html",
+      "sha256": "7ba34af28b30d130c447562ac1d10fdc280e8f27bf2c95de3062440f063eac9b"
+    },
+    {
+      "path": "manifest.webmanifest",
+      "sha256": "d36ddaccaf207ab9b95dafda7e7a36ec54eea2439f7afd4c0123d4182ca9b8f8"
+    }
+  ]
+}
