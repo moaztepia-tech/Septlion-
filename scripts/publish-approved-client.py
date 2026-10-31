@@ -10,7 +10,6 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import ssl
-import socket
 import sys
 import tarfile
 import time
@@ -85,41 +84,19 @@ def remote_directory(ftp, relative):
         ftp.cwd(part)
 
 
-def verified_hostinger_hostname(server):
+def connect_hostinger(ftp, server):
     server = server.strip()
+    ftp.connect(server, 21)
     try:
-        address = ipaddress.ip_address(server)
+        ipaddress.ip_address(server)
     except ValueError:
-        return server
-    candidates = []
-    try:
-        candidates.append(socket.gethostbyaddr(str(address))[0])
-    except socket.herror:
-        pass
-    if not candidates:
-        # Inspect the public, CA-validated certificate without sending credentials.
-        # The authenticated connection below always uses full hostname validation.
-        discovery_context = ssl.create_default_context()
-        discovery_context.check_hostname = False
-        discovery = ftplib.FTP_TLS(context=discovery_context, timeout=40)
-        try:
-            discovery.connect(str(address), 21)
-            discovery.auth()
-            certificate = discovery.sock.getpeercert()
-            candidates.extend(value for key, value in certificate.get("subjectAltName", []) if key == "DNS")
-            candidates.extend(value for group in certificate.get("subject", []) for key, value in group if key == "commonName")
-        finally:
-            discovery.close()
-    for candidate in candidates:
-        hostname = candidate.rstrip(".").lower()
-        if "*" in hostname or not hostname.endswith((".hstgr.io", ".hstgr.cloud", ".hostinger.com")):
-            continue
-        addresses = {ipaddress.ip_address(item[4][0]) for item in socket.getaddrinfo(hostname, 21)}
-        if address in addresses:
-            print("Using the matching Hostinger server hostname with full TLS verification")
-            return hostname
-    print("Public certificate DNS names: " + ", ".join(candidates))
-    raise RuntimeError("No CA-validated Hostinger hostname resolves to the configured FTP IP")
+        return
+    # The connection remains on the configured account server IP. Hostinger
+    # presents its shared FTPS certificate with the exact SAN `hstgr.io`.
+    # FTP_TLS uses `host` for SNI and certificate identity on the existing
+    # control socket and protected passive data sockets. CA and hostname
+    # verification remain enabled on both, before credentials are sent.
+    ftp.host = "hstgr.io"
 
 
 def publish(data):
@@ -130,7 +107,7 @@ def publish(data):
     BACKUP.mkdir(exist_ok=True)
     ftp = ftplib.FTP_TLS(context=ssl.create_default_context(), timeout=60)
     try:
-        ftp.connect(verified_hostinger_hostname(os.environ[names[0]]), 21)
+        connect_hostinger(ftp, os.environ[names[0]])
         ftp.login(os.environ[names[1]], os.environ[names[2]])
         ftp.prot_p()
         ftp.cwd(REMOTE_ROOT)
