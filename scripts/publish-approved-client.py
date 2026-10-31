@@ -5,10 +5,12 @@ import base64
 import ftplib
 import hashlib
 import io
+import ipaddress
 import json
 import os
 from pathlib import Path, PurePosixPath
 import ssl
+import socket
 import sys
 import tarfile
 import time
@@ -83,6 +85,22 @@ def remote_directory(ftp, relative):
         ftp.cwd(part)
 
 
+def verified_hostinger_hostname(server):
+    server = server.strip()
+    try:
+        address = ipaddress.ip_address(server)
+    except ValueError:
+        return server
+    hostname = socket.gethostbyaddr(str(address))[0].rstrip(".").lower()
+    if not hostname.endswith((".hstgr.io", ".hstgr.cloud", ".hostinger.com")):
+        raise RuntimeError("The configured FTP IP has no verified Hostinger server hostname")
+    addresses = {ipaddress.ip_address(item[4][0]) for item in socket.getaddrinfo(hostname, 21)}
+    if address not in addresses:
+        raise RuntimeError("The Hostinger server hostname does not resolve to the configured FTP IP")
+    print("Using the matching Hostinger server hostname with full TLS verification")
+    return hostname
+
+
 def publish(data):
     check_files(OUTPUT, data)
     names = ("HOSTINGER_FTP_SERVER", "HOSTINGER_FTP_USERNAME", "HOSTINGER_FTP_PASSWORD")
@@ -91,7 +109,7 @@ def publish(data):
     BACKUP.mkdir(exist_ok=True)
     ftp = ftplib.FTP_TLS(context=ssl.create_default_context(), timeout=60)
     try:
-        ftp.connect(os.environ[names[0]], 21)
+        ftp.connect(verified_hostinger_hostname(os.environ[names[0]]), 21)
         ftp.login(os.environ[names[1]], os.environ[names[2]])
         ftp.prot_p()
         ftp.cwd(REMOTE_ROOT)
