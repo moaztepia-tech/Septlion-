@@ -7,6 +7,7 @@ on:
       - .github/workflows/approved-client-hostinger.yml
       - scripts/publish-approved-client.py
       - deploy/approved-client-manifest.json
+      - deploy/approved-client.tar.gz.b64
   workflow_dispatch:
 
 permissions:
@@ -26,7 +27,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Fetch and validate the exact approved client files
+      - name: Unpack and validate the exact approved client files
         run: python3 scripts/publish-approved-client.py prepare
 
       - name: Check client JavaScript syntax

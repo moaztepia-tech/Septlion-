@@ -1,13 +1,16 @@
 """Publish only the approved static client using the existing Hostinger FTPS account."""
 
 import argparse
+import base64
 import ftplib
 import hashlib
+import io
 import json
 import os
 from pathlib import Path, PurePosixPath
 import ssl
 import sys
+import tarfile
 import time
 import urllib.request
 
@@ -49,13 +52,23 @@ def get_url(url):
 
 
 def prepare(data):
-    for item in data["files"]:
-        destination = OUTPUT / item["path"]
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        raw = get_url(data["source_origin"] + "/" + item["path"])
-        if digest(raw) != item["sha256"]:
-            raise RuntimeError("Published source differs from approved content: " + item["path"])
-        destination.write_bytes(raw)
+    packed = base64.b64decode((ROOT / "deploy/approved-client.tar.gz.b64").read_bytes())
+    if digest(packed) != data["archive_sha256"]:
+        raise RuntimeError("Approved archive checksum mismatch")
+    expected = {item["path"]: item for item in data["files"]}
+    with tarfile.open(fileobj=io.BytesIO(packed), mode="r:gz") as archive:
+        members = archive.getmembers()
+        if len(members) != len(expected) or {member.name for member in members} != set(expected):
+            raise RuntimeError("Archive does not contain exactly the approved files")
+        for member in members:
+            if not member.isfile():
+                raise RuntimeError("Only regular approved files can be published")
+            raw = archive.extractfile(member).read()
+            if digest(raw) != expected[member.name]["sha256"]:
+                raise RuntimeError("Archived file differs from approved content: " + member.name)
+            destination = OUTPUT / member.name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(raw)
     check_files(OUTPUT, data)
 
 

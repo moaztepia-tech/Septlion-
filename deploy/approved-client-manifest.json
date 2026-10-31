@@ -39,5 +39,6 @@
       "path": "manifest.webmanifest",
       "sha256": "d36ddaccaf207ab9b95dafda7e7a36ec54eea2439f7afd4c0123d4182ca9b8f8"
     }
-  ]
+  ],
+  "archive_sha256": "6e17a3441523751cee09f664507689d216cf18da71bb8a7e674b57764a5d5141"
 }
