@@ -91,14 +91,35 @@ def verified_hostinger_hostname(server):
         address = ipaddress.ip_address(server)
     except ValueError:
         return server
-    hostname = socket.gethostbyaddr(str(address))[0].rstrip(".").lower()
-    if not hostname.endswith((".hstgr.io", ".hstgr.cloud", ".hostinger.com")):
-        raise RuntimeError("The configured FTP IP has no verified Hostinger server hostname")
-    addresses = {ipaddress.ip_address(item[4][0]) for item in socket.getaddrinfo(hostname, 21)}
-    if address not in addresses:
-        raise RuntimeError("The Hostinger server hostname does not resolve to the configured FTP IP")
-    print("Using the matching Hostinger server hostname with full TLS verification")
-    return hostname
+    candidates = []
+    try:
+        candidates.append(socket.gethostbyaddr(str(address))[0])
+    except socket.herror:
+        pass
+    if not candidates:
+        # Inspect the public, CA-validated certificate without sending credentials.
+        # The authenticated connection below always uses full hostname validation.
+        discovery_context = ssl.create_default_context()
+        discovery_context.check_hostname = False
+        discovery = ftplib.FTP_TLS(context=discovery_context, timeout=40)
+        try:
+            discovery.connect(str(address), 21)
+            discovery.auth()
+            certificate = discovery.sock.getpeercert()
+            candidates.extend(value for key, value in certificate.get("subjectAltName", []) if key == "DNS")
+            candidates.extend(value for group in certificate.get("subject", []) for key, value in group if key == "commonName")
+        finally:
+            discovery.close()
+    for candidate in candidates:
+        hostname = candidate.rstrip(".").lower()
+        if "*" in hostname or not hostname.endswith((".hstgr.io", ".hstgr.cloud", ".hostinger.com")):
+            continue
+        addresses = {ipaddress.ip_address(item[4][0]) for item in socket.getaddrinfo(hostname, 21)}
+        if address in addresses:
+            print("Using the matching Hostinger server hostname with full TLS verification")
+            return hostname
+    print("Public certificate DNS names: " + ", ".join(candidates))
+    raise RuntimeError("No CA-validated Hostinger hostname resolves to the configured FTP IP")
 
 
 def publish(data):
