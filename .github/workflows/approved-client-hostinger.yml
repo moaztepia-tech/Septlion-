@@ -49,7 +49,10 @@ jobs:
         run: python3 scripts/publish-approved-client.py publish
 
       - name: Verify the public domain serves the approved files
-        run: python3 scripts/publish-approved-client.py verify
+        run: |
+          python3 -m venv .release-verify
+          .release-verify/bin/python -m pip install --disable-pip-version-check Pillow==12.3.0
+          .release-verify/bin/python scripts/publish-approved-client.py verify
 
       - name: Retain the previous versions of replaced files
         if: always()

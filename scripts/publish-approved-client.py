@@ -111,6 +111,22 @@ def publish(data):
         ftp.login(os.environ[names[1]], os.environ[names[2]])
         ftp.prot_p()
         ftp.cwd(REMOTE_ROOT)
+        already_published = True
+        for item in data["files"]:
+            chunks = []
+            try:
+                ftp.retrbinary("RETR " + item["path"], chunks.append)
+            except ftplib.error_perm as error:
+                if str(error).startswith("550"):
+                    already_published = False
+                    break
+                raise
+            if digest(b"".join(chunks)) != item["sha256"]:
+                already_published = False
+                break
+        if already_published:
+            print("Approved release already published; all remote file checksums match")
+            return
         metadata = {"missing": [], "backed_up": []}
         for item in data["files"]:
             filename = item["path"]
@@ -160,12 +176,19 @@ def verify(data):
                 path = "/" if item["path"] == "index.html" else "/" + item["path"]
                 raw = get_url(data["target_origin"] + path)
                 if digest(raw) != item["sha256"]:
-                    raise RuntimeError("The public domain has not served the approved content: " + item["path"])
+                    if not item["path"].endswith(".png"):
+                        raise RuntimeError("The public domain has not served the approved content: " + item["path"])
+                    from PIL import Image
+                    with Image.open(io.BytesIO(raw)) as served, Image.open(OUTPUT / item["path"]) as original:
+                        # Hosting may rewrite PNG metadata while preserving every pixel.
+                        if served.size != original.size or served.convert("RGBA").tobytes() != original.convert("RGBA").tobytes():
+                            raise RuntimeError("The public domain image differs from the approved pixels: " + item["path"])
+                    print("Lossless PNG delivery verified: " + item["path"])
             print("Verified public deployment: " + data["target_origin"])
             summary = os.environ.get("GITHUB_STEP_SUMMARY")
             if summary:
                 with open(summary, "a") as stream:
-                    stream.write("## Approved SEPTLION client published\n\nURL: " + data["target_origin"] + "\n\nAll " + str(len(data["files"])) + " public files match their approved SHA-256 checksums. The client remains a local-storage prototype.\n")
+                    stream.write("## Approved SEPTLION client published\n\nURL: " + data["target_origin"] + "\n\nAll " + str(len(data["files"])) + " public files match their approved content. PNG delivery is compared pixel for pixel when hosting rewrites metadata; other files match SHA-256. All uploaded files also match SHA-256 over FTPS. The client remains a local-storage prototype.\n")
             return
         except Exception as error:
             last_error = error
