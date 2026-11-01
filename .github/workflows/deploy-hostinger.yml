@@ -10,7 +10,80 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  smart_need:
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[smart-need-only]') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout approved smart-need patch only
+        uses: actions/checkout@v4
+        with:
+          ref: dded8f4f45fcf776d21a6c4c48015d4eb4f76d1a
+          persist-credentials: false
+      - name: Install protected FTPS client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Download existing Hostinger index.html
+        env:
+          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$H_SERVER" && test -n "$H_USER" && test -n "$H_PASS"
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set net:max-retries 2; cd /domains/septlion.com/public_html/; get index.html -o /tmp/septlion-index-before.html; bye'
+          test -s /tmp/septlion-index-before.html
+      - name: Refuse to overwrite a different live website; patch only composer
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          original = Path('/tmp/septlion-index-before.html').read_bytes()
+          sha = hashlib.sha256(original).hexdigest()
+          approved = '7ba34af28b30d130c447562ac1d10fdc280e8f27bf2c95de3062440f063eac9b'
+          if sha != approved:
+              raise SystemExit('SAFETY STOP: Live index.html differs from approved Oct 31 file. SHA256=' + sha + '; no change made.')
+          text = original.decode('utf-8')
+          start = 'function send(text){'
+          end = "input.addEventListener('keydown'"
+          if text.count(start) != 1 or text.count(end) != 1 or text.count('function proceedCard(){') != 1:
+              raise SystemExit('SAFETY STOP: composer markers are not unique')
+          a = text.index(start)
+          b = text.index(end, a)
+          previous = text[a:b]
+          if "addMsg(t,'user')" not in previous or "stage='ready'" not in previous:
+              raise SystemExit('SAFETY STOP: existing composer not recognized')
+          patched_send = Path('scripts/smart-need-send.js').read_text('utf-8')
+          updated = text[:a] + previous.replace(start, 'function legacySend(text){', 1) + '\n' + patched_send + '\n' + text[b:]
+          expected = '7c54fa192dad637ca37c6311666955f9f40fc0dfe87e574063cec1e8ff7ef4e8'
+          actual = hashlib.sha256(updated.encode('utf-8')).hexdigest()
+          if actual != expected:
+              raise SystemExit('SAFETY STOP: generated HTML differs from exact user-approved patch ' + actual)
+          Path('/tmp/septlion-index-next.html').write_bytes(updated.encode('utf-8'))
+          print('Verified exact approved website and exact single-function enhancement.')
+          PY
+      - name: Back up live index for one-file rollback
+        uses: actions/upload-artifact@v4
+        with:
+          name: septlion-index-before-smart-need
+          path: /tmp/septlion-index-before.html
+          retention-days: 14
+      - name: Upload only index.html and read it back
+        env:
+          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set net:max-retries 2; cd /domains/septlion.com/public_html/; put /tmp/septlion-index-next.html -o index.html; get index.html -o /tmp/septlion-index-verified.html; bye'
+          if ! cmp -s /tmp/septlion-index-next.html /tmp/septlion-index-verified.html; then
+            echo "Verification failed. Restoring original site."
+            lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; cd /domains/septlion.com/public_html/; put /tmp/septlion-index-before.html -o index.html; bye'
+            exit 1
+          fi
+          echo 'PASS: only the live index.html updated; remote file read-back matches exact approved smart need HTML.'
   deploy:
+    if: ${{ !contains(github.event.head_commit.message, '[smart-need-only]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
