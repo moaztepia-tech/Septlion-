@@ -40,6 +40,12 @@ jobs:
           fi
           lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html/; get index.html -o /tmp/septlion-index-before.html; bye'
           test -s /tmp/septlion-index-before.html
+      - name: Back up live index for one-file rollback
+        uses: actions/upload-artifact@v4
+        with:
+          name: septlion-index-before-smart-need
+          path: /tmp/septlion-index-before.html
+          retention-days: 14
       - name: Refuse to overwrite a different live website; patch only composer
         run: |
           python3 - <<'PY'
@@ -50,6 +56,9 @@ jobs:
           if not (100000 < len(original) < 700000 and 'من احتياجك' in text and 'ما الذي تحتاجه؟' in text):
               raise SystemExit('SAFETY STOP: live file does not match expected SEPTLION UI structure')
           print('Live HTML SHA256:', hashlib.sha256(original).hexdigest(), '(preserved outside composer)')
+          print('Composer function markers:', {marker: text.count(marker) for marker in
+              ['function send(text){', "input.addEventListener('keydown'", 'function proceedCard(){',
+               'async function send(text){', 'function legacySend(text){', 'SMART_NEED_V1']})
           start = 'function send(text){'
           end = "input.addEventListener('keydown'"
           if text.count(start) != 1 or text.count(end) != 1 or text.count('function proceedCard(){') != 1:
@@ -71,12 +80,6 @@ jobs:
           Path('/tmp/septlion-index-next.html').write_bytes(updated.encode('utf-8'))
           print('Verified exact approved website and exact single-function enhancement.')
           PY
-      - name: Back up live index for one-file rollback
-        uses: actions/upload-artifact@v4
-        with:
-          name: septlion-index-before-smart-need
-          path: /tmp/septlion-index-before.html
-          retention-days: 14
       - name: Upload only index.html and read it back
         env:
           H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
