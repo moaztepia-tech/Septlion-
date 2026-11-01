@@ -1,7 +1,7 @@
 {
   "source_origin": "https://septlion-client-moaz-20261101.moaztepia.chatgpt.site",
   "target_origin": "https://www.septlion.com",
-  "approved_index_sha256": "7ba34af28b30d130c447562ac1d10fdc280e8f27bf2c95de3062440f063eac9b",
+  "approved_index_sha256": "1c1fcf0c78c0cb81c620b29c404a51e329e39bd23f5d41e96964ec880d3ca640",
   "files": [
     {
       "path": "data/products.json",
@@ -33,12 +33,13 @@
     },
     {
       "path": "index.html",
-      "sha256": "7ba34af28b30d130c447562ac1d10fdc280e8f27bf2c95de3062440f063eac9b"
+      "sha256": "1c1fcf0c78c0cb81c620b29c404a51e329e39bd23f5d41e96964ec880d3ca640"
     },
     {
       "path": "manifest.webmanifest",
       "sha256": "d36ddaccaf207ab9b95dafda7e7a36ec54eea2439f7afd4c0123d4182ca9b8f8"
     }
   ],
-  "archive_sha256": "6e17a3441523751cee09f664507689d216cf18da71bb8a7e674b57764a5d5141"
+  "archive_sha256": "5033956b323a4dfb22b83af161249c3ab878a1ce942be7c3377f39c3b5370314",
+  "revision": "Responsive frame and full header logo; original SVG artwork preserved"
 }
