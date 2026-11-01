@@ -4,8 +4,30 @@ export const runtime = 'nodejs';
 
 const MAX_LENGTH = 4000;
 const MODEL = 'gemini-2.5-flash';
+const MAX_PER_MINUTE = 6;
+const requests = new Map<string, {count:number; reset:number}>();
+
+function allowedOrigin(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  if (!origin) return false;
+  const expected = process.env.SEPTLION_PUBLIC_ORIGIN;
+  if (expected) return origin === expected;
+  return origin === request.nextUrl.origin;
+}
+function withinLimit(request: NextRequest) {
+  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const now = Date.now();
+  if (requests.size > 10000) for (const [k,v] of requests) if (v.reset < now) requests.delete(k);
+  const record = requests.get(ip);
+  if (!record || now >= record.reset) { requests.set(ip,{count:1,reset:now+60000}); return true; }
+  if (record.count >= MAX_PER_MINUTE) return false;
+  record.count++;
+  return true;
+}
 
 export async function POST(request: NextRequest) {
+  if (!allowedOrigin(request)) return NextResponse.json({error:'الطلب غير مسموح'},{status:403});
+  if (!withinLimit(request)) return NextResponse.json({error:'حاول بعد دقيقة'},{status:429});
   const key = process.env.GEMINI_API_KEY;
   if (!key) return NextResponse.json({ error: 'الخدمة غير مهيأة بعد' }, { status: 503 });
 
