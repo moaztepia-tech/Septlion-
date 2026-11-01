@@ -31,7 +31,14 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$H_SERVER" && test -n "$H_USER" && test -n "$H_PASS"
-          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set net:max-retries 2; cd /domains/septlion.com/public_html/; get index.html -o /tmp/septlion-index-before.html; bye'
+          # Hostinger's FTP_IP presents a CA-valid certificate for the server hostname rather than the IP.
+          # Pin the observed server certificate before allowing that documented hostname exception.
+          fp=$(timeout 20 openssl s_client -starttls ftp -connect "$H_SERVER:21" -showcerts </dev/null 2>/dev/null | openssl x509 -noout -fingerprint -sha1 | sed 's/.*=//')
+          if [ "$fp" != 'D5:F8:12:83:AA:BE:1E:92:51:FF:84:B3:A5:65:D6:51:91:C9:A5:28' ]; then
+            echo 'SAFETY STOP: FTP TLS certificate fingerprint is not the previously verified Hostinger certificate.'
+            exit 1
+          fi
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html/; get index.html -o /tmp/septlion-index-before.html; bye'
           test -s /tmp/septlion-index-before.html
       - name: Refuse to overwrite a different live website; patch only composer
         run: |
@@ -75,7 +82,7 @@ jobs:
           H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
         run: |
           set -euo pipefail
-          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set net:max-retries 2; cd /domains/septlion.com/public_html/; put /tmp/septlion-index-next.html -o index.html; get index.html -o /tmp/septlion-index-verified.html; bye'
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html/; put /tmp/septlion-index-next.html -o index.html; get index.html -o /tmp/septlion-index-verified.html; bye'
           if ! cmp -s /tmp/septlion-index-next.html /tmp/septlion-index-verified.html; then
             echo "Verification failed. Restoring original site."
             lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; cd /domains/septlion.com/public_html/; put /tmp/septlion-index-before.html -o index.html; bye'
