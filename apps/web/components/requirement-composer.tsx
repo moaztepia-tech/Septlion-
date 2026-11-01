@@ -70,7 +70,25 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
   function submit(event?:FormEvent) {
     event?.preventDefault();
     if (!draft.input.trim() || saving || draft.savedRequirementId) return;
-    setDraft(d=>answerRequirement(d,d.input,lang)); setSaveError('');
+    const submitted = draft.input.trim();
+    setDraft(d=>answerRequirement(d,submitted,lang)); setSaveError('');
+    // Optional server-side guidance: deterministic field extraction remains authoritative.
+    if (!draft.reorder && submitted.length >= 12) {
+      void fetch('/api/interpret-requirement', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text:submitted})
+      }).then(async response=>{
+        if(!response.ok)return;
+        const payload:unknown=await response.json();
+        const result=payload && typeof payload==='object' && 'result' in payload
+          ? (payload as {result?:unknown}).result : null;
+        if(typeof result!=='string'||!result.trim())return;
+        setDraft(current=>{
+          if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
+          return {...current,messages:[...current.messages.slice(0,-1),{role:'assistant' as const,text:result.slice(0,1500)}]};
+        });
+      }).catch(()=>{ /* Existing composer works without the optional service. */ });
+    }
     requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});
   }
   function edit(field:RequirementField,value:string) {
