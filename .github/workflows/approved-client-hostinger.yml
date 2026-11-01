@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/approved-client-hostinger.yml
       - scripts/publish-approved-client.py
+      - tests/approved-client-intake.test.cjs
       - deploy/approved-client-manifest.json
       - deploy/approved-client.tar.gz.b64
   workflow_dispatch:
@@ -38,8 +39,12 @@ jobs:
           for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
             if (!/application\/json/.test(match[1])) new vm.Script(match[2]);
           }
+          new vm.Script(fs.readFileSync('release-output/intake.js', 'utf8'));
           console.log('Approved client JavaScript syntax passed');
           JS
+
+      - name: Verify Arabic intake behavior
+        run: node --test tests/approved-client-intake.test.cjs
 
       - name: Back up target files and publish using existing Hostinger FTPS credentials
         env:
