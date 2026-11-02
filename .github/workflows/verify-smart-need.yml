@@ -1,0 +1,13 @@
+name: Verify Septlion smart need service
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    if: contains(github.event.head_commit.message, '[smart-need-only]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Gemini responds to Arabic sourcing request
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 30             -H 'Origin: https://www.septlion.com'             -H 'Content-Type: application/json'             --data '{"text":"أحتاج حاويتين دقيق قمح إلى مومباسا"}'             'https://septlion-web-production.up.railway.app/api/interpret-requirement'
