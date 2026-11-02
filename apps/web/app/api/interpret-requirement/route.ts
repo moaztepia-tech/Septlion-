@@ -106,7 +106,15 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    if (!response.ok) return error(request, 'تعذر فهم الاحتياج الآن', 502);
+    if (!response.ok) {
+      let providerCode = 'UNKNOWN';
+      try {
+        const providerError = await response.json();
+        if (typeof providerError?.error?.status === 'string') providerCode = providerError.error.status.slice(0, 60);
+      } catch {}
+      console.error('[Septlion Gemini] provider request failed:', response.status, providerCode);
+      return error(request, 'تعذر فهم الاحتياج الآن', 502);
+    }
     const data = await response.json();
     const raw = data?.candidates?.[0]?.content?.parts
       ?.map((part: { text?: string }) => part.text ?? '').join('').trim();
