@@ -1,3 +1,4 @@
+import {interpretLocally} from '../../../lib/requirement-fallback';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -65,7 +66,6 @@ export async function POST(request: NextRequest) {
   if (!withinLimit(request)) return error(request, 'حاول بعد دقيقة', 429);
 
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return error(request, 'الخدمة غير مهيأة بعد', 503);
 
   let body: unknown;
   try { body = await request.json(); }
@@ -77,6 +77,11 @@ export async function POST(request: NextRequest) {
   if (typeof text !== 'string' || !text.trim() || text.length > MAX_LENGTH) {
     return error(request, 'اكتب وصفًا لا يتجاوز ٤٠٠٠ حرف', 400);
   }
+
+  // Safe fast path: the local parser requires no credential and never guesses trade terms.
+  // Gemini is optional and must be explicitly enabled after valid authentication is verified.
+  const fallback = () => NextResponse.json(interpretLocally(text), { headers: corsHeaders(request) });
+  if (!key || process.env.GEMINI_ENABLED !== 'true') return fallback();
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
@@ -113,7 +118,7 @@ export async function POST(request: NextRequest) {
         if (typeof providerError?.error?.status === 'string') providerCode = providerError.error.status.slice(0, 60);
       } catch {}
       console.error('[Septlion Gemini] provider request failed:', response.status, providerCode);
-      return error(request, 'تعذر فهم الاحتياج الآن', 502);
+      return fallback();
     }
     const data = await response.json();
     const raw = data?.candidates?.[0]?.content?.parts
@@ -121,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     let parsed: Record<string, unknown>;
     try { parsed = JSON.parse(raw || ''); }
-    catch { return error(request, 'تعذر قراءة نتيجة التحليل', 502); }
+    catch { return fallback(); }
 
     const extracted = empty();
     for (const field of fields) extracted[field] = normalize(parsed[field]);
@@ -145,7 +150,7 @@ export async function POST(request: NextRequest) {
       { headers: corsHeaders(request) }
     );
   } catch {
-    return error(request, 'تعذر الاتصال بالخدمة الآن', 504);
+    return fallback();
   } finally {
     clearTimeout(timer);
   }
