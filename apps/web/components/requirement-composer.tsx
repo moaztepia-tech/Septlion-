@@ -74,8 +74,13 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     setDraft(d=>answerRequirement(d,submitted,lang)); setSaveError('');
     // Optional server-side guidance: deterministic field extraction remains authoritative.
     if (!draft.reorder && submitted.length >= 12) {
-      void fetch('/api/interpret-requirement', {
-        method:'POST', headers:{'Content-Type':'application/json'},
+      // Hostinger publishes static pages only. This API executes on the separate Railway server.
+      // The local deterministic interpreter above remains authoritative and works if this fails.
+      const guidance = new AbortController();
+      const guidanceTimeout = setTimeout(()=>guidance.abort(),12000);
+      void fetch('https://septlion-web-production.up.railway.app/api/interpret-requirement', {
+        method:'POST', mode:'cors', cache:'no-store', signal:guidance.signal,
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({text:submitted})
       }).then(async response=>{
         if(!response.ok)return;
@@ -87,7 +92,8 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
           if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
           return {...current,messages:[...current.messages.slice(0,-1),{role:'assistant' as const,text:result.slice(0,1500)}]};
         });
-      }).catch(()=>{ /* Existing composer works without the optional service. */ });
+      }).catch(()=>{ /* Existing composer works without optional Gemini. */ })
+        .finally(()=>clearTimeout(guidanceTimeout));
     }
     requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});
   }
