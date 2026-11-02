@@ -1,0 +1,25 @@
+name: SEPTLION customer launch audit (read-only)
+on:
+  push:
+    branches:
+      - release/septlion-launch-audit-20261102
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe public customer journey (no writes)
+        run: node scripts/septlion-live-audit.mjs
+      - name: Preserve audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: septlion-live-audit
+          path: septlion-live-audit.md
+          if-no-files-found: warn
