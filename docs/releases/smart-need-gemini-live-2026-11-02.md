@@ -11,3 +11,6 @@ Release is conditional on:
 - A complete read-back comparison of the single uploaded HTML file.
 
 Any failed condition must stop publication and leave the live site unchanged.
+
+## Validation retry
+Rechecked on 2026-11-02 with Gemini 3.5 Flash-Lite. Publishing is still conditional on real provider extraction, native UI matching, and remote file readback.
