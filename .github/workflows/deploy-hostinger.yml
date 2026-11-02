@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   smart_need:
-    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[smart-need-only]') }}
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[smart-need-only]') && contains(github.event.head_commit.message, '[release-smart-need]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -69,7 +69,7 @@ jobs:
           fi
           echo 'PASS: only the live index.html updated; remote file read-back matches exact approved smart need HTML.'
   deploy:
-    if: ${{ !contains(github.event.head_commit.message, '[smart-need-only]') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[approved-full-release]')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
