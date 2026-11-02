@@ -1,4 +1,5 @@
 'use client';
+import {DesignButton} from "../../components/design-system";
 import { useEffect, useState } from 'react';
 import { BuyerShell } from '../../components/buyer-shell';
 import { edge, hasSession } from '../../lib/api';
@@ -9,7 +10,7 @@ export default function OfferDocumentPage(){
   const m=d?offerDocumentModel(d):null;
   async function download(){if(!d||busy)return;setBusy(true);setErr('');try{await downloadOfferPdf(d)}catch(e){setErr(e instanceof Error?e.message:'تعذر تنزيل المستند')}finally{setBusy(false)}}
   return <BuyerShell title="مستند العرض" context={{offerId:d?.offer.id}}><section className="buyer-section offer-document-workspace">
-    <div className="offer-document-actions"><a href={d?"/offer?id="+encodeURIComponent(d.offer.id):"/requests"}>العودة إلى العرض والطلب</a>{d&&<><button className="primary-link" disabled={busy} onClick={download}>{busy?'جارٍ تجهيز PDF…':'تنزيل PDF'}</button><button onClick={()=>window.print()}>طباعة / حفظ PDF نصي</button></>}</div>
+    <div className="offer-document-actions"><a href={d?"/offer?id="+encodeURIComponent(d.offer.id):"/requests"}>العودة إلى العرض والطلب</a>{d&&<><DesignButton className="primary-link" disabled={busy} onClick={download}>{busy?'جارٍ تجهيز PDF…':'تنزيل PDF'}</DesignButton><DesignButton onClick={()=>window.print()}>طباعة / حفظ PDF نصي</DesignButton></>}</div>
     {err&&<p role="alert">{err}</p>}{!d&&!err&&<p role="status">جارٍ تحميل المستند المحفوظ…</p>}
     {d&&m&&<article className="offer-document-sheet" dir="rtl">
       <header><img src="/brand/septlion-primary-navy.png" alt="Septlion"/><div><small>SEPTLION</small><h1>{m.testOnly?'عرض TEST غير ملزم':'عرض سعر'}</h1></div></header>

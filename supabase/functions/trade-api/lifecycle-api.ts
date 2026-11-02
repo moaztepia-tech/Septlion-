@@ -9,6 +9,7 @@ const messages:Record<string,string>={
  invalid_status_transition:'هذا الانتقال غير متاح من الحالة الحالية.',milestone_mismatch:'مرحلة التنفيذ لا تطابق الحالة.',
  claim_pending:'يجب معالجة المطالبة المفتوحة قبل تأكيد الاستلام.',claim_already_open:'توجد مطالبة مفتوحة لهذه الصفقة.',
  receipt_not_available:'تأكيد الاستلام غير متاح قبل تسجيل التسليم.',reorder_not_available:'إعادة الطلب متاحة بعد اكتمال الصفقة.',
+ batch_evidence_required:'اختر مستند إثبات مشتركًا ومناسبًا لهذه الدفعة.',batch_not_found:'الدفعة غير متاحة لحسابك.',supply_plan_quantity_mismatch:'كمية جدول التوريد لا تطابق بنود العرض.',
  shipping_evidence_required:'ارفع بوليصة الشحن وشاركها مع المشتري قبل تسجيل الشحن.',delivery_evidence_required:'ارفع إثبات التسليم وشاركه مع المشتري قبل تسجيل التسليم.',
  transaction_not_found:'لم نجد صفقة متاحة لحسابك.',document_not_found:'المستند غير متاح لحسابك.',actor_not_active:'الحساب أو المؤسسة غير نشط.',access_denied:'لا تملك صلاحية هذه العملية.'
 };
@@ -17,11 +18,11 @@ function checked(result:any) { if(result.error)throw new Error('تعذر قرا�
 
 export async function handleLifecycle(action:string,body:Record<string,unknown>,c:Context):Promise<Response|null> {
  const {db,admin,userId,buyerOrgId,operator,out}=c;
- const supported=new Set(['operator.transaction','offers.accept','transactions.get','transactions.list','transactions.advance','receipt.accept','claims.open','claims.resolve','reorder.create','documents.prepare','documents.complete','documents.list','documents.download']);
+ const supported=new Set(['operator.transaction','offers.accept','transactions.get','transactions.list','transactions.advance','batches.change','receipt.accept','claims.open','claims.resolve','reorder.create','documents.prepare','documents.complete','documents.list','documents.download']);
  if(!supported.has(action))return null;
  const side=body.side===undefined?'BUYER':body.side;
  if(side!=='BUYER'&&side!=='OPERATOR')return out({error:'جهة الوصول غير صالحة'},400);
- const isOp=action==='operator.transaction'||action==='transactions.advance'||action==='claims.resolve'||side==='OPERATOR';
+ const isOp=action==='operator.transaction'||action==='transactions.advance'||action==='claims.resolve'||action==='batches.change'&&side==='OPERATOR'||side==='OPERATOR';
  if(isOp&&!operator)return out({error:'هذه العملية متاحة لفريق العمليات فقط'},403);
  const orgId=isOp?'septlion-operator':buyerOrgId;
  async function transaction(id:unknown) {
@@ -30,7 +31,7 @@ export async function handleLifecycle(action:string,body:Record<string,unknown>,
  if(action==='offers.accept') {
   if(body.mode!=='TEST'&&body.mode!=='COMMERCIAL')return out({error:'حدد وضع التأكيد'},400);
   const revision=expectedVersion(body.revision);
-  const r=await db.rpc('accept_trade_offer_v2',{p_offer_id:String(body.offerId||''),p_buyer_org_id:buyerOrgId,p_user_id:userId,p_revision:revision,p_mode:body.mode});
+  const r=await db.rpc('accept_trade_offer_v3',{p_offer_id:String(body.offerId||''),p_buyer_org_id:buyerOrgId,p_user_id:userId,p_revision:revision,p_mode:body.mode});
   return r.error?rpcError(c,r.error):out(r.data);
  }
  if(action==='transactions.list')return out({items:checked(await db.from('TradeTransaction').select('id,reference,status,testOnly,version,createdAt,updatedAt').eq('buyerOrgId',buyerOrgId).order('updatedAt',{ascending:false}).limit(100))||[]});
@@ -46,18 +47,28 @@ export async function handleLifecycle(action:string,body:Record<string,unknown>,
    db.from('TradeClaim').select('id,status,description,resolution,createdAt,resolvedAt').eq('transactionId',tx.id).order('createdAt',{ascending:false}).limit(100)
   ]);
   const [milestones,receipt,events,lock,claims]=results.map(checked);
+  const batches=checked(await db.from('TradeSupplyBatch').select('id,sequence,quantity,unit,plannedDate,notes,status,version,claimNote,claimResolution,receivedAt,shippingDocumentId,deliveryDocumentId,updatedAt').eq('transactionId',tx.id).order('sequence'))||[];
   // Buyer workspaces never receive procurement evidence stored in the lock.
   const commercialLock=lock?{id:lock.id,lockedAt:lock.lockedAt,snapshotHash:lock.snapshotHash,offerId:lock.offerId,snapshot:{items:lock.snapshot?.items||[],terms:lock.snapshot?.terms||{},testOnly:tx.testOnly}}:null;
-  return out({item:tx,commercialLock,milestones:milestones||[],receipt,events:(events||[]).filter((e:any)=>e.visibility!=='INTERNAL'||e.actorOrgId===orgId).map((e:any)=>({id:e.id,sequence:e.sequence,type:e.type,occurredAt:e.occurredAt,payload:{input:e.payload?.input?{note:e.payload.input.note}:undefined,note:e.payload?.note,description:e.payload?.description,fileName:e.payload?.fileName}})),claims:claims||[],nextAction:NEXT_STAGE[tx.status]||null});
+  return out({item:tx,batches,commercialLock,milestones:milestones||[],receipt,events:(events||[]).filter((e:any)=>e.visibility!=='INTERNAL'||e.actorOrgId===orgId).map((e:any)=>({id:e.id,sequence:e.sequence,type:e.type,occurredAt:e.occurredAt,payload:{input:e.payload?.input?{note:e.payload.input.note}:undefined,note:e.payload?.note,description:e.payload?.description,fileName:e.payload?.fileName}})),claims:claims||[],nextAction:batches.length?null:NEXT_STAGE[tx.status]||null});
+ }
+ if(action==='batches.change') {
+  const tx=await transaction(body.transactionId);if(!tx)return out({error:messages.transaction_not_found},404);
+  const action=String(body.batchAction||'');
+  if(!(isOp?['IN_EXECUTION','READY_TO_SHIP','SHIPPED','IN_TRANSIT','DELIVERED','CLAIM_RESOLVED']:['ACCEPTED','CLAIM_OPEN']).includes(action))return out({error:'لا تملك صلاحية هذا التحديث للدفعة.'},403);
+  const r=await db.rpc('change_trade_supply_batch',{p_transaction_id:tx.id,p_batch_id:String(body.batchId||''),p_org_id:orgId,p_user_id:userId,p_action:action,p_version:expectedVersion(body.expectedVersion),p_note:textValue(body.note,5,2000,'أضف ملاحظة من 5 إلى 2000 حرف'),p_key:actionKey(body.idempotencyKey),p_document_id:body.documentId?String(body.documentId):null});
+  return r.error?rpcError(c,r.error):out(r.data);
  }
  if(action==='transactions.advance') {
   const tx=await transaction(body.transactionId);if(!tx)return out({error:messages.transaction_not_found},404);
+  if((checked(await db.from('TradeSupplyBatch').select('id').eq('transactionId',tx.id).limit(1))||[]).length)return out({error:'حدّث كل دفعة من جدول التوريد داخل الصفقة.'},409);
   const x=advanceInput(body,tx.status),r=await db.rpc('advance_trade_transaction_v2',{p_transaction_id:tx.id,p_status:x.status,p_milestone_code:x.milestoneCode,p_user_id:userId,p_expected_version:x.expectedVersion,p_key:x.key,p_note:x.note});
   return r.error?rpcError(c,r.error):out(r.data);
  }
  if(['receipt.accept','claims.open','claims.resolve','reorder.create'].includes(action)) {
   const tx=await transaction(body.transactionId);if(!tx)return out({error:messages.transaction_not_found},404);
   const base={p_transaction_id:tx.id,p_user_id:userId};let name='',args:Record<string,unknown>={};
+  if(['receipt.accept','claims.open','claims.resolve'].includes(action)&&(checked(await db.from('TradeSupplyBatch').select('id').eq('transactionId',tx.id).limit(1))||[]).length)return out({error:'راجع استلام كل دفعة من جدول التوريد. تُغلق الصفقة بعد استلامها جميعًا.'},409);
   if(action==='receipt.accept'){name='accept_trade_receipt_v2';args={...base,p_buyer_org_id:buyerOrgId,p_expected_version:expectedVersion(body.expectedVersion)};}
   if(action==='claims.open'){name='open_trade_claim_v2';args={...base,p_buyer_org_id:buyerOrgId,p_description:textValue(body.description,5,2000,'صف المشكلة في 5 إلى 2000 حرف'),p_expected_version:expectedVersion(body.expectedVersion),p_key:actionKey(body.idempotencyKey)};}
   if(action==='claims.resolve'){name='resolve_trade_claim_v2';args={...base,p_claim_id:String(body.claimId||''),p_note:textValue(body.note,5,2000,'أضف وصفًا لمعالجة المطالبة'),p_expected_version:expectedVersion(body.expectedVersion)};}
@@ -65,7 +76,7 @@ export async function handleLifecycle(action:string,body:Record<string,unknown>,
    const lock=checked(await db.from('CommercialLock').select('offerId').eq('id',tx.commercialLockId).single());
    const offer=checked(await db.from('SeptlionOffer').select('requirementId').eq('id',lock.offerId).single());
    const requirement=checked(await db.from('QualifiedRequirement').select('unit').eq('id',offer.requirementId).single());
-   const x=reorderInput(body,requirement.unit);name='reorder_trade_transaction_v2';args={...base,p_buyer_org_id:buyerOrgId,p_quantity:x.quantity,p_key:x.key};
+   const x=reorderInput(body,requirement.unit);name='reorder_trade_transaction_v3';args={...base,p_buyer_org_id:buyerOrgId,p_quantity:x.quantity,p_key:x.key};
   }
   const r=await db.rpc(name,args);return r.error?rpcError(c,r.error):out(r.data,r.data?.idempotent?200:action==='claims.open'||action==='reorder.create'?201:200);
  }

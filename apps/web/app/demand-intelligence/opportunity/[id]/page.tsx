@@ -4,8 +4,9 @@ import {demandSignals} from '../../signals';
 
 export function generateStaticParams(){return demandSignals.map(s=>({id:s.id}))}
 
-export default function OpportunityPage({params}:{params:{id:string}}){
- const s=demandSignals.find(x=>x.id===params.id);
+export default async function OpportunityPage({params}:{params:Promise<{id:string}>}){
+ const {id}=await params;
+ const s=demandSignals.find(x=>x.id===id);
  if(!s) notFound();
  const query=encodeURIComponent(s.product+' '+s.market+' '+s.quantity);
  return <main className="di">

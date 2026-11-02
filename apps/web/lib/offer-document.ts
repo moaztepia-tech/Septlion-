@@ -1,3 +1,4 @@
+import {SupplyPlan} from './supply-plan';
 export type OfferDocument = {
   offer: {id:string;status:string;currency:string;currentRevision:number;validUntil:string|null};
   revision: {revisionNo:number;issuedAt:string;snapshotHash:string;snapshot:{product?:string;testOnly?:boolean;items?:Array<{description:string;quantity:number;unit:string;unitPrice:number}>;terms?:Record<string,unknown>}};
@@ -13,6 +14,8 @@ export function offerDocumentModel(d:OfferDocument){
   const conditions=[['شرط التجارة',String(terms.incoterm||'غير محدد')],['شروط الدفع',String(terms.payment||'غير محدد')],['التسليم',String(terms.destination||'غير محدد')],['التعبئة',String(terms.packing||'غير محدد')]];
   const notice=testOnly?'TEST — للاختبار التقني فقط. هذا المستند غير ملزم ولا يمثل بيعًا أو شحنة أو التزامًا بالدفع.':String(terms.notice||'العرض يخضع للشروط الموضحة وتأكيد المواصفات والتوفر.');
   const rows=[['مرجع الطلب',d.rfq.reference],['العميل',d.buyer.legalName||d.buyer.name],['تاريخ الإصدار',date(d.revision.issuedAt)],['الصلاحية',date(d.offer.validUntil)],['المنتج',s.product||'حسب بنود العرض'],['الحالة',d.offer.status],...items.flatMap((x,i)=>[['البند '+(i+1),x.description],['الكمية وسعر الوحدة',x.quantity+' '+x.unit+' · '+money(x.unitPrice)],['إجمالي البند',money(x.quantity*x.unitPrice)]]),['إجمالي العرض',money(total)],...conditions];
+  const plan=terms.supplyPlan as SupplyPlan|undefined;
+  if(plan){for(const b of plan.batches)rows.push(['الدفعة '+b.sequence,b.quantity+' '+b.unit+' · '+b.plannedDate+(b.notes?' · '+b.notes:'')]);if(plan.terms)rows.push(['شروط الدفعات',plan.terms]);}
   if(terms.notes)rows.push(['ملاحظات',String(terms.notes)]);rows.push(['الشروط العامة',notice]);
   return{reference,testOnly,items,total,money,date,conditions,notice,rows,notes:String(terms.notes||'')};
 }

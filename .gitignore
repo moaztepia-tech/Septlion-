@@ -6,3 +6,9 @@ dist
 !.env.example
 coverage
 *.log
+
+*.tsbuildinfo
+supabase/.temp/
+test-results/
+playwright-report/
+.next-test/

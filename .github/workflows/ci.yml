@@ -47,6 +47,10 @@ jobs:
         run: node --test tests/requirement-input.test.mjs
       - name: Customer draft, context, contact and acceptance regression tests
         run: node --test tests/customer-experience.test.mjs
+      - name: Command center, verified contact and PostgreSQL integration
+        run: node --test tests/command-center-api.test.mjs tests/command-center-db.test.mjs tests/access-token-ttl.test.mjs tests/phone-verification.test.mjs tests/staging-config.test.mjs
+      - name: Dependency security gate
+        run: pnpm audit --audit-level high
       - name: Prisma validate
         working-directory: apps/api
         run: pnpm exec prisma validate
@@ -74,7 +78,36 @@ jobs:
         run: pnpm exec prisma generate
         env:
           DATABASE_URL: postgresql://septlion:septlion@localhost:5432/septlion
+      - name: API typecheck and build
+        run: |
+          pnpm --filter @septlion/api typecheck
+          pnpm --filter @septlion/api build
       - name: Web typecheck
         run: pnpm --filter @septlion/web typecheck
       - name: Web production build
         run: pnpm --filter @septlion/web build
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Use runner-provided Google Chrome
+        run: test -x /usr/bin/google-chrome
+      - run: pnpm test:browser
+        env:
+          CHROMIUM_EXECUTABLE: /usr/bin/google-chrome
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: command-center-mobile-browser
+          path: test-results
+          retention-days: 7

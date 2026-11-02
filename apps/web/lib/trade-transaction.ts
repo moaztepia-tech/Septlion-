@@ -1,7 +1,9 @@
+export type TradeSupplyBatch={id:string;sequence:number;quantity:number;unit:string;plannedDate:string;notes:string;status:string;version:number;claimNote:string|null;claimResolution:string|null;receivedAt:string|null;shippingDocumentId:string|null;deliveryDocumentId:string|null};
 export type TradeSide='BUYER'|'OPERATOR';
 export type TradeDocument={id:string;fileName:string;mimeType:string;byteSize:string|number;kind:string;createdAt:string;own:boolean;visibilityToCounterparty:boolean};
 export type TradeClaim={id:string;status:string;description:string;resolution:{note?:string}|null;createdAt:string;resolvedAt:string|null};
 export type TradeWorkspace={
+ batches?:TradeSupplyBatch[];
  item:{id:string;reference:string;status:string;testOnly:boolean;version:number;updatedAt:string};
  commercialLock:{id:string;lockedAt:string;snapshotHash:string;offerId:string;snapshot:{product?:string;items:Array<{description:string;quantity:number;unit:string}>;terms:Record<string,unknown>;testOnly:boolean}}|null;
  milestones:Array<{code:string;label:string;status:string;sequence:number;completedAt:string|null}>;
