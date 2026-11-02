@@ -19,7 +19,7 @@ jobs:
       - name: Checkout approved smart-need patch only
         uses: actions/checkout@v4
         with:
-          ref: dded8f4f45fcf776d21a6c4c48015d4eb4f76d1a
+          ref: c06a76f70bb95dc6d3fab077e2b93cc37ee348d5
           persist-credentials: false
       - name: Install protected FTPS client
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
@@ -46,40 +46,14 @@ jobs:
           name: septlion-index-before-smart-need
           path: /tmp/septlion-index-before.html
           retention-days: 14
-      - name: Refuse to overwrite a different live website; patch only composer
+      - name: Check compatibility and create one-file smart patch
         run: |
-          python3 - <<'PY'
-          import hashlib
-          from pathlib import Path
-          original = Path('/tmp/septlion-index-before.html').read_bytes()
-          text = original.decode('utf-8')
-          if not (100000 < len(original) < 700000 and 'من احتياجك' in text and 'ما الذي تحتاجه؟' in text):
-              raise SystemExit('SAFETY STOP: live file does not match expected SEPTLION UI structure')
-          print('Live HTML SHA256:', hashlib.sha256(original).hexdigest(), '(preserved outside composer)')
-          print('Composer function markers:', {marker: text.count(marker) for marker in
-              ['function send(text){', "input.addEventListener('keydown'", 'function proceedCard(){',
-               'async function send(text){', 'function legacySend(text){', 'SMART_NEED_V1']})
-          start = 'function send(text){'
-          end = "input.addEventListener('keydown'"
-          if text.count(start) != 1 or text.count(end) != 1 or text.count('function proceedCard(){') != 1:
-              raise SystemExit('SAFETY STOP: composer markers are not unique')
-          a = text.index(start)
-          b = text.index(end, a)
-          previous = text[a:b]
-          expected_handler_sha = 'dd3869077eb739f447c4518d55abc6fd0241f834c1e1eb00be0483db959264e2'
-          if hashlib.sha256(previous.encode('utf-8')).hexdigest() != expected_handler_sha:
-              raise SystemExit('SAFETY STOP: the live composer is different from the audited source; no change made.')
-          if "addMsg(t,'user')" not in previous or "stage='ready'" not in previous:
-              raise SystemExit('SAFETY STOP: existing composer not recognized')
-          patched_send = Path('scripts/smart-need-send.js').read_text('utf-8')
-          updated = text[:a] + previous.replace(start, 'function legacySend(text){', 1) + '\n' + patched_send + '\n' + text[b:]
-          if len(updated.encode('utf-8')) - len(original) != 2068:
-              raise SystemExit('SAFETY STOP: patch size differs from audited release')
-          if updated[:a] != text[:a] or updated[a + len(previous) + 1 + len(patched_send) + 1:] != text[b:]:
-              raise SystemExit('SAFETY STOP: non-composer HTML was altered')
-          Path('/tmp/septlion-index-next.html').write_bytes(updated.encode('utf-8'))
-          print('Verified exact approved website and exact single-function enhancement.')
-          PY
+          node --check scripts/smart-need-intake-send.js
+          python3 scripts/patch-live-intake.py /tmp/septlion-index-before.html scripts/smart-need-intake-send.js /tmp/septlion-index-next.html
+      - name: Verify Gemini extraction before publishing
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 30 -H 'Origin: https://www.septlion.com' -H 'Content-Type: application/json' --data '{"text":"أحتاج حاويتين دقيق قمح إلى مومباسا"}' 'https://septlion-web-production.up.railway.app/api/interpret-requirement' > /tmp/gemini-test.json
+          python3 -c "import json; x=json.load(open('/tmp/gemini-test.json')); assert x.get('fields',{}).get('product') and x.get('fields',{}).get('quantity') and x.get('result'), 'Gemini returned incomplete data'"
       - name: Upload only index.html and read it back
         env:
           H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
