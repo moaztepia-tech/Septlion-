@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-3.5-flash-lite';
 const MAX_LENGTH = 4000;
 const MAX_PER_MINUTE = 6;
 const counters = new Map<string, { count: number; reset: number }>();
