@@ -19,7 +19,7 @@ export async function packageProduction(projectRoot=root){
   if(rel.endsWith('.rsc')){const target=path.join(dest,'_rsc',rel);await mkdir(path.dirname(target),{recursive:true});await cp(file,target);}
   if(['robots.txt.body','sitemap.xml.body','llms.txt.body'].includes(rel))await cp(file,path.join(dest,rel.slice(0,-5)));
  }
- for(const route of ['index','discover','require','requests','request','offer','offer-document','commit','execution','documents','receive','reorder','account','notifications','operations','analytics']){
+ for(const route of ['index','discover','require','review','my-septlion','requests','request','offer','offer-document','commit','execution','documents','receive','reorder','account','notifications','operations','analytics']){
   const file=path.join(dest,route==='index'?'index.html':route+'/index.html');
   if(!(await stat(file)).size||!(await stat(path.join(dest,'_rsc',route+'.rsc'))).size)throw new Error('Missing production HTML or navigation payload: '+route);
   const html=await readFile(file,'utf8');if(!html.includes('/_next/')||html.includes('/preview/septlion-customer-v2/_next/'))throw new Error('Wrong production assets: '+route);
