@@ -1,0 +1,35 @@
+name: Read-only inventory of approved live RFQ submit logic
+on:
+  push:
+    branches: [inspect/approved-live-submit-20261103]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install protected FTPS client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Retrieve live homepage read-only
+        env:
+          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          fp=$(timeout 20 openssl s_client -starttls ftp -connect "$H_SERVER:21" -showcerts </dev/null 2>/dev/null | openssl x509 -noout -fingerprint -sha1 | sed 's/.*=//')
+          test "$fp" = 'D5:F8:12:83:AA:BE:1E:92:51:FF:84:B3:A5:65:D6:51:91:C9:A5:28'
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set cmd:fail-exit yes; set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html; get index.html -o /tmp/septlion-live-inspection.html; bye'
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,re
+          s=Path('/tmp/septlion-live-inspection.html').read_text('utf-8')
+          print('sha256:',hashlib.sha256(s.encode()).hexdigest(),'size:',len(s))
+          for pattern in ['septlion.preview.requests.v3','تم حفظ طلبك التجريبي','هذه معاينة للواجهة','طلب عرض سعر','function send(text)','function submit','function submitRFQ','function save','function complete','function confirm','localStorage.setItem','preview.requests','verified']:
+              indices=[m.start() for m in re.finditer(re.escape(pattern),s)]
+              print('MATCH:',pattern,'COUNT:',len(indices))
+              for i in indices[:3]:
+                  print('----',pattern,'offset',i,'----')
+                  print(s[max(0,i-700):min(len(s),i+1200)])
+          PY
