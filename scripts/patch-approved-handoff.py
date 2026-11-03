@@ -84,6 +84,13 @@ r"""$('#needForm').addEventListener('submit',e=>{
 });
 ""","freeform RFQ")
 
+# The existing My Septlion demo must not conceal real saved requests.
+old_nav="function go(id){ if(location.hash==='#'+id) show(id); else location.hash=id; }"
+new_nav="function go(id){ if(id==='orders'){window.location.assign('/my-septlion/');return} if(location.hash==='#'+id) show(id); else location.hash=id; }"
+if source.count(old_nav)!=1:
+    raise SystemExit("SAFETY STOP: expected preview navigation not found.")
+source=source.replace(old_nav,new_nav)
+
 notices={
   "معاينة تفاعلية · لا تُرسل طلبات حقيقية":"لإرسال طلب حقيقي، أكمل المراجعة والتحقق من بياناتك.",
   "في النسخة التشغيلية سيُستخدم الرقم للتحقق والمتابعة. لا يتم إرسال رمز تحقق في هذه المعاينة.":"سيُطلب منك تأكيد رقم واتساب قبل إرسال طلب عرض السعر الحقيقي.",
