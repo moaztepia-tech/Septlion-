@@ -30,18 +30,35 @@ jobs:
         run: |
           pnpm test
           pnpm --filter @septlion/web typecheck
-      - name: Record live homepage fingerprint
+      - name: Back up and fingerprint live homepage through protected FTPS
+        env:
+          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
         run: |
-          node --input-type=module <<'NODE'
-          import {writeFile} from 'node:fs/promises';
-          import {createHash} from 'node:crypto';
-          const r=await fetch('https://www.septlion.com/',{cache:'no-store'});
-          if(!r.ok)throw new Error('Current homepage is unreachable: '+r.status);
-          const html=await r.text();
-          if(!html.includes('SEPTLION') || !html.includes('معاينة'))throw new Error('Unexpected live homepage; refuse publishing any routes');
-          await writeFile('live-homepage-sha256.txt',createHash('sha256').update(html).digest('hex'));
-          console.log('Snapshot fingerprint verified; homepage itself will NOT be uploaded.');
-          NODE
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          test -n "$H_SERVER" && test -n "$H_USER" && test -n "$H_PASS"
+          fp=$(timeout 20 openssl s_client -starttls ftp -connect "$H_SERVER:21" -showcerts </dev/null 2>/dev/null | openssl x509 -noout -fingerprint -sha1 | sed 's/.*=//')
+          if [ "$fp" != 'D5:F8:12:83:AA:BE:1E:92:51:FF:84:B3:A5:65:D6:51:91:C9:A5:28' ]; then
+            echo 'FTPS server certificate fingerprint has changed; stop instead of risking a wrong server.'
+            exit 1
+          fi
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html/; get index.html -o /tmp/septlion-index-before.html; bye'
+          test -s /tmp/septlion-index-before.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          before=Path('/tmp/septlion-index-before.html').read_bytes()
+          assert b'SEPTLION' in before, 'Unexpected homepage backup'
+          print('Original homepage sha256:',hashlib.sha256(before).hexdigest())
+          PY
+      - name: Keep original homepage rollback artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: septlion-approved-homepage-before-routes
+          path: /tmp/septlion-index-before.html
+          retention-days: 14
       - name: Build existing platform routes
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
@@ -76,22 +93,15 @@ jobs:
           server-dir: /domains/septlion.com/public_html/
           state-name: .ftp-deploy-septlion-missing-routes.json
           dangerous-clean-slate: false
-      - name: Verify live route delivery and preserve approved homepage
+      - name: Verify exact uploaded files and homepage over FTPS
+        env:
+          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
         run: |
-          node --input-type=module <<'NODE'
-          import {readFile} from 'node:fs/promises';
-          import {createHash} from 'node:crypto';
-          const expected=(await readFile('live-homepage-sha256.txt','utf8')).trim();
-          const home=await fetch('https://www.septlion.com/',{cache:'no-store'});
-          if(!home.ok)throw new Error('Homepage no longer available');
-          const actual=createHash('sha256').update(await home.text()).digest('hex');
-          if(actual!==expected)throw new Error('Homepage changed during route deployment; investigate immediately');
-          for(const route of ['review','my-septlion']){
-            const response=await fetch('https://www.septlion.com/'+route+'/?release='+Date.now(),{cache:'no-store'});
-            const body=await response.text();
-            if(!response.ok || !body.includes('/_next/') || (route==='review'&&!body.includes('مراجعة')))
-              throw new Error('Customer route not verified: '+route+' HTTP '+response.status);
-            console.log('Verified published route: '+route+' HTTP '+response.status);
-          }
-          console.log('Homepage remained byte-for-byte unchanged.');
-          NODE
+          set -euo pipefail
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html/; get index.html -o /tmp/septlion-index-after.html; get review/index.html -o /tmp/septlion-review-after.html; get my-septlion/index.html -o /tmp/septlion-my-septlion-after.html; bye'
+          cmp -s /tmp/septlion-index-before.html /tmp/septlion-index-after.html || { echo 'SAFETY ERROR: homepage changed'; exit 1; }
+          cmp -s deploy-missing-routes/review/index.html /tmp/septlion-review-after.html
+          cmp -s deploy-missing-routes/my-septlion/index.html /tmp/septlion-my-septlion-after.html
+          echo 'PASS: Both missing routes are present byte-for-byte; original homepage is unchanged.'
