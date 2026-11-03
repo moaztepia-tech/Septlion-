@@ -1,0 +1,42 @@
+name: Audit dual homepage root cause (read only)
+on:
+  push:
+    branches: [audit/dual-homepage-root-cause-20261104]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FTPS
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Read deployed files safely
+        env:
+          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$H_SERVER" && test -n "$H_USER" && test -n "$H_PASS"
+          fp=$(timeout 20 openssl s_client -starttls ftp -connect "$H_SERVER:21" -showcerts </dev/null 2>/dev/null | openssl x509 -noout -fingerprint -sha1 | sed 's/.*=//')
+          test "$fp" = 'D5:F8:12:83:AA:BE:1E:92:51:FF:84:B3:A5:65:D6:51:91:C9:A5:28'
+          mkdir -p /tmp/site-audit
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set cmd:fail-exit yes; set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html; cls -a > /tmp/site-audit/root-list.txt; get index.html -o /tmp/site-audit/root-index.html; bye'
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html; get .htaccess -o /tmp/site-audit/htaccess.txt; get sw.js -o /tmp/site-audit/sw.js; get service-worker.js -o /tmp/site-audit/service-worker.js; get manifest.json -o /tmp/site-audit/manifest.json; get manifest.webmanifest -o /tmp/site-audit/manifest.webmanifest; bye' || true
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,hashlib,json
+          p=Path('/tmp/site-audit'); html=(p/'root-index.html').read_text(encoding='utf-8')
+          out={'sha256':hashlib.sha256(html.encode()).hexdigest(),'bytes':len(html.encode()),'title':re.findall(r'<title[^>]*>(.*?)</title>',html,re.I|re.S)[:2],'sw_related':list(dict.fromkeys(re.findall(r'.{0,100}(?:serviceWorker|navigator\\.serviceWorker|register\\(|caches\\.|manifest|cache-control|location\\.href|window\\.location).{0,110}',html,re.I)))[:35],'top_files':(p/'root-list.txt').read_text().splitlines()[:70],'extra_files':{f.name:{'bytes':f.stat().st_size,'sha256':hashlib.sha256(f.read_bytes()).hexdigest(),'head':f.read_text(errors='replace')[:450] if f.name in ['htaccess.txt','sw.js','service-worker.js','manifest.json','manifest.webmanifest'] else None} for f in p.iterdir() if f.name not in ['root-list.txt','root-index.html']}}
+          print('DEPLOYED_AUDIT='+json.dumps(out,ensure_ascii=False))
+          (p/'audit-report.json').write_text(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployed-site-audit-no-homepage
+          path: /tmp/site-audit/audit-report.json
+          retention-days: 3
