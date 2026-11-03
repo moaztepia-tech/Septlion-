@@ -34,6 +34,26 @@ jobs:
           print('DEPLOYED_AUDIT='+json.dumps(out,ensure_ascii=False))
           (p/'audit-report.json').write_text(json.dumps(out,ensure_ascii=False,indent=2))
           PY
+      - name: Inspect service worker and parallel homepages (read only)
+        env:
+          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        run: |
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html; get demand-sw.js -o /tmp/site-audit/demand-sw.js; get intake.js -o /tmp/site-audit/intake.js; get preview/index.html -o /tmp/site-audit/preview-index.html; get deploy-missing-routes/index.html -o /tmp/site-audit/deploy-index.html; bye' || true
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          p=Path('/tmp/site-audit')
+          report={}
+          for name in ['demand-sw.js','intake.js','preview-index.html','deploy-index.html']:
+            f=p/name
+            if not f.exists(): continue
+            s=f.read_text(errors='replace')
+            kws=['serviceWorker','register(','cache','index.html','navigate','fetch','septlion.com','preview','skipWaiting','clients.claim']
+            report[name]={'size':len(s),'sha256':hashlib.sha256(f.read_bytes()).hexdigest(),'head':s[:650],'matches':{k:[s[max(0,m.start()-75):m.end()+100] for m in list(re.finditer(re.escape(k),s,re.I))[:6]] for k in kws if re.search(re.escape(k),s,re.I)}}
+          print('ADDITIONAL_AUDIT='+json.dumps(report,ensure_ascii=False))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
