@@ -1,0 +1,97 @@
+name: SEPTLION missing customer routes only
+on:
+  push:
+    branches: [release/hostinger-missing-routes-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: septlion-hostinger-partial-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact release
+        uses: actions/checkout@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Test existing flow and route packaging
+        run: |
+          pnpm test
+          pnpm --filter @septlion/web typecheck
+      - name: Record live homepage fingerprint
+        run: |
+          node --input-type=module <<'NODE'
+          import {writeFile} from 'node:fs/promises';
+          import {createHash} from 'node:crypto';
+          const r=await fetch('https://www.septlion.com/',{cache:'no-store'});
+          if(!r.ok)throw new Error('Current homepage is unreachable: '+r.status);
+          const html=await r.text();
+          if(!html.includes('SEPTLION') || !html.includes('معاينة'))throw new Error('Unexpected live homepage; refuse publishing any routes');
+          await writeFile('live-homepage-sha256.txt',createHash('sha256').update(html).digest('hex'));
+          console.log('Snapshot fingerprint verified; homepage itself will NOT be uploaded.');
+          NODE
+      - name: Build existing platform routes
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD
+        run: pnpm --filter @septlion/web build
+      - name: Package ONLY the two missing routes and matching Next assets
+        run: |
+          set -euo pipefail
+          mkdir -p deploy-missing-routes/review deploy-missing-routes/my-septlion deploy-missing-routes/_rsc deploy-missing-routes/_next
+          for route in review my-septlion; do
+            test -s "apps/web/.next/server/app/${route}.html"
+            test -s "apps/web/.next/server/app/${route}.rsc"
+            cp "apps/web/.next/server/app/${route}.html" "deploy-missing-routes/${route}/index.html"
+            cp "apps/web/.next/server/app/${route}.rsc" "deploy-missing-routes/_rsc/${route}.rsc"
+            grep -q '/_next/' "deploy-missing-routes/${route}/index.html"
+          done
+          cp -R apps/web/.next/static deploy-missing-routes/_next/static
+          test ! -e deploy-missing-routes/index.html
+          test ! -e deploy-missing-routes/404.html
+          test ! -e deploy-missing-routes/.htaccess
+          test ! -e deploy-missing-routes/intake.js
+          find deploy-missing-routes -type f | head -30
+      - name: Upload ONLY two new customer routes and versioned static assets
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: deploy-missing-routes/
+          server-dir: /domains/septlion.com/public_html/
+          state-name: .ftp-deploy-septlion-missing-routes.json
+          dangerous-clean-slate: false
+      - name: Verify live route delivery and preserve approved homepage
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFile} from 'node:fs/promises';
+          import {createHash} from 'node:crypto';
+          const expected=(await readFile('live-homepage-sha256.txt','utf8')).trim();
+          const home=await fetch('https://www.septlion.com/',{cache:'no-store'});
+          if(!home.ok)throw new Error('Homepage no longer available');
+          const actual=createHash('sha256').update(await home.text()).digest('hex');
+          if(actual!==expected)throw new Error('Homepage changed during route deployment; investigate immediately');
+          for(const route of ['review','my-septlion']){
+            const response=await fetch('https://www.septlion.com/'+route+'/?release='+Date.now(),{cache:'no-store'});
+            const body=await response.text();
+            if(!response.ok || !body.includes('/_next/') || (route==='review'&&!body.includes('مراجعة')))
+              throw new Error('Customer route not verified: '+route+' HTTP '+response.status);
+            console.log('Verified published route: '+route+' HTTP '+response.status);
+          }
+          console.log('Homepage remained byte-for-byte unchanged.');
+          NODE
