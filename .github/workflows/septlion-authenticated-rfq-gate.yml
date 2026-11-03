@@ -1,0 +1,48 @@
+name: SEPTLION — isolated authenticated RFQ release gate
+on:
+  push:
+    branches: [test/authenticated-rfq-release-gate-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-rfq:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: septlion
+          POSTGRES_PASSWORD: septlion
+          POSTGRES_DB: septlion
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U septlion -d septlion"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://septlion:septlion@localhost:5432/septlion?schema=core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Create isolated database schema
+        working-directory: apps/api
+        run: pnpm exec prisma db push --skip-generate
+      - name: Verify WhatsApp OTP, auth session and refused unverified submissions
+        run: node --test tests/phone-verification.test.mjs tests/auth-session.test.mjs
+      - name: Verify request lifecycle and buyer contact validation
+        run: node --test tests/customer-experience.test.mjs tests/command-center-api.test.mjs
+      - name: Verify real database transaction and permission gates in isolated Postgres
+        run: node --test tests/command-center-db.test.mjs tests/trade-lifecycle.test.mjs
+      - name: Verify requirement inputs and repeat-request idempotency
+        run: node --test tests/requirement-input.test.mjs tests/requirement-fallback.test.mjs
