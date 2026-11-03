@@ -26,10 +26,10 @@ jobs:
           import hashlib,re
           s=Path('/tmp/septlion-live-inspection.html').read_text('utf-8')
           print('sha256:',hashlib.sha256(s.encode()).hexdigest(),'size:',len(s))
-          for pattern in ['septlion.preview.requests.v3','تم حفظ طلبك التجريبي','هذه معاينة للواجهة','طلب عرض سعر','function send(text)','function submit','function submitRFQ','function save','function complete','function confirm','localStorage.setItem','preview.requests','verified']:
+          for pattern in ["$('#needForm').addEventListener", "needForm", "captureNeedDetails", "function submitRfq", "function go(", "function fillNeedDetails"]:
               indices=[m.start() for m in re.finditer(re.escape(pattern),s)]
               print('MATCH:',pattern,'COUNT:',len(indices))
-              for i in indices[:3]:
+              for i in indices[:2]:
                   print('----',pattern,'offset',i,'----')
-                  print(s[max(0,i-700):min(len(s),i+1200)])
+                  print(s[max(0,i-450):min(len(s),i+4400)])
           PY
