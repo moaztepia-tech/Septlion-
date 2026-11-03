@@ -1,0 +1,31 @@
+name: Live SEPTLION UX audit — no writes
+on:
+  push:
+    branches: [audit/live-customer-ux-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Audit live website with Chrome at 390px and 1366px
+        env:
+          CHROMIUM_EXECUTABLE: /usr/bin/google-chrome
+        run: node scripts/audit-live-customer-ux.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: septlion-ux-audit-mobile-desktop
+          path: test-results/ux-audit/
+          retention-days: 14
