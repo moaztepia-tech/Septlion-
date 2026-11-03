@@ -81,7 +81,7 @@ jobs:
           test ! -e deploy-missing-routes/.htaccess
           test ! -e deploy-missing-routes/intake.js
           find deploy-missing-routes -type f | head -30
-      - name: Upload missing routes through verified FTPS (single connection, no deletion)
+      - name: Upload exact customer pages first, then static assets (no deletions)
         env:
           H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
           H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
@@ -91,8 +91,7 @@ jobs:
           test ! -e deploy-missing-routes/index.html
           test ! -e deploy-missing-routes/404.html
           test ! -e deploy-missing-routes/.htaccess
-          test ! -e deploy-missing-routes/intake.js
-          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; set net:timeout 25; mirror -R --parallel=1 --only-newer --no-perms deploy-missing-routes /domains/septlion.com/public_html/; bye'
+          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set cmd:fail-exit yes; set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; set net:timeout 25; cd /domains/septlion.com/public_html/; mkdir -p review; mkdir -p my-septlion; mkdir -p _rsc; put deploy-missing-routes/review/index.html -o review/index.html; put deploy-missing-routes/my-septlion/index.html -o my-septlion/index.html; put deploy-missing-routes/_rsc/review.rsc -o _rsc/review.rsc; put deploy-missing-routes/_rsc/my-septlion.rsc -o _rsc/my-septlion.rsc; mirror -R --parallel=1 --no-perms deploy-missing-routes/_next/static _next/static; bye'
       - name: Verify exact uploaded files and homepage over FTPS
         env:
           H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
