@@ -1,0 +1,33 @@
+name: Free Chrome browser — SEPTLION live smoke
+on:
+  push:
+    branches: [test/production-browser-free-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chrome:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify runner Chrome
+        run: test -x /usr/bin/google-chrome
+      - name: Check live SEPTLION without writes or login
+        run: node scripts/check-live-septlion-browser.mjs
+        env:
+          CHROMIUM_EXECUTABLE: /usr/bin/google-chrome
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: septlion-live-chrome-screenshots-and-report
+          path: test-results/live/
+          retention-days: 7
