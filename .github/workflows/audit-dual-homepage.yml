@@ -54,6 +54,18 @@ jobs:
             report[name]={'size':len(s),'sha256':hashlib.sha256(f.read_bytes()).hexdigest(),'head':s[:650],'matches':{k:[s[max(0,m.start()-75):m.end()+100] for m in list(re.finditer(re.escape(k),s,re.I))[:6]] for k in kws if re.search(re.escape(k),s,re.I)}}
           print('ADDITIONAL_AUDIT='+json.dumps(report,ensure_ascii=False))
           PY
+      - name: Diagnose exact homepage routing and old-version cache markers
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, json, hashlib
+          html=Path('/tmp/site-audit/root-index.html').read_text()
+          names=['ROUTES','function go(','function show(','hashchange','location.hash','history.pushState','history.replaceState','serviceWorker','navigator.serviceWorker','CACHE_NAME','localStorage','manifest.webmanifest','preview','show(PREVIEW']
+          hits={}
+          for name in names:
+            hits[name]=[html[max(0,m.start()-150):min(len(html),m.end()+420)] for m in list(re.finditer(re.escape(name),html,re.I))[:8]]
+          print('ROUTING_DIAGNOSIS='+json.dumps(hits,ensure_ascii=False))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
