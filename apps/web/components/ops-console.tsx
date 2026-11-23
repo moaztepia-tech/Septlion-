@@ -1,6 +1,7 @@
 'use client';
 // Shared frame and helpers for the team's console (command center + requests).
 import Link from 'next/link';
+import {PlatformIcon} from './platform-header';
 import '../app/ops-console.css';
 
 export type OpsBuyer={name:string|null;company:string|null;email:string|null;whatsapp:string|null}|null;
@@ -45,6 +46,12 @@ export function OpsFrame({active,children}:{active:'home'|'requests';children:Re
    <nav className="ops-nav" aria-label="أقسام اللوحة">
     <Link href="/command-center" aria-current={active==='home'?'page':undefined}>الرئيسية</Link>
     <Link href="/operations" aria-current={active==='requests'?'page':undefined}>الطلبات</Link>
+   </nav>
+   <nav className="ops-icons" aria-label="اختصارات">
+    <Link href="/discover" aria-label="البحث في المنتجات" title="البحث"><PlatformIcon name="discover"/></Link>
+    <Link href="/analytics" aria-label="الإحصاءات" title="الإحصاءات"><PlatformIcon name="operations"/></Link>
+    <Link href="/notifications" aria-label="التنبيهات" title="التنبيهات"><PlatformIcon name="bell"/></Link>
+    <Link href="/account" aria-label="الحساب" title="الحساب"><PlatformIcon name="account"/></Link>
    </nav>
   </div></header>
   <main className="ops-main">{children}</main>

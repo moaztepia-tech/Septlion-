@@ -75,3 +75,8 @@
 /* The team console uses the full screen, not the customer's phone-width frame. */
 .app-full:has(> .ops){max-width:none;padding:0;margin:0}
 body:has(.ops){margin:0;background:#071a30}
+.ops-icons{display:flex;gap:4px}
+.ops-icons a{width:40px;height:40px;display:grid;place-items:center;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+.ops-icons a:hover{color:var(--text);border-color:var(--line2)}
+.ops-icons svg{width:20px;height:20px}
+@media(max-width:560px){.ops-top-in{flex-wrap:wrap}.ops-icons{order:2}.ops-nav{order:3;width:100%}.ops-nav a{flex:1;justify-content:center}}
