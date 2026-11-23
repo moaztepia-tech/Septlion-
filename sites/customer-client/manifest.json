@@ -3,6 +3,10 @@
   "target_origin": "https://www.septlion.com",
   "files": [
     {
+      "path": ".htaccess",
+      "sha256": "cf14ebd01fa19b74d389d349cfb5f8e706f4ae343e1d286559b0756d6358d18c"
+    },
+    {
       "path": "index.html",
       "sha256": "1d17c68c2ae6c81dd4f6952480635064259f058dd74e53934956de5b0b07ee88"
     },

@@ -24,5 +24,20 @@ Rebuild after the new-app interface changes: refresh `sites/new-app-live/index.h
 from the live file, run the build script, then update `manifest.json` hashes.
 
 Publish with the Hostinger deploy workflow: `site = customer-client`, first
-`mode = plan`, then `mode = publish` with that plan id. Only `index.html` and
-`septlion-bridge.js` are uploaded; `/new-app/` and the platform pages are untouched.
+`mode = plan`, then `mode = publish` with that plan id. Uploaded: `index.html`, `septlion-bridge.js` and the root `.htaccess`.
+`/new-app/` and the platform pages are untouched.
+
+## Routing (`public/.htaccess`)
+
+Before this client, the root `.htaccess` sent every path to `/new-app/`, so
+the platform pages were unreachable. Now:
+
+1. `/` serves this `index.html` (outside `/new-app/`, so the new-app CSP,
+   which only allows `connect-src 'self'`, does not block Supabase).
+2. Real files at the root (platform `_next/` assets, the bridge) are served.
+3. Platform pages such as `/command-center/` and `/account/` are served from
+   the root, except the new-app short links (`/discover`, `/requests`,
+   `/notifications`, `/require`), which stay with new-app.
+4. Everything else goes to `/new-app/` as before (photos, admin, 404).
+
+The rules were checked on a local Apache 2.4 with the same layout.
