@@ -33,6 +33,7 @@ test('a product request becomes a linked FCL requirement', () => {
   const i = B.buildInput(x, contact, {}, catalog);
   assert.equal(i.product, 'زولانا أساسي — 50 كجم');
   assert.equal(i.destination, 'السعودية · جدة');
+  assert.equal(i.deliveryCountry, 'السعودية'); assert.equal(i.deliveryPort, 'جدة');
   assert.equal(i.quantity, 3); assert.equal(i.unit, 'FCL');
   assert.equal(i.incoterm, 'FOB'); assert.equal(i.paymentPreference, 'T/T');
   assert.equal(i.catalogProductId, 'prod-zollana-asasi');

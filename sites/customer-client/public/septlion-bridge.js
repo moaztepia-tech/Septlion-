@@ -84,7 +84,9 @@
       const destination = [clean(x.dest, 200), clean(x.port, 90)].filter(Boolean).join(' · ');
       if (!destination) throw new Error('حدد وجهة التسليم.');
       const input = Object.assign(base, {
-        product: clean(x.title, 500), destination, quantity: n, unit: 'FCL', containerCount: n,
+        product: clean(x.title, 500), destination, quantity: n,
+        // Country and port in their own fields: the port prices CIF/CFR, the country sets documents.
+        deliveryCountry: clean(x.dest, 120) || null, deliveryPort: clean(x.port, 90) || null, unit: 'FCL', containerCount: n,
         incoterm: INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF', paymentPreference: paymentCode(x.payment),
         packing: clean(x.description, 300) || null,
         knownFacts: { note: clean(x.note, 1000) || undefined, localProductId: x.productId || undefined },
