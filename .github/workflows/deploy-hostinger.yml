@@ -1,159 +1,104 @@
 name: Deploy Septlion to Hostinger
 
+# The only path that changes www.septlion.com. Manual start only; see docs/DEPLOY.md.
+#   1. mode=plan      builds the package and shows which live files would be replaced. Changes nothing.
+#   2. mode=publish   with the plan_id from step 1: full backup, upload, read-back, public check, auto-restore.
+#   3. mode=rollback  restores a backup made by an earlier publish (latest if backup_name is empty).
+# Nothing is ever deleted on the server.
+
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      mode:
+        description: plan, publish or rollback
+        type: choice
+        options: [plan, publish, rollback]
+        default: plan
+      site:
+        description: "nextjs = the platform in apps/web; approved-client = the archived live client in sites/approved-client"
+        type: choice
+        options: [nextjs, approved-client]
+        default: nextjs
+      plan_id:
+        description: "publish only: the plan id printed by the plan run"
+        type: string
+        default: ""
+      backup_name:
+        description: "rollback only: backup to restore (empty = latest)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
 
 concurrency:
   group: septlion-production
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Release script tests
+        run: python3 -m unittest discover -s tests -p 'hostinger_release_test.py'
 
       - name: Setup pnpm
+        if: inputs.mode != 'rollback' && inputs.site == 'nextjs'
         uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
 
       - name: Setup Node
+        if: inputs.mode != 'rollback' && inputs.site == 'nextjs'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Security and integration gates
-        run: |
-          pnpm audit --audit-level high
-          pnpm test
-      - name: Build website
+      - name: Install, test and build the platform
+        if: inputs.mode != 'rollback' && inputs.site == 'nextjs'
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD
-        run: pnpm --filter @septlion/web build
-
-      - name: Prepare static deployment
         run: |
+          pnpm install --frozen-lockfile
+          pnpm audit --audit-level high
+          pnpm test
+          pnpm --filter @septlion/web build
           if test -f apps/web/.next/server/app/api/command-session/route.js; then
-            echo "Server authorization requires a Node.js runtime. Static Hostinger deployment is blocked; deploy the full Next.js app to staging first." >&2
+            echo "Server authorization requires a Node.js runtime. Static Hostinger deployment is blocked." >&2
             exit 1
           fi
-          rm -rf deploy
-          mkdir -p deploy/_next deploy/discover deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
-          cp apps/web/.next/server/app/index.html deploy/index.html
-          cp apps/web/.next/server/app/index.html deploy/404.html
-          DISCOVER_HTML="$(find apps/web/.next/server/app -type f -path '*/discover.html' | head -n 1)"
-          test -n "$DISCOVER_HTML"
-          cp "$DISCOVER_HTML" deploy/discover/index.html
-          test -s deploy/discover/index.html
-          mkdir -p deploy/requests
-          REQUESTS_HTML="$(find apps/web/.next/server/app -type f -path '*/requests.html' | head -n 1)"
-          test -n "$REQUESTS_HTML"
-          cp "$REQUESTS_HTML" deploy/requests/index.html
-          test -s deploy/requests/index.html
-          mkdir -p deploy/request
-          REQUEST_HTML="$(find apps/web/.next/server/app -type f -path '*/request.html' | head -n 1)"
-          test -n "$REQUEST_HTML"
-          cp "$REQUEST_HTML" deploy/request/index.html
-          test -s deploy/request/index.html
-          mkdir -p deploy/offer
-          OFFER_HTML="$(find apps/web/.next/server/app -type f -path '*/offer.html' | head -n 1)"
-          test -n "$OFFER_HTML"
-          cp "$OFFER_HTML" deploy/offer/index.html
-          test -s deploy/offer/index.html
-          mkdir -p deploy/offer-document
-          OFFER_DOCUMENT_HTML="$(find apps/web/.next/server/app -type f -path '*/offer-document.html' | head -n 1)"
-          test -n "$OFFER_DOCUMENT_HTML"
-          cp "$OFFER_DOCUMENT_HTML" deploy/offer-document/index.html
-          test -s deploy/offer-document/index.html
-          mkdir -p deploy/commit
-          COMMIT_HTML="$(find apps/web/.next/server/app -type f -path '*/commit.html' | head -n 1)"
-          test -n "$COMMIT_HTML"
-          cp "$COMMIT_HTML" deploy/commit/index.html
-          test -s deploy/commit/index.html
-          mkdir -p deploy/execution
-          EXECUTION_HTML="$(find apps/web/.next/server/app -type f -path '*/execution.html' | head -n 1)"
-          test -n "$EXECUTION_HTML"
-          cp "$EXECUTION_HTML" deploy/execution/index.html
-          test -s deploy/execution/index.html
-          mkdir -p deploy/receive
-          RECEIVE_HTML="$(find apps/web/.next/server/app -type f -path '*/receive.html' | head -n 1)"
-          test -n "$RECEIVE_HTML"
-          cp "$RECEIVE_HTML" deploy/receive/index.html
-          test -s deploy/receive/index.html
-          mkdir -p deploy/reorder
-          REORDER_HTML="$(find apps/web/.next/server/app -type f -path '*/reorder.html' | head -n 1)"
-          test -n "$REORDER_HTML"
-          cp "$REORDER_HTML" deploy/reorder/index.html
-          test -s deploy/reorder/index.html
-          mkdir -p deploy/notifications
-          NOTIFICATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/notifications.html' | head -n 1)"
-          test -n "$NOTIFICATIONS_HTML"
-          cp "$NOTIFICATIONS_HTML" deploy/notifications/index.html
-          test -s deploy/notifications/index.html
-          mkdir -p deploy/account
-          ACCOUNT_HTML="$(find apps/web/.next/server/app -type f -path '*/account.html' | head -n 1)"
-          test -n "$ACCOUNT_HTML"
-          cp "$ACCOUNT_HTML" deploy/account/index.html
-          test -s deploy/account/index.html
-          mkdir -p deploy/operations
-          OPERATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/operations.html' | head -n 1)"
-          test -n "$OPERATIONS_HTML"
-          cp "$OPERATIONS_HTML" deploy/operations/index.html
-          test -s deploy/operations/index.html
-          mkdir -p deploy/analytics
-          ANALYTICS_HTML="$(find apps/web/.next/server/app -type f -path '*/analytics.html' | head -n 1)"
-          test -n "$ANALYTICS_HTML"
-          cp "$ANALYTICS_HTML" deploy/analytics/index.html
-          test -s deploy/analytics/index.html
-          mkdir -p deploy/documents
-          DOCUMENTS_HTML="$(find apps/web/.next/server/app -type f -path '*/documents.html' | head -n 1)"
-          test -n "$DOCUMENTS_HTML"
-          cp "$DOCUMENTS_HTML" deploy/documents/index.html
-          test -s deploy/documents/index.html
-          cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
-          if [ -f apps/web/.next/server/app/demand-intelligence.html ]; then cp apps/web/.next/server/app/demand-intelligence.html deploy/demand-intelligence/index.html; fi
-          if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html; fi
-          REQUIRE_HTML="$(find apps/web/.next/server/app -type f -path '*/require.html' | head -n 1)"
-          test -n "$REQUIRE_HTML"
-          cp "$REQUIRE_HTML" deploy/require/index.html
-          test -s deploy/require/index.html
-          test -s deploy/operations/index.html
-          test -s deploy/analytics/index.html
-          if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html; fi
-          if [ -f apps/web/.next/server/app/intent/demand.html ]; then cp apps/web/.next/server/app/intent/demand.html deploy/intent/demand/index.html; fi
-          cp -R apps/web/.next/static deploy/_next/static
-          if [ -d apps/web/public ]; then cp -R apps/web/public/. deploy/; fi
-          if [ -f apps/web/.next/server/app/robots.txt.body ]; then cp apps/web/.next/server/app/robots.txt.body deploy/robots.txt; fi
-          if [ -f apps/web/.next/server/app/sitemap.xml.body ]; then cp apps/web/.next/server/app/sitemap.xml.body deploy/sitemap.xml; fi
-          if [ -f apps/web/.next/server/app/llms.txt.body ]; then cp apps/web/.next/server/app/llms.txt.body deploy/llms.txt; fi
-          echo "Deployment files verified"
-          test -s deploy/index.html
-          test -s deploy/require/index.html
+          node scripts/hostinger-production.mjs
+          node scripts/generate-demand-pages.mjs
 
-      - name: Generate live demand SEO pages
-        run: node scripts/generate-demand-pages.mjs
+      - name: Package the archived live client
+        if: inputs.mode != 'rollback' && inputs.site == 'approved-client'
+        run: |
+          node --test sites/approved-client/intake.test.cjs
+          python3 scripts/package-approved-client.py deploy
 
-      - name: Upload to Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+      - name: Run release (${{ inputs.mode }})
+        env:
+          HOSTINGER_FTP_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          HOSTINGER_FTP_USERNAME: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          MODE: ${{ inputs.mode }}
+          PLAN_ID: ${{ inputs.plan_id }}
+          BACKUP_NAME: ${{ inputs.backup_name }}
+        run: python3 scripts/hostinger-release.py "$MODE" --package deploy --plan-id "$PLAN_ID" --backup-name "$BACKUP_NAME" --out release-backup
+
+      - name: Keep backups and plan as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: deploy/
-          server-dir: /domains/septlion.com/public_html/
-          # Preserve the live files while publishing the next build.
-          dangerous-clean-slate: false
-
-# deployment trigger: production-route-republish-2026-10-04
-
+          name: septlion-${{ inputs.mode }}-${{ inputs.site }}-${{ github.run_id }}
+          path: release-backup/
+          if-no-files-found: ignore
+          retention-days: 90
