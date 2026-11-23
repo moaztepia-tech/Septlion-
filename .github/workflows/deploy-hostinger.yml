@@ -2,7 +2,7 @@ name: Deploy Septlion to Hostinger
 
 # The only path that changes www.septlion.com. Manual start only; see docs/DEPLOY.md.
 #   1. mode=plan      builds the package and shows which live files would be replaced. Changes nothing.
-#   2. mode=publish   with the plan_id from step 1: full backup, upload, read-back, public check, auto-restore.
+#   2. mode=publish   with the plan_id from step 1: backup of touched files (all with full_scan), upload, read-back, public check, auto-restore.
 #   3. mode=rollback  restores a backup made by an earlier publish (latest if backup_name is empty).
 # Nothing is ever deleted on the server.
 
@@ -27,6 +27,10 @@ on:
         description: "rollback only: backup to restore (empty = latest)"
         type: string
         default: ""
+      full_scan:
+        description: "Scan and back up all of public_html (slow, ~10-20 min). Off = only the files in the package (fast, same plan id)."
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -98,7 +102,11 @@ jobs:
           MODE: ${{ inputs.mode }}
           PLAN_ID: ${{ inputs.plan_id }}
           BACKUP_NAME: ${{ inputs.backup_name }}
-        run: python3 scripts/hostinger-release.py "$MODE" --package deploy --plan-id "$PLAN_ID" --backup-name "$BACKUP_NAME" --out release-backup
+          FULL_SCAN: ${{ inputs.full_scan }}
+        run: |
+          extra=""
+          if [ "$FULL_SCAN" = "true" ]; then extra="--full"; fi
+          python3 scripts/hostinger-release.py "$MODE" --package deploy --plan-id "$PLAN_ID" --backup-name "$BACKUP_NAME" --out release-backup $extra
 
       - name: Keep backups and plan as an artifact
         if: always()

@@ -2,7 +2,7 @@
 
 > **بالعربية باختصار:** يوجد الآن طريق واحد فقط لتغيير الموقع، وهو workflow اسمه "Deploy Septlion to Hostinger" ويُشغَّل يدوياً من تبويب Actions.
 > 1. شغّله أولاً بوضع **plan**. هذا الوضع لا يغيّر أي شيء، ويعرض لك قائمة بالملفات الحية التي ستُستبدَل، ويعطيك رقم خطة (plan id).
-> 2. إذا وافقت على القائمة، شغّله بوضع **publish** وضع فيه رقم الخطة. سيأخذ نسخة احتياطية كاملة، ثم يرفع الملفات ويتحقق منها، وإذا فشل أي فحص يرجع للنسخة السابقة تلقائياً.
+> 2. إذا وافقت على القائمة، شغّله بوضع **publish** وضع فيه رقم الخطة. سيأخذ نسخة احتياطية من كل ملف سيتغيّر، ثم يرفع الملفات ويتحقق منها، وإذا فشل أي فحص يرجع للنسخة السابقة تلقائياً.
 > 3. للتراجع في أي وقت: شغّله بوضع **rollback**.
 >
 > لا يُحذف أي ملف من الخادم أبداً.
@@ -21,17 +21,20 @@ anything.
 | `site` | `nextjs` (default), `approved-client`, `customer-client` | What to publish: the platform in `apps/web`, the archived live client in `sites/approved-client`, or the new-app interface at `/` that sends requests to the platform (`sites/customer-client`, see its README) |
 | `plan_id` | text | Required for `publish`: the id printed by the plan run |
 | `backup_name` | text | Optional for `rollback`: which backup to restore (empty means the latest) |
+| `full_scan` | `false` (default), `true` | Off: read and back up only the live copies of the files in the package (a minute or two; same plan id). On: also scan and back up all of `public_html` (10 to 20 minutes) and list the files the package leaves untouched |
 
 ### 1. Plan (changes nothing)
 
 Run with `mode = plan` and the `site` you want. The job builds the package,
-downloads every live file, and writes a table to the run summary:
+downloads the live copy of every file in it (all live files with
+`full_scan`), and writes a table to the run summary:
 
 * **New files**: these are added.
 * **Replaced live files**: these are overwritten. This is the list to read
   carefully. If the live home page (`index.html`) is listed, the current live
   home page will be replaced.
 * **Kept untouched**: live files that are not in the package. They stay as they are.
+  They are counted only with `full_scan`; a release never writes them either way.
 * **Plan id**: a short code for "replace exactly these live files, in exactly
   their current versions".
 

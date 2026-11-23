@@ -2,12 +2,15 @@
 
 Commands (run by .github/workflows/deploy-hostinger.yml, see docs/DEPLOY.md):
 
-  plan     Download every live file, compare it with the package, and print the
-           plan: which files are new, which live files would be replaced, and a
-           PLAN ID. Nothing on the server changes.
+  plan     Download the live copy of every file in the package, compare, and
+           print the plan: which files are new, which live files would be
+           replaced, and a PLAN ID. Nothing on the server changes.
+           With --full it downloads all of public_html instead (slow; it also
+           lists the live files the package leaves untouched).
   publish  Needs the PLAN ID from a plan run. Re-checks that the live files that
            would be replaced are still exactly the ones that were approved,
-           stores a full backup on the server and as a workflow artifact,
+           stores a backup of every file it will touch on the server and as a
+           workflow artifact (all of public_html with --full),
            uploads only new or changed files, reads every one back, checks the
            public site, and restores the backup automatically if anything fails.
   rollback Restores a server-side backup made by an earlier publish.
@@ -15,7 +18,9 @@ Commands (run by .github/workflows/deploy-hostinger.yml, see docs/DEPLOY.md):
 Safety rules that hold for every command:
   * Nothing is ever deleted on the server (no DELE, no RMD). Files that a
     rollback must take out of service are renamed, so they can be recovered.
-  * A full backup of public_html exists before the first byte is uploaded.
+  * A backup of every live file the release replaces exists, on the server
+    and as an artifact, before the first byte is uploaded. Files outside the
+    package are never written, so they need no backup.
   * The FTPS connection verifies the CA chain and hostname before login.
 """
 
@@ -144,15 +149,17 @@ def store(ftp, root, relative, data, tag):
     ftp.rename(temporary, target)
 
 
-def snapshot(ftp, probe=()):
-    """Download all of public_html: {relative path: bytes}.
+def snapshot(ftp, probe=(), full=False):
+    """Download live files: {relative path: bytes}.
 
-    Some FTP servers hide dot files such as .htaccess from listings, so every
-    path in `probe` (the package) is also fetched directly. A hidden live file
-    is then backed up and counted as replaced, never as new.
+    By default only the paths in `probe` (the package) are fetched, one by one,
+    which is all a release can replace, so the plan id and the backup are the
+    same as with a full scan. With full=True all of public_html is walked too.
+    Fetching by path also finds dot files such as .htaccess that some FTP
+    servers hide from listings; a hidden live file counts as replaced, never new.
     """
     files = {}
-    for relative in walk(ftp, REMOTE_ROOT):
+    for relative in (walk(ftp, REMOTE_ROOT) if full else ()):
         if PurePosixPath(relative).name.startswith(".septlion-upload-"):
             continue
         files[relative] = fetch(ftp, REMOTE_ROOT + "/" + relative)
@@ -178,11 +185,11 @@ def read_package(directory):
     return files
 
 
-def make_plan(live, package):
+def make_plan(live, package, full=True):
     added = sorted(path for path in package if path not in live)
     replaced = sorted(path for path in package if path in live and live[path] != package[path])
     unchanged = sorted(path for path in package if path in live and live[path] == package[path])
-    kept = sorted(path for path in live if path not in package)
+    kept = sorted(path for path in live if path not in package) if full else None
     # The plan id covers what would be lost: each live file that gets replaced
     # and its exact current content. Rebuilding the package does not change it,
     # but any change on the live site does.
@@ -198,7 +205,8 @@ def describe(plan, live, package):
         "* New files: %d" % len(plan["added"]),
         "* Live files that will be **replaced** (backed up first): %d" % len(plan["replaced"]),
         "* Identical, not re-uploaded: %d" % len(plan["unchanged"]),
-        "* Live files not in this package, **kept untouched**: %d" % len(plan["kept"]),
+        ("* Live files not in this package, **kept untouched**: %d" % len(plan["kept"])) if plan["kept"] is not None
+        else "* Live files not in this package: not scanned (fast plan); they are never written",
         "",
     ]
     if plan["replaced"]:
@@ -308,10 +316,10 @@ def cmd_plan(args):
     package = read_package(args.package)
     ftp = connect()
     try:
-        live = snapshot(ftp, package)
+        live = snapshot(ftp, package, args.full)
     finally:
         ftp.close()
-    plan = make_plan(live, package)
+    plan = make_plan(live, package, args.full)
     text = describe(plan, live, package)
     log(text)
     summary(text)
@@ -328,14 +336,15 @@ def cmd_publish(args):
     name = time.strftime("%Y%m%d-%H%M%S") + "-run" + tag
     ftp = connect()
     try:
-        live = snapshot(ftp, package)
-        plan = make_plan(live, package)
+        live = snapshot(ftp, package, args.full)
+        plan = make_plan(live, package, args.full)
         if plan["plan_id"] != args.plan_id:
             text = describe(plan, live, package)
             summary("## SAFETY STOP\n\nThe live site no longer matches the approved plan %s. Nothing was changed.\n\n%s" % (args.plan_id, text))
             raise RuntimeError("Plan id mismatch: approved %s, current %s. Nothing was changed." % (args.plan_id, plan["plan_id"]))
 
-        # 1. Full backup, saved locally (artifact) and on the server outside public_html.
+        # 1. Backup of the live files this release touches (all of public_html with --full),
+        #    saved locally (artifact) and on the server outside public_html.
         archive = backup_archive(live)
         record = {"name": name, "plan_id": plan["plan_id"], "commit": os.environ.get("GITHUB_SHA", ""),
                   "added": plan["added"], "replaced": plan["replaced"], "backup_sha256": digest(archive)}
@@ -347,7 +356,7 @@ def cmd_publish(args):
         if digest(fetch(ftp, REMOTE_BACKUPS + "/" + name + ".tar.gz")) != record["backup_sha256"]:
             raise RuntimeError("Server backup read-back mismatch. Nothing was published.")
         store(ftp, REMOTE_BACKUPS, name + ".release.json", json.dumps(record, indent=2).encode(), tag + "-j")
-        log("Full backup of %d live files stored: %s" % (len(live), name))
+        log("Backup of %d live files stored: %s" % (len(live), name))
 
         # 2. Upload new and changed files; index.html last so the old home stays up until assets exist.
         order = [p for p in plan["added"] + plan["replaced"] if p != "index.html"]
@@ -395,7 +404,7 @@ def cmd_rollback(args):
             raise RuntimeError("Backup archive checksum mismatch: " + name)
         backup_files = read_archive(archive)
         # Keep a backup of the state we are rolling back from, too.
-        current = snapshot(ftp, backup_files)
+        current = snapshot(ftp, set(backup_files) | set(record["added"]), args.full)
         before = backup_archive(current)
         pre = name + "-before-rollback-run" + tag
         store(ftp, REMOTE_BACKUPS, pre + ".tar.gz", before, tag + "-b")
@@ -416,6 +425,7 @@ def main(argv=None):
     parser.add_argument("--backup-name", default="")
     parser.add_argument("--out", default="release-backup")
     parser.add_argument("--skip-smoke", action="store_true")
+    parser.add_argument("--full", action="store_true", help="scan and back up all of public_html (slow)")
     args = parser.parse_args(argv)
     {"plan": cmd_plan, "publish": cmd_publish, "rollback": cmd_rollback}[args.command](args)
 

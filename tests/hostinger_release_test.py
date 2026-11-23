@@ -113,18 +113,39 @@ class ReleaseTest(unittest.TestCase):
     def run_cmd(self, *argv):
         release.main([*argv, "--package", str(self.pkg), "--out", str(self.dir / "out")])
 
-    def plan_id(self):
-        self.run_cmd("plan")
+    def plan_id(self, *extra):
+        self.run_cmd("plan", *extra)
         return json.loads((self.dir / "out/plan.json").read_text())
 
     def test_plan_changes_nothing_and_finds_hidden_files(self):
         before = dict(self.fake.files)
-        plan = self.plan_id()
+        plan = self.plan_id("--full")
         self.assertEqual(self.fake.files, before)
         self.assertEqual(plan["replaced"], [".htaccess", "index.html"])
         self.assertEqual(plan["added"], ["discover/index.html"])
         self.assertEqual(plan["kept"], ["intake.js"])
         self.assertEqual(plan["unchanged"], ["same.txt"])
+
+    def test_fast_plan_matches_full_plan_without_listing(self):
+        full = self.plan_id("--full")
+        self.fake.mlsd = lambda *a, **k: (_ for _ in ()).throw(AssertionError("fast plan must not list"))
+        fast = self.plan_id()
+        self.assertEqual(fast["plan_id"], full["plan_id"])
+        self.assertEqual((fast["added"], fast["replaced"], fast["unchanged"]), (full["added"], full["replaced"], full["unchanged"]))
+        self.assertIsNone(fast["kept"])
+
+    def test_fast_publish_backs_up_touched_files_and_rolls_back(self):
+        plan = self.plan_id()
+        self.run_cmd("publish", "--plan-id", plan["plan_id"])
+        self.assertEqual(public(self.fake, "index.html"), b"<html>new home</html>")
+        self.assertEqual(public(self.fake, "intake.js"), b"live intake engine")
+        backups = [p for p in self.fake.files if p.startswith(release.REMOTE_BACKUPS) and p.endswith(".tar.gz")]
+        saved = release.read_archive(self.fake.files[backups[0]])
+        self.assertEqual(set(saved), {".htaccess", "index.html", "same.txt"})
+        self.run_cmd("rollback")
+        self.assertEqual(public(self.fake, "index.html"), b"<html>live engine</html>")
+        self.assertEqual(public(self.fake, ".htaccess"), b"live hidden rules")
+        self.assertIsNone(public(self.fake, "discover/index.html"))
 
     def test_publish_requires_matching_plan_id(self):
         with self.assertRaises(RuntimeError):
@@ -141,8 +162,8 @@ class ReleaseTest(unittest.TestCase):
         self.assertEqual(public(self.fake, "index.html"), b"<html>edited by hand</html>")
 
     def test_publish_backs_up_keeps_unlisted_files_and_rolls_back(self):
-        plan = self.plan_id()
-        self.run_cmd("publish", "--plan-id", plan["plan_id"])
+        plan = self.plan_id("--full")
+        self.run_cmd("publish", "--plan-id", plan["plan_id"], "--full")
         self.assertEqual(public(self.fake, "index.html"), b"<html>new home</html>")
         self.assertEqual(public(self.fake, "intake.js"), b"live intake engine")
         backups = [p for p in self.fake.files if p.startswith(release.REMOTE_BACKUPS) and p.endswith(".tar.gz")]
