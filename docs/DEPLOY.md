@@ -18,7 +18,7 @@ anything.
 | Input | Values | Meaning |
 |---|---|---|
 | `mode` | `plan` (default), `publish`, `rollback` | What to do |
-| `site` | `nextjs` (default), `approved-client` | What to publish: the platform in `apps/web`, or the archived live client in `sites/approved-client` |
+| `site` | `nextjs` (default), `approved-client`, `customer-client` | What to publish: the platform in `apps/web`, the archived live client in `sites/approved-client`, or the new-app interface at `/` that sends requests to the platform (`sites/customer-client`, see its README) |
 | `plan_id` | text | Required for `publish`: the id printed by the plan run |
 | `backup_name` | text | Optional for `rollback`: which backup to restore (empty means the latest) |
 

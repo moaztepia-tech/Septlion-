@@ -1,0 +1,14 @@
+{
+  "source": "sites/new-app-live/index.html (live www.septlion.com/new-app/ on 2026-11-23) + septlion-bridge.js",
+  "target_origin": "https://www.septlion.com",
+  "files": [
+    {
+      "path": "index.html",
+      "sha256": "1d17c68c2ae6c81dd4f6952480635064259f058dd74e53934956de5b0b07ee88"
+    },
+    {
+      "path": "septlion-bridge.js",
+      "sha256": "c5dc699c96f40178504aec3953f8d6c372a3f3e647ed6d36a43f1953df637437"
+    }
+  ]
+}
