@@ -561,7 +561,7 @@ textarea.input{padding:12px 14px;min-height:76px;resize:vertical;line-height:1.6
 .dinput::placeholder{color:#8aa0c3;font-weight:500}
 .dclr{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:#ffffff14;color:#cfdcf2;font-size:18px;line-height:1}
 .dlist{display:grid;max-height:268px;overflow-y:auto;border:1px solid #3b5780;border-radius:13px;background:#0b2037;scrollbar-width:thin;padding:4px}
-.dlist .dh{padding:8px 10px 4px;font-size:10.5px;font-weight:700;color:#8da4c9}
+.dlist .dh{padding:10px 10px 4px;font-size:13px;font-weight:800;color:#c9d8f0;display:flex;align-items:center;gap:6px}.dh .dflag{font-size:18px;line-height:1}
 .dopt{display:flex;align-items:baseline;gap:8px;width:100%;min-height:46px;padding:8px 10px;border:0;border-radius:9px;background:none;color:#e9f0fc;font:700 14px var(--font);text-align:start}
 .dopt small{font-size:11px;font-weight:600;color:#8da4c9}
 .dopt mark{background:none;color:#fff;box-shadow:inset 0 -2px 0 var(--gold)}
@@ -1076,9 +1076,23 @@ const dest={value:''},port={value:''};   // الحالة: الدولة/المي�
 const LAST_KEY='septlion.lastDest';
 let dAct=-1,dOpts=[];
 const dQ=$('#destQ'),dL=$('#destList'),dBox=$('#dBox'),dClr=$('#destClr');
-const destLabel=()=>dest.value?dest.value+(port.value?' — '+port.value:''):'';
+const destLabel=()=>dest.value?flagC(dest.value)+' '+dest.value+(port.value?' — '+port.value:''):'';
 function dHl(t,q){if(!q)return esc(t);const n=norm(t),i=n.indexOf(q);return i<0||n.length!==t.length?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length))}
+const FLAG_ISO={'السعودية':'SA','السودان':'SD','الإمارات':'AE','مصر':'EG','تنزانيا':'TZ','كينيا':'KE','اليمن':'YE','غانا':'GH','نيجيريا':'NG','جيبوتي':'DJ','تشاد':'TD'};
+const flagC=c=>{const i=FLAG_ISO[c];return i?String.fromCodePoint(...[...i].map(x=>0x1F1E6+x.charCodeAt(0)-65)):'🌍'};
 function dOptions(raw){
+  const src=dOptions0(raw),out=[],li=src.findIndex(o=>o.h==='آخر وجهة استخدمتها');
+  if(li>=0)out.push(src[li],src[li+1]);
+  const opts=src.filter((o,i)=>!o.h&&!o.free&&!(li>=0&&i===li+1));
+  [...new Set(opts.map(o=>o.c))].forEach(c=>{
+    const ports=DEST.filter(d=>d[1]===c);
+    if(!ports.length){out.push(...opts.filter(o=>o.c===c));return}
+    out.push({h:'<span class="dflag">'+flagC(c)+'</span> '+esc(c)});
+    ports.forEach(d=>out.push({c,p:d[0],g:1}));
+  });
+  return out.concat(src.filter(o=>o.free));
+}
+function dOptions0(raw){
   const q=norm(raw),out=[];
   if(!q){
     let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
@@ -1099,7 +1113,7 @@ function dRender(){
     if(o.h){h+=`<div class="dh" role="presentation">${o.h}</div>`;return}
     const id='dopt'+idx,sel=idx===dAct;
     h+=o.free?`<button type="button" class="dopt free" id="${id}" role="option" aria-selected="${sel}" data-i="${idx}">استخدام «${esc(o.c)}» كوجهة</button>`
-      :`<button type="button" class="dopt" id="${id}" role="option" aria-selected="${sel}" data-i="${idx}">${o.p?`<span>${dHl(o.p,q)}</span><small>${dHl(o.c,q)}</small>`:`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;
+      :`<button type="button" class="dopt" id="${id}" role="option" aria-selected="${sel}" data-i="${idx}">${o.p?`<span>${dHl(o.p,q)}</span>${o.g?'':`<small>${flagC(o.c)} ${dHl(o.c,q)}</small>`}`:`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;
     o.idx=idx;idx++;
   });
   dL.innerHTML=h||'<div class="dh">اكتب اسم الدولة أو الميناء</div>';
@@ -1112,7 +1126,7 @@ function dQuick(){
   let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
   const L=[];if(last&&last.c)L.push({c:last.c,p:last.p||'',last:1});
   DEST_POP.forEach(n=>{const d=DEST.find(x=>x[0]===n);if(d&&!L.some(o=>o.c===d[1]&&o.p===d[0]))L.push({c:d[1],p:d[0]})});
-  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':esc(o.c)}</small></button>`).join('');
+  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':flagC(o.c)+' '+esc(o.c)}</small></button>`).join('');
 }
 $('#destQuick').addEventListener('click',e=>{const b=e.target.closest('button');if(b)dPick({c:b.dataset.c,p:b.dataset.p})});
 function dSync(){dBox.classList.toggle('ok',!!dest.value);dClr.hidden=!dest.value&&!dQ.value;dQuick();rfqSum()}

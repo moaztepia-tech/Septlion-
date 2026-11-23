@@ -45,6 +45,26 @@ const reqBtns=x=>`<div class="sendbox">${cbtn('pri ml',ICO_SEND,'يصل مباش
 one("case 'send-wa':{", "case 'send-platform':{const x=reqById(a.dataset.id);x&&SeptlionBridge.submit(x);break}\n    case 'send-wa':{")
 one("سيُفتح واتساب برسالة جاهزة؛ اضغط «إرسال» ليصلنا الطلب.", "نؤكد بريدك مرة واحدة، ثم يصل طلبك مباشرة إلى فريق سبتليون.")
 one("طلبك محفوظ على جهازك ولم يصلنا بعد. أرسله عبر واتساب أو البريد لنبدأ المراجعة.", "طلبك محفوظ على جهازك ولم يصلنا بعد. اضغط «إرسال الطلب» لنبدأ المراجعة.")
+# Destination search: each country with its flag, its ports listed under it.
+one("function dOptions(raw){", """const FLAG_ISO={'السعودية':'SA','السودان':'SD','الإمارات':'AE','مصر':'EG','تنزانيا':'TZ','كينيا':'KE','اليمن':'YE','غانا':'GH','نيجيريا':'NG','جيبوتي':'DJ','تشاد':'TD'};
+const flagC=c=>{const i=FLAG_ISO[c];return i?String.fromCodePoint(...[...i].map(x=>0x1F1E6+x.charCodeAt(0)-65)):'🌍'};
+function dOptions(raw){
+  const src=dOptions0(raw),out=[],li=src.findIndex(o=>o.h==='آخر وجهة استخدمتها');
+  if(li>=0)out.push(src[li],src[li+1]);
+  const opts=src.filter((o,i)=>!o.h&&!o.free&&!(li>=0&&i===li+1));
+  [...new Set(opts.map(o=>o.c))].forEach(c=>{
+    const ports=DEST.filter(d=>d[1]===c);
+    if(!ports.length){out.push(...opts.filter(o=>o.c===c));return}
+    out.push({h:'<span class="dflag">'+flagC(c)+'</span> '+esc(c)});
+    ports.forEach(d=>out.push({c,p:d[0],g:1}));
+  });
+  return out.concat(src.filter(o=>o.free));
+}
+function dOptions0(raw){""")
+one("<span>${dHl(o.p,q)}</span><small>${dHl(o.c,q)}</small>", "<span>${dHl(o.p,q)}</span>${o.g?'':`<small>${flagC(o.c)} ${dHl(o.c,q)}</small>`}")
+one("const destLabel=()=>dest.value?dest.value+(port.value?' — '+port.value:''):'';", "const destLabel=()=>dest.value?flagC(dest.value)+' '+dest.value+(port.value?' — '+port.value:''):'';")
+one("${o.last?'آخر وجهة':esc(o.c)}", "${o.last?'آخر وجهة':flagC(o.c)+' '+esc(o.c)}")
+one(".dh{padding:8px 10px 4px;font-size:10.5px;font-weight:700;color:#8da4c9}", ".dh{padding:10px 10px 4px;font-size:13px;font-weight:800;color:#c9d8f0;display:flex;align-items:center;gap:6px}.dh .dflag{font-size:18px;line-height:1}")
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n
