@@ -1173,7 +1173,7 @@ const reqById=id=>store.get(REQ_KEY,[]).find(r=>r.id===id);
 const ICO_WA='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 18.8z"/><path d="M9.3 8.8c.2 2.6 3.1 5.4 5.9 5.9l1-1.3-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2z"/></svg>',ICO_ML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7.5 8 6 8-6"/></svg>';
 const cbtn=(cls,ic,small,val,raw)=>`<button class="cbtn ${cls}" ${raw}><span class="ci">${ic}</span><span class="ct"><small>${small}</small><b>${val}</b></span><span class="go" aria-hidden="true">←</span></button>`;
 const ICO_SEND='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4 18-7z"/></svg>';
-const reqBtns=x=>`<div class="sendbox">${cbtn('pri ml',ICO_SEND,'يصل مباشرة إلى فريقنا','إرسال إلى سبتليون',`type="button" data-act="send-platform" data-id="${esc(x.id)}"`)}<button class="btn-link" style="justify-self:center;color:var(--sky,#9db3d6);font-weight:500" data-act="send-wa" data-id="${esc(x.id)}">أو أرسله عبر واتساب</button></div>`;
+const reqBtns=x=>`<div class="sendbox">${cbtn('pri ml',ICO_SEND,'يصل مباشرة إلى فريق سبتليون','إرسال الطلب',`type="button" data-act="send-platform" data-id="${esc(x.id)}"`)}<button class="btn-link" style="justify-self:center;color:var(--sky,#9db3d6);font-weight:500" data-act="send-wa" data-id="${esc(x.id)}">أو أرسله عبر واتساب</button></div>`;
 function submitRfq(){
   const n=Number(qty.value),p=S.selected;
   if(!dest.value){$('#destPick').classList.add('bad');$('#destErr').textContent='اكتب وجهة التسليم أو اخترها من الاقتراحات.';dQ.focus();return}
@@ -1202,7 +1202,7 @@ function renderTrack(){
   const x=S.trackId==='demo'?DEMO:list.find(r=>r.id===S.trackId); if(!x){S.trackId=null;return go('orders')}
   const st=STATUS[x.evaluation]||STATUS.pending;
   $('#trackBody').innerHTML=`<div class="ptitle"><span class="pill" style="margin-bottom:10px">${x.demo?'بيانات توضيحية':(x.sent?'طلب مُرسل':'طلب محفوظ — لم يُرسل بعد')}</span><h2 style="font-size:24px">${esc(x.title||x.id)}</h2><p>${esc(x.description||'')}</p></div>
-  <div class="card" style="margin-top:12px"><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span><p>${esc(x.demo||x.sent||x.evaluation!=='pending'?st.msg:'طلبك محفوظ على جهازك ولم يصلنا بعد. اضغط «إرسال إلى سبتليون» لنبدأ المراجعة.')}</p>${x.demo||x.sent?'':reqBtns(x)}</div>
+  <div class="card" style="margin-top:12px"><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span><p>${esc(x.demo||x.sent||x.evaluation!=='pending'?st.msg:'طلبك محفوظ على جهازك ولم يصلنا بعد. اضغط «إرسال الطلب» لنبدأ المراجعة.')}</p>${x.demo||x.sent?'':reqBtns(x)}</div>
   <div class="timeline" role="list">${FLOW.map((f,i)=>{const cls=i<st.step?'done':i===st.step?(st.stop?'stop':'active'):'todo';return `<div class="tl ${cls}" role="listitem"><span class="tl-dot">${cls==='done'?'✓':i+1}</span><div><strong>${esc(f[0])}</strong><small>${esc(f[1])}</small></div></div>`}).join('')}</div>
   `;
 }
