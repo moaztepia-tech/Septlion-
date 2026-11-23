@@ -1917,3 +1917,11 @@ textarea{resize:vertical;line-height:1.75}
 .frame-inner-edge{opacity:var(--op-35)}
 .ds-customer .mobile-discover{display:inline-flex;align-items:center;justify-content:center;min-height:44px}
 @media(max-width:600px){.ds-customer .platform-actions .header-start{display:none}}
+
+/* The decorative application frame is fixed to the viewport, so it was drawn
+   across cards and text while scrolling. Keep the page clean: no overlay frame,
+   and give wide screens a readable column instead of the 580px phone shell. */
+.ds-customer .customer-frame{display:none}
+@media(min-width:900px){
+  .ds-customer .customer-shell{max-width:1120px;padding-inline:var(--sp-5)}
+}
