@@ -3,14 +3,14 @@ import {test,expect} from '@playwright/test';
 async function browserSession(page,token){await page.addInitScript(token=>{if(location.pathname==='/command-center'&&!localStorage.getItem('septlion_session'))localStorage.setItem('septlion_session',JSON.stringify({access_token:token,refresh_token:'fixture',session_key:'browser',expires_at:4102444800,user:{id:'fixture'}}))},token)}
 test('360px ADMIN draft/publication and BUYER discovery-to-RFQ flow with server authorization',async({page,context})=>{
  await page.setViewportSize({width:360,height:800});await page.goto('/command-center');
- await expect(page.getByRole('heading',{name:'الدخول إلى مركز القيادة'})).toBeVisible();await expect(page.getByText('ماذا تريد أن تنجز؟')).toHaveCount(0);
+ await expect(page.getByRole('heading',{name:'لوحة فريق سبتليون'})).toBeVisible();await expect(page.getByText('أحدث الطلبات')).toHaveCount(0);
  // A session trade-api does not recognize as an operator never opens the command center.
  await page.evaluate(()=>localStorage.setItem('septlion_session',JSON.stringify({access_token:'BUYER',refresh_token:'fixture',session_key:'browser',expires_at:4102444800,user:{id:'fixture'}})));
- await page.reload();await page.getByRole('button',{name:'متابعة بالحساب الحالي'}).click();
- await expect(page.locator('main [role=alert]')).toBeVisible();await expect(page.getByText('ماذا تريد أن تنجز؟')).toHaveCount(0);
+ await page.reload();await page.getByRole('button',{name:'لقد سجّلت الدخول'}).click();
+ await expect(page.locator('main [role=alert]')).toBeVisible();await expect(page.getByText('أحدث الطلبات')).toHaveCount(0);
  await page.evaluate(()=>localStorage.removeItem('septlion_session'));
  await browserSession(page,'ADMIN');await page.reload();
- await expect(page.getByText('ماذا تريد أن تنجز؟')).toBeVisible();
+ await expect(page.getByText('أحدث الطلبات')).toBeVisible();await page.getByText('المنتجات والقطاعات').click();
  await page.getByLabel('اسم المنتج',{exact:true}).fill('زيت زولانا');await page.getByLabel('رمز الرابط').fill('zollana-oil');await page.getByRole('combobox',{name:'القطاع',exact:true}).selectOption('food');await page.getByLabel('الوصف',{exact:true}).fill('زيت عباد الشمس · تُثبت المواصفة في العرض');await page.getByLabel('رمز الصنف').fill('ZO-OIL-1');await page.getByLabel('اسم التعبئة').fill('عبوة 1 لتر');await page.getByLabel('مواصفة التعبئة').fill('1 لتر × 12');
  await page.getByRole('button',{name:'حفظ كمسودة خاصة'}).click();await expect(page.getByText('DRAFT · PRIVATE')).toBeVisible();
  await page.getByRole('button',{name:'مراجعة النشر'}).click();await expect(page.getByRole('button',{name:'تأكيد النشر'})).toBeDisabled();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'تأكيد النشر'}).click();await expect(page.getByText('ACTIVE · PUBLIC')).toBeVisible();
@@ -32,7 +32,7 @@ test('360px ADMIN draft/publication and BUYER discovery-to-RFQ flow with server 
 
  const requirementId=new URL(page.url()).searchParams.get('id');const beforeOffer=await(await page.request.get('http://127.0.0.1:3299/observations')).json();const rfq=beforeOffer.rfqs.find(r=>r.requirementId===requirementId);expect(rfq).toBeTruthy();
  await page.evaluate(()=>localStorage.setItem('septlion_session',JSON.stringify({access_token:'ADMIN',refresh_token:'fixture',session_key:'operator',expires_at:4102444800,user:{id:'actor-admin'}})));
- await page.goto('/operations');await expect(page.getByRole('heading',{name:'إصدار العرض',exact:true})).toBeVisible();await page.getByRole('combobox',{name:'طلب عرض السعر',exact:true}).selectOption(rfq.id);await expect(page.getByLabel('وصف البند')).toHaveValue('زيت عباد الشمس');await page.getByLabel('سعر الوحدة',{exact:true}).fill('1');await page.getByRole('combobox',{name:'شروط الدفع',exact:true}).selectOption('LC');await page.getByLabel('مرجع عرض المورد').fill('TEST-SUPPLIER-QUOTE-01');await page.getByRole('button',{name:'إصدار عرض Septlion',exact:true}).click();await expect(page.getByText('تم إصدار العرض وحفظ بنوده. أصبح المستند متاحًا.')).toBeVisible();
+ await page.goto('/operations');await page.getByRole('button',{name:/زيت عباد الشمس/}).first().click();await expect(page.getByRole('heading',{name:'إصدار عرض سعر',exact:true})).toBeVisible();await expect(page.getByLabel('وصف البند')).toHaveValue(/^زيت عباد الشمس/);await page.getByLabel('سعر الوحدة',{exact:true}).fill('1');await page.getByRole('combobox',{name:'الدفع',exact:true}).selectOption('LC');await page.getByLabel('مرجع عرض المورد').fill('TEST-SUPPLIER-QUOTE-01');await page.getByRole('button',{name:'إصدار العرض',exact:true}).click();await expect(page.getByText('تم إصدار العرض وحفظه.',{exact:false})).toBeVisible();
  await page.evaluate(()=>localStorage.setItem('septlion_session',JSON.stringify({access_token:'PHONE',refresh_token:'fixture',session_key:'buyer',expires_at:4102444800,user:{id:'phone-buyer'}})));
  await page.goto('/offer?requirement='+requirementId);await expect(page.getByRole('button',{name:'قبول النسخة 1 وتثبيت الطلب',exact:true})).toBeDisabled();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'قبول النسخة 1 وتثبيت الطلب',exact:true}).click();await expect(page.getByRole('heading',{name:'تم تثبيت الشروط التجارية'})).toBeVisible();const transactionId=new URL(page.url()).searchParams.get('id');
  await page.evaluate(()=>localStorage.setItem('septlion_session',JSON.stringify({access_token:'ADMIN',refresh_token:'fixture',session_key:'operator',expires_at:4102444800,user:{id:'actor-admin'}})));

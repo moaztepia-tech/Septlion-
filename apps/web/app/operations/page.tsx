@@ -21,7 +21,7 @@ export default function Operations(){
   try{const[dashboard,queue]=await Promise.all([edge<Dashboard>('operator.dashboard'),edge<{rfqs:OpsRfq[]}>('operator.queue')]);setD(dashboard);setRfqs(queue.rfqs);setErr('')}
   catch(e){setErr(e instanceof Error?e.message:'تعذر تحميل الطلبات')}
  },[]);
- useEffect(()=>{void load();const q=new URLSearchParams(window.location.search);const id=q.get('rfq');if(id)setSelected(id);if(q.get('tab')==='deals')setTab('deals')},[load]);
+ useEffect(()=>{void load();const q=new URLSearchParams(window.location.search);const id=q.get('rfq');if(id)setSelected(id);if(q.get('tab')==='deals'||q.get('transactionId'))setTab('deals')},[load]);
  useEffect(()=>{
   if(!selected){setDetail(null);return}let cancelled=false;setDetail(null);setFormErr('');setMessage('');
   edge<Detail>('operator.rfq',{id:selected}).then(x=>{if(cancelled)return;setDetail(x);setDescription([x.requirement.product,packingOf(x.requirement)].filter(Boolean).join(' — '));setQuantity(String(Number(x.requirement.quantity)||''));setUnit(x.requirement.unit||'');setPrice('');setIncoterm(x.requirement.incoterm||x.rfq.incoterm||'');setPayment((x.requirement.paymentPreference||'').replace('L/C','LC'));setValid(new Date(Date.now()+7*86400000).toISOString().slice(0,10));setEvidence('');setNotes('');setKey(crypto.randomUUID())}).catch(e=>{if(!cancelled)setFormErr(e.message)});
