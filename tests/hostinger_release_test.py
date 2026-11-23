@@ -187,6 +187,19 @@ class ReleaseTest(unittest.TestCase):
         self.assertEqual(public(self.fake, ".htaccess"), b"live hidden rules")
         self.assertIsNone(public(self.fake, "discover/index.html"))
 
+    def test_fast_plan_fails_on_transient_read_error_instead_of_calling_it_new(self):
+        original = self.fake.retrbinary
+        def flaky(command, callback):
+            if command.endswith("/index.html"):
+                raise ftplib.error_temp("421 try again")
+            return original(command, callback)
+        self.fake.retrbinary = flaky
+        with self.assertRaises(ftplib.error_temp):
+            self.plan_id()
+        self.fake.retrbinary = lambda c, cb: (_ for _ in ()).throw(ftplib.error_perm("530 denied"))
+        with self.assertRaises(ftplib.error_perm):
+            self.plan_id()
+
     def test_never_deletes(self):
         self.assertFalse(hasattr(FakeFTP, "delete"))
         source = (Path(__file__).resolve().parents[1] / "scripts/hostinger-release.py").read_text()
