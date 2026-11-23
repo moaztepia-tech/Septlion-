@@ -7,7 +7,7 @@ import {supplyPlanProblem} from '../lib/supply-plan';
 import {quantityDetails} from '../lib/composer-draft';
 import {FormEvent, useEffect, useRef, useState} from 'react';
 import {PlatformHeader} from './platform-header';
-import {edge, hasSession, sessionUserId} from '../lib/api';
+import {edge, hasSession, publicFunction, sessionUserId} from '../lib/api';
 import {createTradeRequirement} from '../lib/trade-data';
 import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
 
@@ -74,15 +74,12 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     setDraft(d=>answerRequirement(d,submitted,lang)); setSaveError('');
     // Optional server-side guidance: deterministic field extraction remains authoritative.
     if (!draft.reorder && submitted.length >= 12) {
-      // Hostinger publishes static pages only. This API executes on the separate Railway server.
-      // The local deterministic interpreter above remains authoritative and works if this fails.
+      // Hostinger publishes static pages only. Guidance runs in the Supabase Edge Function
+      // interpret-requirement; the local deterministic interpreter above stays authoritative.
       const guidance = new AbortController();
       const guidanceTimeout = setTimeout(()=>guidance.abort(),12000);
-      void fetch('https://septlion-web-production.up.railway.app/api/interpret-requirement', {
-        method:'POST', mode:'cors', cache:'no-store', signal:guidance.signal,
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({text:submitted})
-      }).then(async response=>{
+      void publicFunction('interpret-requirement', {text:submitted}, guidance.signal)
+        .then(async response=>{
         if(!response.ok)return;
         const payload:unknown=await response.json();
         const result=payload && typeof payload==='object' && 'result' in payload
@@ -92,7 +89,7 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
           if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
           return {...current,messages:[...current.messages.slice(0,-1),{role:'assistant' as const,text:result.slice(0,1500)}]};
         });
-      }).catch(()=>{ /* Existing composer works without optional Gemini. */ })
+      }).catch(()=>{ /* Existing composer works without optional AI guidance. */ })
         .finally(()=>clearTimeout(guidanceTimeout));
     }
     requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});

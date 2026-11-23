@@ -4,3 +4,8 @@ project_id = "septlion"
 # getUser and verifies active core membership inside the handler/RPC.
 [functions.trade-api]
 verify_jwt = false
+
+# Public composer guidance. It holds no buyer data; origin allowlist and rate limit
+# apply, and any failure leaves the browser on its local parser.
+[functions.interpret-requirement]
+verify_jwt = false

@@ -151,6 +151,15 @@ export async function edge<T>(action: string, payload: Record<string, unknown> =
 function revokeCommandCookie(){
  if(typeof window!=='undefined'&&window.location?.origin)void fetch('/api/command-session',{method:'DELETE',keepalive:true}).catch(()=>{});
 }
+// Public Edge Function call without a session (e.g. optional composer guidance).
+export function publicFunction(name: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<Response> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return Promise.reject(new Error('Supabase is not configured'));
+  return fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+    method: 'POST', mode: 'cors', cache: 'no-store', signal,
+    headers: {'Content-Type': 'application/json', apikey: SUPABASE_KEY},
+    body: JSON.stringify(body),
+  });
+}
 export function saveSession(s: Session) { storeSession(s, crypto.randomUUID());window.localStorage.removeItem(PHONE_CHALLENGE_KEY);revokeCommandCookie(); }
 export function accessToken() { return readSession()?.access_token || null; }
 export function clearSession() {

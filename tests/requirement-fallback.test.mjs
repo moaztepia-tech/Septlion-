@@ -37,9 +37,3 @@ test('explicit terms remain separate and no arbitrary content becomes a product'
  assert.equal(result.ready,true);
  assert.equal(fallback.interpretLocally('السلام عليكم').fields.product,'');
 });
-test('API route uses fast fallback unless Gemini was explicitly verified',async()=>{
- const source=await readFile(new URL('../apps/web/app/api/interpret-requirement/route.ts',import.meta.url),'utf8');
- assert.ok(source.includes("process.env.GEMINI_ENABLED !== 'true'"));
- assert.ok(source.includes('return fallback();'));
- assert.ok(source.includes('interpretLocally(text)'));
-});
