@@ -741,7 +741,7 @@ details.opt.lv>:not(summary){margin-inline:0}
     <div class="field"><label for="fPhone">رقم واتساب مع رمز الدولة</label><input class="input" id="fPhone" type="tel" inputmode="tel" dir="ltr" placeholder="+249 …" autocomplete="tel" aria-describedby="fPhoneErr"><p class="err" id="fPhoneErr" role="alert"></p></div>
     <p class="hint" style="margin-top:10px">سنتواصل معك على هذا الرقم عبر واتساب لمتابعة الطلب.</p>
     <button class="btn btn-primary" type="submit" style="margin-top:18px">طلب عرض سعر <span class="arrow">←</span></button>
-    <p class="compose-note">سيُفتح واتساب برسالة جاهزة؛ اضغط «إرسال» ليصلنا الطلب.</p>
+    <p class="compose-note">نؤكد بريدك مرة واحدة، ثم يصل طلبك مباشرة إلى فريق سبتليون.</p>
   </form>
 </section>
 
@@ -1172,7 +1172,8 @@ function sendMail(x){location.href=`mailto:${CONTACT.mail}?subject=${encodeURICo
 const reqById=id=>store.get(REQ_KEY,[]).find(r=>r.id===id);
 const ICO_WA='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 18.8z"/><path d="M9.3 8.8c.2 2.6 3.1 5.4 5.9 5.9l1-1.3-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2z"/></svg>',ICO_ML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7.5 8 6 8-6"/></svg>';
 const cbtn=(cls,ic,small,val,raw)=>`<button class="cbtn ${cls}" ${raw}><span class="ci">${ic}</span><span class="ct"><small>${small}</small><b>${val}</b></span><span class="go" aria-hidden="true">←</span></button>`;
-const reqBtns=x=>`<div class="sendbox">${cbtn('pri wa',ICO_WA,'الأسرع — رسالة جاهزة','إرسال عبر واتساب',`type="button" data-act="send-wa" data-id="${esc(x.id)}"`)}${cbtn('ml',ICO_ML,'نسخة مكتوبة','إرسال عبر البريد',`type="button" data-act="send-mail" data-id="${esc(x.id)}"`)}${x.sent?'':`<button class="btn-link" data-act="mark-sent" data-id="${esc(x.id)}">أرسلتُ الطلب بالفعل</button>`}</div>`;
+const ICO_SEND='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4 18-7z"/></svg>';
+const reqBtns=x=>`<div class="sendbox">${cbtn('pri ml',ICO_SEND,'يصل مباشرة إلى فريقنا','إرسال إلى سبتليون',`type="button" data-act="send-platform" data-id="${esc(x.id)}"`)}<button class="btn-link" style="justify-self:center;color:var(--sky,#9db3d6);font-weight:500" data-act="send-wa" data-id="${esc(x.id)}">أو أرسله عبر واتساب</button></div>`;
 function submitRfq(){
   const n=Number(qty.value),p=S.selected;
   if(!dest.value){$('#destPick').classList.add('bad');$('#destErr').textContent='اكتب وجهة التسليم أو اخترها من الاقتراحات.';dQ.focus();return}
@@ -1191,7 +1192,7 @@ const stLabel=(x,st)=>x.demo||x.sent||x.evaluation!=='pending'?st.label:'محف�
 function renderOrders(){
   const list=store.get(REQ_KEY,[]);
   $('#ordersEmpty').hidden=list.length>0;
-  $('#orderList').innerHTML=list.length?`<p class="hint" style="margin:16px 2px 10px">طلباتك محفوظة على هذا الجهاز. يصلنا الطلب بعد تأكيد بريدك، أو عند إرساله عبر واتساب أو البريد.</p>`+list.map(x=>{
+  $('#orderList').innerHTML=list.length?`<p class="hint" style="margin:16px 2px 10px">طلباتك محفوظة على هذا الجهاز. يصلنا الطلب بعد تأكيد بريدك.</p>`+list.map(x=>{
     const st=STATUS[x.evaluation]||STATUS.pending;
     const meta=x.kind==='sku'?`${esc(x.dest)}${x.port?' · '+esc(x.port):''} · ${esc(x.qty)} حاوية · ${esc(x.incoterm)}`:esc(x.description);
     return `<article class="card"><div class="card-head"><strong>${esc(x.title||x.id)}</strong><span class="latin" style="font-size:10px;color:var(--sky);letter-spacing:.06em">${esc(x.id)}</span></div><p>${meta}</p><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span>${x.sent?'':reqBtns(x)}<button class="btn btn-ghost" style="margin-top:8px" data-act="track" data-id="${esc(x.id)}">عرض حالة الطلب <span class="arrow">←</span></button></article>`}).join(''):'';
@@ -1201,7 +1202,7 @@ function renderTrack(){
   const x=S.trackId==='demo'?DEMO:list.find(r=>r.id===S.trackId); if(!x){S.trackId=null;return go('orders')}
   const st=STATUS[x.evaluation]||STATUS.pending;
   $('#trackBody').innerHTML=`<div class="ptitle"><span class="pill" style="margin-bottom:10px">${x.demo?'بيانات توضيحية':(x.sent?'طلب مُرسل':'طلب محفوظ — لم يُرسل بعد')}</span><h2 style="font-size:24px">${esc(x.title||x.id)}</h2><p>${esc(x.description||'')}</p></div>
-  <div class="card" style="margin-top:12px"><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span><p>${esc(x.demo||x.sent||x.evaluation!=='pending'?st.msg:'طلبك محفوظ على جهازك ولم يصلنا بعد. أرسله عبر واتساب أو البريد لنبدأ المراجعة.')}</p>${x.demo||x.sent?'':reqBtns(x)}</div>
+  <div class="card" style="margin-top:12px"><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span><p>${esc(x.demo||x.sent||x.evaluation!=='pending'?st.msg:'طلبك محفوظ على جهازك ولم يصلنا بعد. اضغط «إرسال إلى سبتليون» لنبدأ المراجعة.')}</p>${x.demo||x.sent?'':reqBtns(x)}</div>
   <div class="timeline" role="list">${FLOW.map((f,i)=>{const cls=i<st.step?'done':i===st.step?(st.stop?'stop':'active'):'todo';return `<div class="tl ${cls}" role="listitem"><span class="tl-dot">${cls==='done'?'✓':i+1}</span><div><strong>${esc(f[0])}</strong><small>${esc(f[1])}</small></div></div>`}).join('')}</div>
   `;
 }
@@ -1262,7 +1263,7 @@ $('#needForm').addEventListener('submit',e=>{
   list.unshift(x);
   store.set(REQ_KEY,list);
   e.target.reset(); S.needText=''; stage='start';topic='';extra='';
-  $('#doneBox').innerHTML=`<div class="mk">✓</div><h1>طلبك محفوظ.</h1><p>أكّد بريدك ليصل الطلب إلى فريق سبتليون، أو أرسله عبر واتساب أو البريد.</p>${reqBtns(x)}<button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>`;
+  $('#doneBox').innerHTML=`<div class="mk">✓</div><h1>طلبك محفوظ.</h1><p>أكّد بريدك ليصل الطلب إلى فريق سبتليون.</p>${reqBtns(x)}<button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>`;
   go('needDone'); SeptlionBridge.submit(x);
 });
 
@@ -1300,6 +1301,7 @@ document.addEventListener('click',e=>{
     case 'level': qty.value=LEVELS[Number(a.dataset.i)][2];tierUpdate();break;
     case 'submit-rfq': submitRfq();break;
     case 'copy':{const v=a.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('تم نسخ '+v),()=>toast(v));break}
+    case 'send-platform':{const x=reqById(a.dataset.id);x&&SeptlionBridge.submit(x);break}
     case 'send-wa':{const x=reqById(a.dataset.id);x&&sendWA(x);break}
     case 'send-mail':{const x=reqById(a.dataset.id);x&&sendMail(x);break}
     case 'mark-sent':{const l=store.get(REQ_KEY,[]),x=l.find(r=>r.id===a.dataset.id);if(x){x.sent=true;store.set(REQ_KEY,l);renderOrders();if(app.dataset.route==='tracking')renderTrack();toast('تم التسجيل — سنراجع طلبك ونردّ عليك')}break}

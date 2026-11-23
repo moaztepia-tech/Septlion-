@@ -337,14 +337,14 @@
       h += '<button class="btn btn-primary" type="submit" style="margin-top:14px">تأكيد وإرسال الطلب <span class="arrow">←</span></button>';
       h += '<button class="sb-alt" type="button" data-sb="back">تعديل البريد أو إعادة إرسال الرمز</button>';
     }
-    h += '<button class="sb-alt" type="button" data-sb="wa">أو أرسل الطلب عبر واتساب</button>';
+    h += '<button class="sb-alt" type="button" data-sb="wa"' + (message ? '' : ' hidden') + '>أو أرسل الطلب عبر واتساب</button>'; // only after a failure
     f.innerHTML = h;
     enhancePhone(f.querySelector('#sbWa'));
   }
   const val = id => { const el = sheet.querySelector('#' + id); return el ? el.value : ''; };
   const radio = name => { const el = sheet.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; };
   function busy(on) { const b = sheet.querySelector('button[type=submit]'); if (b) { b.disabled = on; b.style.opacity = on ? .6 : 1; } }
-  function showErr(m) { const e = sheet.querySelector('#sbErr'); if (e) e.textContent = m; }
+  function showErr(m) { const e = sheet.querySelector('#sbErr'); if (e) e.textContent = m; const w = sheet.querySelector('[data-sb="wa"]'); if (w && m) w.hidden = false; }
 
   async function onSubmit(e) {
     e.preventDefault(); showErr(''); busy(true);
