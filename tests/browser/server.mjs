@@ -3,7 +3,8 @@
 import {createServer} from 'node:http';
 import {spawn} from 'node:child_process';
 import {createEdgePostgres} from '../helpers/edge-postgres.mjs';
-const phoneUser={id:'phone-buyer',phone:'201012345678',phone_confirmed_at:'2026-01-01T00:00:00Z'};
+// Buyer verified by the free email code; WhatsApp stays an unconfirmed contact.
+const phoneUser={id:'phone-buyer',email:'buyer@fixture.invalid',email_confirmed_at:'2026-01-01T00:00:00Z'};
 const otpChannels=[];
 const backend=await createEdgePostgres(token=>token==='ADMIN'?{id:'actor-admin',email:'admin@fixture.invalid'}:token==='PHONE'?phoneUser:null);
 const server=createServer(async(req,res)=>{
@@ -16,8 +17,8 @@ const server=createServer(async(req,res)=>{
    const rfqs=(await backend.pg.query('select id,"requirementId",status from core."RFQ"')).rows;const transactions=(await backend.pg.query('select id,status,version from core."TradeTransaction"')).rows;res.end(JSON.stringify({requests,rfqs,transactions,otpChannels,engine:'postgresql'}));return;
   }
   const b=JSON.parse(raw||'{}');
-  if(req.url==='/auth/v1/otp'){if(b.channel!=='whatsapp'){res.statusCode=400;res.end('{}');return}otpChannels.push(b.channel);res.end('{}');return}
-  if(req.url==='/auth/v1/verify'){if(b.token!=='123456'){res.statusCode=403;res.end(JSON.stringify({message:'Invalid OTP'}));return}res.end(JSON.stringify({access_token:'PHONE',refresh_token:'fixture',expires_at:4102444800,user:phoneUser}));return}
+  if(req.url==='/auth/v1/otp'){if(b.email!==phoneUser.email||b.channel){res.statusCode=400;res.end('{}');return}otpChannels.push('email');res.end('{}');return}
+  if(req.url==='/auth/v1/verify'){if(b.token!=='123456'||b.email!==phoneUser.email||b.type!=='email'){res.statusCode=403;res.end(JSON.stringify({message:'Invalid OTP'}));return}res.end(JSON.stringify({access_token:'PHONE',refresh_token:'fixture',expires_at:4102444800,user:phoneUser}));return}
   if(req.url==='/auth/v1/user'){res.end(JSON.stringify(phoneUser));return}
   const result=await backend.handler(new Request('http://127.0.0.1:3299'+req.url,{method:req.method,headers:req.headers,...(req.method==='POST'?{body:raw}:{})}));
   res.statusCode=result.status;res.end(await result.text());
