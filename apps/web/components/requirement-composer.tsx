@@ -1,13 +1,13 @@
 'use client';
-import {PhoneVerification} from './phone-verification';
-import {buyerContactProblem,normalizePhone} from '../lib/buyer-contact';
+import {EmailVerification} from './email-verification';
+import {buyerContactProblem,normalizeEmail,normalizePhone} from '../lib/buyer-contact';
 import {DesignField, DesignLink, DesignButton, DesignLayers} from "./design-system";
 import {SupplyPlanEditor} from './supply-plan';
 import {supplyPlanProblem} from '../lib/supply-plan';
 import {quantityDetails} from '../lib/composer-draft';
 import {FormEvent, useEffect, useRef, useState} from 'react';
 import {PlatformHeader} from './platform-header';
-import {edge, hasSession, sessionUserId} from '../lib/api';
+import {edge, hasSession, publicFunction, sessionUserId} from '../lib/api';
 import {createTradeRequirement} from '../lib/trade-data';
 import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
 
@@ -74,15 +74,12 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     setDraft(d=>answerRequirement(d,submitted,lang)); setSaveError('');
     // Optional server-side guidance: deterministic field extraction remains authoritative.
     if (!draft.reorder && submitted.length >= 12) {
-      // Hostinger publishes static pages only. This API executes on the separate Railway server.
-      // The local deterministic interpreter above remains authoritative and works if this fails.
+      // Hostinger publishes static pages only. Guidance runs in the Supabase Edge Function
+      // interpret-requirement; the local deterministic interpreter above stays authoritative.
       const guidance = new AbortController();
       const guidanceTimeout = setTimeout(()=>guidance.abort(),12000);
-      void fetch('https://septlion-web-production.up.railway.app/api/interpret-requirement', {
-        method:'POST', mode:'cors', cache:'no-store', signal:guidance.signal,
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({text:submitted})
-      }).then(async response=>{
+      void publicFunction('interpret-requirement', {text:submitted}, guidance.signal)
+        .then(async response=>{
         if(!response.ok)return;
         const payload:unknown=await response.json();
         const result=payload && typeof payload==='object' && 'result' in payload
@@ -92,7 +89,7 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
           if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
           return {...current,messages:[...current.messages.slice(0,-1),{role:'assistant' as const,text:result.slice(0,1500)}]};
         });
-      }).catch(()=>{ /* Existing composer works without optional Gemini. */ })
+      }).catch(()=>{ /* Existing composer works without optional AI guidance. */ })
         .finally(()=>clearTimeout(guidanceTimeout));
     }
     requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});
@@ -108,7 +105,7 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     if (!reviewOnly || !hydrated || storageError || !draft.composerVisited || busy.current || !ready || draft.savedRequirementId) return;
     busy.current=true;setSaving(true);setSaveError('');
     try {
-      if(!draft.reorder){const problem=buyerContactProblem(contact);if(problem)throw new Error(problem);if(verifiedContact!==normalizePhone(contact.phone))throw new Error('أكد ملكية رقم واتساب قبل إرسال الطلب.')}
+      if(!draft.reorder){const problem=buyerContactProblem(contact);if(problem)throw new Error(problem);if(verifiedContact!==normalizeEmail(contact.email))throw new Error('أكد بريدك الإلكتروني قبل إرسال الطلب.')}
       const input=draft.reorder?reorderPayload(draft):{...requirementPayload(draft),buyer:{name:contact.name,company:contact.company,email:contact.email||null,whatsapp:normalizePhone(contact.phone)}};
       if(!hasSession())throw new Error('أكد رقم التواصل للمتابعة.');
       const result=draft.reorder?await edge<{id:string}>('reorder.create',input):await createTradeRequirement(input);
@@ -144,8 +141,8 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
           {!draft.reorder&&<label className="composer-notes"><span>{ar?'ملاحظات المواصفة والتوريد — اختياري':'Specification and supply notes — optional'}</span><DesignField multiline><textarea disabled={saving||!!draft.savedRequirementId} value={draft.notes} onChange={e=>setDraft(d=>({...d,notes:e.target.value}))} maxLength={8000} rows={3} placeholder={ar?'أضف متطلبات الجودة أو التعبئة أو أي تفصيل مهم لعرضك…':'Add quality, packaging or other requirements for your offer…'}/></DesignField></label>}
           {!draft.reorder&&<SupplyPlanEditor plan={draft.supplyPlan||null} onChange={supplyPlan=>setDraft(d=>({...d,supplyPlan}))} unit={quantityDetails(draft.data.quantity)?.unit||'FCL'} disabled={saving||!!draft.savedRequirementId} ar={ar}/>}
           {planError&&<p className="workspace-error" role="alert">{planError}</p>}
-          {!draft.reorder&&!draft.savedRequirementId&&<section aria-label="بيانات التواصل للطلب"><h3>{ar?'بيانات التواصل':'Contact details'}</h3><div className="composer-field-grid">{([['name',ar?'الاسم':'Name'],['company',ar?'الشركة':'Company'],['email',ar?'البريد الإلكتروني — اختياري':'Email — optional'],['phone',ar?'رقم واتساب مع رمز الدولة':'WhatsApp with country code']] as const).map(([key,label])=><label key={key}>{label}<DesignField><input disabled={saving} type={key==='email'?'email':key==='phone'?'tel':'text'} maxLength={key==='phone'?30:254} value={contact[key]} onChange={e=>setContact({...contact,[key]:e.target.value})}/></DesignField></label>)}</div><PhoneVerification phone={contact.phone} onVerified={setVerifiedContact} disabled={saving}/></section>}
-          {draft.savedRequirementId?<DesignLink className="primary-link" href={'/request?id='+encodeURIComponent(draft.savedRequirementId)}>{ar?'فتح الطلب الذي أُرسل':'Open submitted request'}</DesignLink>:<div className="composer-review-actions"><p>{ready?(ar?'الإرسال يطلب إعداد عرض؛ تثبيت الشروط يتم عند قبول العرض لاحقًا.':'Sending requests an offer. Terms are locked when you accept the offer later.'):missing.length?requirementQuestion(missing[0],lang,draft.feed):planError}</p>{reviewOnly?<DesignButton className="primary-link" disabled={!hydrated||storageError||!ready||saving||!draft.reorder&&(!verifiedContact||verifiedContact!==normalizePhone(contact.phone))} onClick={()=>void save()}>{saving?(ar?'جارٍ الإرسال…':'Sending…'):(ar?'إرسال الطلب لإعداد العرض':'Request a Septlion offer')}</DesignButton>:<DesignLink className="primary-link" href="/review">{ar?'متابعة إلى مراجعة الطلب':'Continue to request review'}</DesignLink>}</div>}
+          {!draft.reorder&&!draft.savedRequirementId&&<section aria-label="بيانات التواصل للطلب"><h3>{ar?'بيانات التواصل':'Contact details'}</h3><div className="composer-field-grid">{([['name',ar?'الاسم':'Name'],['company',ar?'الشركة':'Company'],['email',ar?'البريد الإلكتروني':'Email'],['phone',ar?'رقم واتساب مع رمز الدولة':'WhatsApp with country code']] as const).map(([key,label])=><label key={key}>{label}<DesignField><input disabled={saving} type={key==='email'?'email':key==='phone'?'tel':'text'} maxLength={key==='phone'?30:254} value={contact[key]} onChange={e=>setContact({...contact,[key]:e.target.value})}/></DesignField></label>)}</div><EmailVerification email={contact.email} onVerified={setVerifiedContact} disabled={saving}/></section>}
+          {draft.savedRequirementId?<DesignLink className="primary-link" href={'/request?id='+encodeURIComponent(draft.savedRequirementId)}>{ar?'فتح الطلب الذي أُرسل':'Open submitted request'}</DesignLink>:<div className="composer-review-actions"><p>{ready?(ar?'الإرسال يطلب إعداد عرض؛ تثبيت الشروط يتم عند قبول العرض لاحقًا.':'Sending requests an offer. Terms are locked when you accept the offer later.'):missing.length?requirementQuestion(missing[0],lang,draft.feed):planError}</p>{reviewOnly?<DesignButton className="primary-link" disabled={!hydrated||storageError||!ready||saving||!draft.reorder&&(!verifiedContact||verifiedContact!==normalizeEmail(contact.email))} onClick={()=>void save()}>{saving?(ar?'جارٍ الإرسال…':'Sending…'):(ar?'إرسال الطلب لإعداد العرض':'Request a Septlion offer')}</DesignButton>:<DesignLink className="primary-link" href="/review">{ar?'متابعة إلى مراجعة الطلب':'Continue to request review'}</DesignLink>}</div>}
           {saveError&&<p className="workspace-error" role="alert">{saveError}</p>}
         </div></section>}
         <div ref={end}/>

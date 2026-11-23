@@ -148,15 +148,20 @@ export async function edge<T>(action: string, payload: Record<string, unknown> =
   if (b === null) throw new Error('تعذر قراءة نتيجة الطلب.');
   return b as T;
 }
-function revokeCommandCookie(){
- if(typeof window!=='undefined'&&window.location?.origin)void fetch('/api/command-session',{method:'DELETE',keepalive:true}).catch(()=>{});
+// Public Edge Function call without a session (e.g. optional composer guidance).
+export function publicFunction(name: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<Response> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return Promise.reject(new Error('Supabase is not configured'));
+  return fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+    method: 'POST', mode: 'cors', cache: 'no-store', signal,
+    headers: {'Content-Type': 'application/json', apikey: SUPABASE_KEY},
+    body: JSON.stringify(body),
+  });
 }
-export function saveSession(s: Session) { storeSession(s, crypto.randomUUID());window.localStorage.removeItem(PHONE_CHALLENGE_KEY);revokeCommandCookie(); }
+export function saveSession(s: Session) { storeSession(s, crypto.randomUUID());window.localStorage.removeItem(PHONE_CHALLENGE_KEY); }
 export function accessToken() { return readSession()?.access_token || null; }
 export function clearSession() {
   if (typeof window === 'undefined') return;
   for (const key of [SESSION_KEY, 'septlion_access', 'septlion_refresh', PHONE_CHALLENGE_KEY]) window.localStorage.removeItem(key);
-  revokeCommandCookie();
 }
 export function hasSession() { const s = readSession(); return Boolean(s?.access_token || s?.refresh_token); }
 // Only scopes local UI drafts. The API independently verifies organization access.
@@ -207,7 +212,49 @@ export async function confirmPhoneVerification(challenge:PhoneChallenge,code:str
  const user=b?.user;
  if(!user?.phone_confirmed_at||'+'+String(user.phone||'').replace(/^\+/,'')!==phone)throw new Error('لم يؤكد الخادم ملكية الرقم. أعد المحاولة.');
  if(before?.user?.id&&user.id!==before.user.id)throw new Error(SESSION_CHANGED);
- if(b.access_token&&b.refresh_token){storeSession(b,before?.session_key||crypto.randomUUID());if(!before)revokeCommandCookie();}
+ if(b.access_token&&b.refresh_token){storeSession(b,before?.session_key||crypto.randomUUID());}
  else if(!before)throw new Error('تعذر إنشاء جلسة رقم التواصل.');
  const verified=await verifiedPhone();if(verified!==phone)throw new Error('تعذر تأكيد الرقم الحالي.');window.localStorage.removeItem(PHONE_CHALLENGE_KEY);return verified;
+}
+
+export type EmailChallenge = {email:string; type:'email'|'email_change'; sessionKey:string|null; nonce:string};
+function emailAddress(value:string) {
+ const email=value.trim().toLowerCase();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)throw new Error('أدخل بريدًا إلكترونيًا صحيحًا.');
+ return email;
+}
+const confirmedEmail=(user:any)=>user?.email_confirmed_at&&typeof user.email==='string'&&Number.isFinite(Date.parse(user.email_confirmed_at))?user.email.toLowerCase():null;
+export async function verifiedEmail():Promise<string|null> {
+ if(!hasSession())return null;
+ return confirmedEmail(await authUserRequest('GET'));
+}
+// Free verification: Supabase Auth emails a one-time code. Only the Auth server's
+// confirmed user is evidence; the UI never marks an address as verified by itself.
+export async function requestEmailVerification(value:string):Promise<EmailChallenge> {
+ configured();const email=emailAddress(value),initial=readSession(),nonce=crypto.randomUUID();
+ window.localStorage.setItem(PHONE_CHALLENGE_KEY,nonce);
+ const currentChallenge=()=>{if(window.localStorage.getItem(PHONE_CHALLENGE_KEY)!==nonce)throw new Error(SESSION_CHANGED)};
+ if(initial){await authUserRequest('PUT',{email});currentChallenge();return{email,type:'email_change',sessionKey:initial.session_key,nonce};}
+ const r=await fetch(`${SUPABASE_URL}/auth/v1/otp`,{method:'POST',headers:headers(),body:JSON.stringify({email,create_user:true})});
+ const b=await responseBody(r);
+ currentChallenge();if(readSession())throw new Error(SESSION_CHANGED);
+ if(!r.ok)throw new Error(message(b,'تعذر إرسال رمز التحقق إلى بريدك. مسودتك محفوظة؛ حاول لاحقًا.'));
+ return{email,type:'email',sessionKey:null,nonce};
+}
+export async function confirmEmailVerification(challenge:EmailChallenge,code:string):Promise<string> {
+ configured();const email=emailAddress(challenge.email);
+ if(!/^\d{6,10}$/.test(code))throw new Error('أدخل رمز التحقق كما وصلك.');
+ const before=readSession();
+ if(window.localStorage.getItem(PHONE_CHALLENGE_KEY)!==challenge.nonce)throw new Error(SESSION_CHANGED);
+ if((before?.session_key||null)!==challenge.sessionKey)throw new Error(SESSION_CHANGED);
+ const r=await fetch(`${SUPABASE_URL}/auth/v1/verify`,{method:'POST',headers:headers(before?.access_token),body:JSON.stringify({email,token:code,type:challenge.type})});
+ const b=await responseBody(r);
+ const current=readSession();if(window.localStorage.getItem(PHONE_CHALLENGE_KEY)!==challenge.nonce)throw new Error(SESSION_CHANGED);if((current?.session_key||null)!==challenge.sessionKey)throw new Error(SESSION_CHANGED);
+ if(!r.ok)throw new Error(message(b,'الرمز غير صحيح أو انتهت صلاحيته.'));
+ const user=b?.user;
+ if(confirmedEmail(user)!==email)throw new Error('لم يؤكد الخادم البريد الإلكتروني. أعد المحاولة.');
+ if(before?.user?.id&&user.id!==before.user.id)throw new Error(SESSION_CHANGED);
+ if(b.access_token&&b.refresh_token){storeSession(b,before?.session_key||crypto.randomUUID());}
+ else if(!before)throw new Error('تعذر إنشاء جلسة الدخول.');
+ const verified=await verifiedEmail();if(verified!==email)throw new Error('تعذر تأكيد البريد الحالي.');window.localStorage.removeItem(PHONE_CHALLENGE_KEY);return verified;
 }

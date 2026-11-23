@@ -88,11 +88,14 @@ test('freeform quantity overrides Home defaults and a complete summary preserves
  const d=draft.answerRequirement({...draft.emptyComposerDraft('home'),data:{quantity:'1 FCL',incoterm:'CIF',payment:'L/C'}},'٥ حاويات دقيق مخابز ٥٠ كجم إلى تنزانيا','ar');
  assert.deepEqual(draft.missingRequirementFields(d.data),[]);assert.equal(draft.requirementPayload(d).containerCount,5);
 });
-test('international phone accepts Arabic digits and optional email is truly optional',()=>{
+test('international phone accepts Arabic digits; requests need an email for the free code, profiles do not',()=>{
  assert.equal(contact.normalizePhone('+٢٥٥ (٧١٢) ٣٤٥-٦٧٨'),'+255712345678');
- assert.equal(contact.buyerContactProblem({name:'Buyer',company:'Company',phone:'+255712345678',email:''}),'');
- for(const phone of ['255712345678','+123','+2557abc12345678','++255712345678'])assert.notEqual(contact.buyerContactProblem({name:'Buyer',company:'Company',phone,email:''}),'');
- assert.match(contact.buyerContactProblem({name:'Buyer',company:'Company',phone:'+255712345678',email:'invalid'}),/اختياري/);
+ assert.equal(contact.buyerContactProblem({name:'Buyer',company:'Company',phone:'+255712345678',email:'buyer@example.com'}),'');
+ assert.match(contact.buyerContactProblem({name:'Buyer',company:'Company',phone:'+255712345678',email:''}),/رمز التحقق/);
+ assert.equal(contact.buyerContactProblem({name:'Buyer',company:'Company',phone:'+255712345678',email:''},{emailRequired:false}),'');
+ for(const phone of ['255712345678','+123','+2557abc12345678','++255712345678'])assert.notEqual(contact.buyerContactProblem({name:'Buyer',company:'Company',phone,email:'buyer@example.com'}),'');
+ assert.match(contact.buyerContactProblem({name:'Buyer',company:'Company',phone:'+255712345678',email:'invalid'},{emailRequired:false}),/صحّح البريد/);
+ assert.equal(contact.normalizeEmail(' Buyer@Example.COM '),'buyer@example.com');
 });
 test('stage navigation carries the exact request, offer and transaction, never another active trade',()=>{
  const links=journey.tradeNavigation({requestId:'request A',offerId:'offer A',transactionId:'transaction A'});

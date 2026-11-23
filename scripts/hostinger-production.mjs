@@ -21,7 +21,10 @@ export async function packageProduction(projectRoot=root){
  }
  for(const route of ['index','discover','require','review','my-septlion','requests','request','offer','offer-document','commit','execution','documents','receive','reorder','account','notifications','operations','analytics']){
   const file=path.join(dest,route==='index'?'index.html':route+'/index.html');
-  if(!(await stat(file)).size||!(await stat(path.join(dest,'_rsc',route+'.rsc'))).size)throw new Error('Missing production HTML or navigation payload: '+route);
+  const sizeOf=async f=>{try{return (await stat(f)).size;}catch(e){if(e?.code==='ENOENT')return {missing:e.code};throw e;}};
+  const sizes=[await sizeOf(file),await sizeOf(path.join(dest,'_rsc',route+'.rsc'))];
+  const missing=sizes.find(x=>typeof x==='object');
+  if(missing||!sizes[0]||!sizes[1])throw new Error('Missing production HTML or navigation payload: '+route+(missing?' ('+missing.missing+')':''));
   const html=await readFile(file,'utf8');if(!html.includes('/_next/')||html.includes('/preview/septlion-customer-v2/_next/'))throw new Error('Wrong production assets: '+route);
  }
  await cp(path.join(dest,'index.html'),path.join(dest,'404.html'));
