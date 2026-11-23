@@ -379,9 +379,9 @@
     if (page().closeSheets) page().closeSheets(true);
     const done = $('#doneBox');
     if (done && $('#needDone') && current.kind === 'free') {
-      done.innerHTML = '<div class="mk">✓</div><h1>وصل طلبك إلى سبتليون.</h1><p>' + (ref ? 'رقم الطلب <b class="latin">' + escH(ref) + '</b>. ' : '') + 'سيتواصل معك فريقنا عبر واتساب أو البريد بعرض مناسب.</p><button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>';
+      done.innerHTML = '<div class="mk">✓</div><h1>تم استلام طلبك.</h1><p>' + (ref ? 'رقم الطلب <b class="latin">' + escH(ref) + '</b>. ' : '') + 'سيتواصل معك فريقنا عبر واتساب أو البريد بعرض مناسب.</p><button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>';
     }
-    if (page().toast) page().toast('وصل طلبك إلى سبتليون' + (ref ? ' — ' + ref : ''), { label: 'طلباتي', go: 'orders' });
+    if (page().toast) page().toast('تم استلام طلبك' + (ref ? ' — رقم الطلب ' + ref : ''), { label: 'طلباتي', go: 'orders' });
     step = 'contact'; current = null;
   }
 
