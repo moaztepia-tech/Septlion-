@@ -75,3 +75,27 @@ test('contact details are checked before any code is sent', () => {
   assert.throws(() => B.buildInput(x, { ...contact, company: ' ' }, {}, null), /الشركة/);
   assert.throws(() => B.buildInput({ ...x, qty: 0 }, contact, {}, null), /الحاويات/);
 });
+
+test('phone numbers are split into country and local number', () => {
+  assert.deepEqual(B.splitPhone('+249 912 345 678', 'SD'), { iso: 'SD', national: '912345678' });
+  assert.deepEqual(B.splitPhone('00966501234567', 'SD'), { iso: 'SA', national: '501234567' });
+  assert.deepEqual(B.splitPhone('0912345678', 'SD'), { iso: 'SD', national: '912345678' });
+  assert.deepEqual(B.splitPhone('٠٩١٢٣٤٥٦٧٨', 'SD'), { iso: 'SD', national: '912345678' });
+  assert.deepEqual(B.splitPhone('249912345678', 'SD'), { iso: 'SD', national: '912345678' });
+  assert.deepEqual(B.splitPhone('+20 100 123 4567', 'SD'), { iso: 'EG', national: '1001234567' });
+  assert.deepEqual(B.splitPhone('+1 415 555 0100', 'SD'), { iso: 'US', national: '4155550100' });
+  assert.deepEqual(B.splitPhone('', 'SA'), { iso: 'SA', national: '' });
+});
+
+test('phone numbers are grouped, checked and joined', () => {
+  assert.equal(B.formatNational('912345678'), '912 345 678');
+  assert.equal(B.formatNational('55123456'), '5512 3456');
+  assert.equal(B.formatNational('1001234567'), '100 123 4567');
+  assert.equal(B.checkPhone('SD', '912 345 678'), '');
+  assert.match(B.checkPhone('SD', '9123'), /ناقص/);
+  assert.match(B.checkPhone('QA', '551234567'), /أطول/);
+  assert.equal(B.joinPhone('SD', '0912345678'), '+249 912 345 678');
+  assert.equal(B.joinPhone('SD', ''), '');
+  const i = B.buildInput({ id: 'RFQ-5', kind: 'sku', title: 'x', dest: 'مصر', qty: 1 }, { ...contact, whatsapp: B.joinPhone('QA', '5512 3456') }, {}, null);
+  assert.equal(i.buyer.whatsapp, '97455123456');
+});

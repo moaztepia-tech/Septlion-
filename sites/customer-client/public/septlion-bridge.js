@@ -109,7 +109,63 @@
     });
   }
 
-  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput };
+  /* ------------------------------------------------------------ phone numbers */
+  // [iso, dial code, Arabic name, national length min, max]. Sudan first: most buyers start there.
+  const COUNTRIES = [
+    ['SD', '249', 'السودان', 9, 9], ['SA', '966', 'السعودية', 9, 9], ['EG', '20', 'مصر', 10, 10],
+    ['AE', '971', 'الإمارات', 8, 9], ['QA', '974', 'قطر', 8, 8], ['KW', '965', 'الكويت', 8, 8],
+    ['OM', '968', 'عُمان', 8, 8], ['BH', '973', 'البحرين', 8, 8], ['JO', '962', 'الأردن', 8, 9],
+    ['IQ', '964', 'العراق', 10, 10], ['LY', '218', 'ليبيا', 9, 9], ['YE', '967', 'اليمن', 7, 9],
+    ['TD', '235', 'تشاد', 8, 8], ['SS', '211', 'جنوب السودان', 9, 9], ['ET', '251', 'إثيوبيا', 9, 9],
+    ['ER', '291', 'إريتريا', 7, 7], ['DJ', '253', 'جيبوتي', 8, 8], ['SO', '252', 'الصومال', 7, 9],
+    ['KE', '254', 'كينيا', 9, 9], ['NG', '234', 'نيجيريا', 10, 10], ['TR', '90', 'تركيا', 10, 10],
+    ['GB', '44', 'بريطانيا', 10, 10], ['US', '1', 'أمريكا وكندا', 10, 10], ['MY', '60', 'ماليزيا', 9, 10],
+  ];
+  const countryOf = iso => COUNTRIES.find(c => c[0] === iso) || COUNTRIES[0];
+  const flagOf = iso => String.fromCodePoint.apply(null, iso.split('').map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
+  const onlyDigits = v => digits(v).replace(/\D/g, '');
+
+  /** "+966 50 123 4567" -> {iso:'SA', national:'501234567'}; a number without a code stays in the default country. */
+  function splitPhone(value, defaultIso) {
+    const raw = digits(value).trim();
+    let d = onlyDigits(raw);
+    const intl = /^\s*(\+|00)/.test(raw);
+    if (intl && raw.trim().startsWith('00')) d = d.slice(2);
+    if (intl) {
+      const c = COUNTRIES.filter(k => d.startsWith(k[1])).sort((a, b) => b[1].length - a[1].length)[0];
+      if (c) return { iso: c[0], national: d.slice(c[1].length).replace(/^0+/, '') };
+    }
+    const def = countryOf(defaultIso);
+    // "249912345678" typed without "+": take the code off when what remains fits that country.
+    const c = COUNTRIES.filter(k => d.startsWith(k[1]) && d.length - k[1].length >= k[3] && d.length - k[1].length <= k[4])
+      .sort((a, b) => (b[0] === def[0]) - (a[0] === def[0]) || b[1].length - a[1].length)[0];
+    if (c && d.length > def[4]) return { iso: c[0], national: d.slice(c[1].length) };
+    return { iso: def[0], national: d.replace(/^0+/, '') };
+  }
+  /** Groups the national digits the way people read them: 912 345 678, 5012 3456, 100 123 4567. */
+  function formatNational(national) {
+    const d = onlyDigits(national);
+    const g = d.length === 8 ? [4, 4] : d.length === 10 ? [3, 3, 4] : d.length === 7 ? [3, 4] : [3, 3, 3, 3, 3];
+    const out = []; let i = 0;
+    for (const n of g) { if (i >= d.length) break; out.push(d.slice(i, i + n)); i += n; }
+    if (i < d.length) out.push(d.slice(i));
+    return out.join(' ');
+  }
+  /** Empty string when the number is fine, otherwise a short Arabic hint. */
+  function checkPhone(iso, national) {
+    const c = countryOf(iso), n = onlyDigits(national).replace(/^0+/, '');
+    if (!n) return 'اكتب رقم واتساب.';
+    if (n.length < c[3]) return 'الرقم ناقص: ' + (c[3] === c[4] ? c[3] : c[3] + ' إلى ' + c[4]) + ' أرقام بعد +' + c[1] + '.';
+    if (n.length > c[4]) return 'الرقم أطول من المعتاد لـ' + c[2] + '. تأكد منه.';
+    return '';
+  }
+  /** "+249 912 345 678" from a country and the digits the customer typed. */
+  function joinPhone(iso, national) {
+    const n = onlyDigits(national).replace(/^0+/, '');
+    return n ? '+' + countryOf(iso)[1] + ' ' + formatNational(n) : '';
+  }
+
+  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput, splitPhone, formatNational, checkPhone, joinPhone, COUNTRIES };
   if (typeof document === 'undefined') return api;
 
   /* ------------------------------------------------------------------ browser */
@@ -170,13 +226,84 @@
     return b;
   }
 
+
+  let styled = false;
+  function ensureStyle() {
+    if (styled) return; styled = true;
+    const style = document.createElement('style');
+    style.textContent = '#sbVerify .sheet-body{padding-bottom:18px}#sbVerify .sb-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}#sbVerify .sb-seg{display:flex;gap:8px;flex-wrap:wrap}#sbVerify .sb-seg label{flex:1;min-width:72px;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border:1px solid #3b5780;border-radius:11px;background:#0b2037;font-size:13px;cursor:pointer}#sbVerify .sb-seg input{accent-color:#b9cde3}#sbVerify .sb-seg label:has(input:checked){border-color:#b9cde3;background:#162d4d}#sbVerify .sb-code{letter-spacing:.4em;text-align:center;font-size:22px;direction:ltr}#sbVerify .sb-alt{display:block;margin:12px auto 0;background:none;border:0;color:var(--sky,#9db3d6);font-size:13px;text-decoration:underline;cursor:pointer}#sbVerify .err{margin-top:10px;font-size:12px}#sbVerify .sb-ok{font-size:13px;color:#cfe3c9;margin-top:10px}' + '.sb-phone{display:flex;gap:8px;direction:ltr}.sb-cc{position:relative;flex:0 0 auto;min-width:104px;display:flex;align-items:center;justify-content:center;gap:6px;min-height:50px;padding:0 12px;background:#0b2037;border:1px solid #3b5780;border-radius:11px;font-size:16px;font-variant-numeric:tabular-nums}.sb-cc:focus-within{border-color:#c1d6ff;box-shadow:0 0 0 3px #8fa6d62e}.sb-cc .sb-flag{font-size:20px;line-height:1}.sb-cc .sb-chev{opacity:.7;font-size:11px}.sb-cc select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}.sb-phone .sb-num{flex:1;min-width:0;letter-spacing:.04em;font-variant-numeric:tabular-nums}.sb-phone .sb-num[aria-invalid=true]{border-color:#e58b8b}.sb-phone-ok{position:absolute;inset-inline-end:12px;top:50%;transform:translateY(-50%);color:#9fd49a;font-size:16px;pointer-events:none;opacity:0;transition:opacity .2s}.sb-numwrap{position:relative;flex:1;min-width:0;display:flex}.sb-numwrap.ok .sb-phone-ok{opacity:1}.sb-phone-hint{margin:6px 0 4px;font-size:12px;color:#9db3d6}.sb-phone-hint.bad{color:#f0a3a3}';
+    document.head.appendChild(style);
+  }
+
+  /**
+   * Turns a plain "phone with country code" input into a country picker plus
+   * the local number. The original input stays (hidden) and always holds the
+   * full number, so the code that reads it does not change.
+   */
+  function enhancePhone(input) {
+    if (!input || input.dataset.sbPhone) return;
+    input.dataset.sbPhone = '1'; ensureStyle();
+    const saved = store.get('septlion.bridge.contact', {});
+    const first = splitPhone(input.value || '', saved.countryIso || 'SD');
+    const id = input.id + 'Num';
+    const box = document.createElement('div'); box.className = 'sb-phone';
+    box.innerHTML = '<label class="sb-cc" title="رمز الدولة"><span class="sb-flag" aria-hidden="true"></span><span class="sb-code-txt"></span><span class="sb-chev" aria-hidden="true">▾</span>' +
+      '<select aria-label="الدولة">' + COUNTRIES.map(c => '<option value="' + c[0] + '"' + (c[0] === 'SD' ? ' selected' : '') + '>' + flagOf(c[0]) + ' ' + escH(c[2]) + '  +' + c[1] + '</option>').join('') + '</select></label>' +
+      '<span class="sb-numwrap"><input class="input sb-num" id="' + id + '" type="tel" inputmode="numeric" autocomplete="tel-national" dir="ltr" maxlength="18"><span class="sb-phone-ok" aria-hidden="true">✓</span></span>';
+    const hint = document.createElement('p'); hint.className = 'sb-phone-hint'; hint.setAttribute('aria-live', 'polite');
+    input.insertAdjacentElement('afterend', box); box.insertAdjacentElement('afterend', hint);
+    input.type = 'hidden';
+    const sel = box.querySelector('select'), num = box.querySelector('.sb-num'), wrap = box.querySelector('.sb-numwrap');
+    const label = input.id && document.querySelector('label[for="' + input.id + '"]');
+    if (label) { label.htmlFor = id; label.innerHTML = 'رقم واتساب'; }
+    if (input.getAttribute('aria-describedby')) num.setAttribute('aria-describedby', input.getAttribute('aria-describedby'));
+    input.focus = () => num.focus(); // the page focuses the field on a mistake
+    let touched = false;
+    function sync(fromTyping) {
+      const c = countryOf(sel.value);
+      box.querySelector('.sb-flag').textContent = flagOf(c[0]);
+      box.querySelector('.sb-code-txt').textContent = '+' + c[1];
+      num.placeholder = formatNational('912345678123'.slice(0, c[3]));
+      if (fromTyping) {
+        // A pasted "+966 …" or "00966 …" picks the country by itself.
+        const typed = digits(num.value);
+        if (/^\s*(\+|00)/.test(typed)) {
+          const code = typed.trim().startsWith('00') ? onlyDigits(typed).slice(2) : onlyDigits(typed);
+          const hit = COUNTRIES.find(k => code.startsWith(k[1])); // dial codes in the list are prefix-free
+          if (!hit) { input.value = ''; wrap.classList.remove('ok'); return; } // still typing the code
+          sel.value = hit[0]; num.value = formatNational(code.slice(hit[1].length).replace(/^0+/, '')); return sync(false);
+        }
+        const f = formatNational(onlyDigits(typed).replace(/^0+/, ''));
+        if (num.value !== f) {
+          // Keep the caret after the same digit it followed before regrouping.
+          const before = onlyDigits(num.value.slice(0, num.selectionStart == null ? num.value.length : num.selectionStart)).length - (onlyDigits(num.value).length - onlyDigits(num.value).replace(/^0+/, '').length);
+          num.value = f;
+          let pos = 0, seen = 0; while (pos < f.length && seen < Math.max(0, before)) { if (/\d/.test(f[pos])) seen++; pos++; }
+          try { num.setSelectionRange(pos, pos); } catch (e) { /* not focusable yet */ }
+        }
+      }
+      const problem = checkPhone(c[0], num.value);
+      input.value = problem ? (onlyDigits(num.value) ? '+' + c[1] + ' ' + num.value + '?' : '') : joinPhone(c[0], num.value);
+      wrap.classList.toggle('ok', !problem);
+      const show = touched && problem && onlyDigits(num.value);
+      num.setAttribute('aria-invalid', show ? 'true' : 'false');
+      hint.className = 'sb-phone-hint' + (show ? ' bad' : '');
+      hint.innerHTML = escH(show ? problem : (problem ? 'اختر الدولة ثم اكتب رقمك بدون الصفر الأول.' : 'سنتواصل معك عبر واتساب على ')) + (show || problem ? '' : '<bdi dir="ltr">' + escH(joinPhone(c[0], num.value)) + '</bdi>');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    sel.value = first.iso; num.value = formatNational(first.national); sync(false);
+    num.addEventListener('input', () => sync(true));
+    num.addEventListener('blur', () => { touched = true; sync(false); });
+    sel.addEventListener('change', () => { store.set('septlion.bridge.contact', Object.assign(store.get('septlion.bridge.contact', {}), { countryIso: sel.value })); sync(false); num.focus(); });
+    const form = input.form;
+    if (form) form.addEventListener('reset', () => setTimeout(() => { sel.value = store.get('septlion.bridge.contact', {}).countryIso || 'SD'; num.value = ''; touched = false; sync(false); }, 0));
+  }
+
   /* ---------------------------------------------------------------- the sheet */
   let sheet = null, current = null, step = 'contact';
   function ensureSheet() {
     if (sheet) return sheet;
-    const style = document.createElement('style');
-    style.textContent = '#sbVerify .sheet-body{padding-bottom:18px}#sbVerify .sb-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}#sbVerify .sb-seg{display:flex;gap:8px;flex-wrap:wrap}#sbVerify .sb-seg label{flex:1;min-width:72px;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border:1px solid #3b5780;border-radius:11px;background:#0b2037;font-size:13px;cursor:pointer}#sbVerify .sb-seg input{accent-color:#b9cde3}#sbVerify .sb-seg label:has(input:checked){border-color:#b9cde3;background:#162d4d}#sbVerify .sb-code{letter-spacing:.4em;text-align:center;font-size:22px;direction:ltr}#sbVerify .sb-alt{display:block;margin:12px auto 0;background:none;border:0;color:var(--sky,#9db3d6);font-size:13px;text-decoration:underline;cursor:pointer}#sbVerify .err{margin-top:10px;font-size:12px}#sbVerify .sb-ok{font-size:13px;color:#cfe3c9;margin-top:10px}';
-    document.head.appendChild(style);
+    ensureStyle();
     sheet = document.createElement('div');
     sheet.className = 'sheet'; sheet.id = 'sbVerify';
     sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-labelledby', 'sbTitle'); sheet.setAttribute('aria-hidden', 'true'); sheet.inert = true;
@@ -195,7 +322,7 @@
       h += '<p class="hint">نرسل رمزًا إلى بريدك للتأكد أن الطلب منك، ثم يصل الطلب مباشرة إلى فريق سبتليون.</p>';
       h += field('sbName', 'الاسم', 'autocomplete="name" required', saved.name);
       h += field('sbCompany', 'الشركة <small>أو اسمك إن لم تكن شركة</small>', 'autocomplete="organization" required', x.company || saved.company);
-      h += field('sbWa', 'رقم واتساب مع رمز الدولة', 'type="tel" inputmode="tel" dir="ltr" autocomplete="tel" placeholder="+249 …" required', x.phone || saved.whatsapp);
+      h += field('sbWa', 'رقم واتساب', 'type="tel" inputmode="tel" dir="ltr" autocomplete="tel" required', x.phone || saved.whatsapp);
       h += field('sbEmail', 'البريد الإلكتروني', 'type="email" inputmode="email" dir="ltr" autocomplete="email" placeholder="name@company.com" required', saved.email);
       if (need.includes('destination')) h += field('sbDest', 'بلد أو مدينة التسليم', 'autocomplete="off" required', '');
       if (need.includes('quantity')) h += '<div class="sb-row">' + field('sbAmount', 'الكمية', 'inputmode="decimal" dir="ltr" required', '') + '<div class="field"><label for="sbUnit">الوحدة</label><select class="input" id="sbUnit"><option value="FCL">حاوية</option><option value="MT">طن</option><option value="KG">كجم</option></select></div></div>';
@@ -212,6 +339,7 @@
     }
     h += '<button class="sb-alt" type="button" data-sb="wa">أو أرسل الطلب عبر واتساب</button>';
     f.innerHTML = h;
+    enhancePhone(f.querySelector('#sbWa'));
   }
   const val = id => { const el = sheet.querySelector('#' + id); return el ? el.value : ''; };
   const radio = name => { const el = sheet.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; };
@@ -225,7 +353,7 @@
         const contact = { name: val('sbName'), company: val('sbCompany'), whatsapp: val('sbWa'), email: val('sbEmail') };
         const extra = { destination: val('sbDest'), amount: val('sbAmount'), unit: val('sbUnit'), incoterm: radio('sbInco'), payment: radio('sbPay') };
         buildInput(current, contact, extra, null); // validates before any code is sent
-        store.set('septlion.bridge.contact', { name: contact.name, company: contact.company, whatsapp: contact.whatsapp, email: contact.email.trim().toLowerCase(), incoterm: extra.incoterm, payment: extra.payment });
+        store.set('septlion.bridge.contact', { countryIso: (store.get('septlion.bridge.contact', {}) || {}).countryIso, name: contact.name, company: contact.company, whatsapp: contact.whatsapp, email: contact.email.trim().toLowerCase(), incoterm: extra.incoterm, payment: extra.payment });
         api._pending = { contact, extra };
         const session = await currentSession().catch(() => null);
         if (session && await confirmedEmailOf(session).catch(() => null) === contact.email.trim().toLowerCase()) return await finish(session);
@@ -263,6 +391,9 @@
     store.set(k, store.get(k, []).map(r => r && r.id === id ? Object.assign({}, r, { sent: true, ref, sentVia: 'platform' }) : r));
     if (page().renderOrders) try { page().renderOrders(); } catch (e) { /* view not mounted */ }
   }
+
+  const hookPage = () => enhancePhone(document.getElementById('fPhone'));
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookPage); else hookPage();
 
   api.submit = function (x) {
     current = x; step = 'contact'; ensureSheet(); render();
