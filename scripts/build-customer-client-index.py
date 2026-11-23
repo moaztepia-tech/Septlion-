@@ -34,7 +34,8 @@ one("""  sendWA(x);
 one("<h1>طلبك جاهز للإرسال.</h1><p>فتحنا واتساب برسالة جاهزة — اضغط «إرسال» ليصلنا الطلب. إن لم يفتح واتساب استخدم الأزرار أدناه.</p>",
     "<h1>طلبك محفوظ.</h1><p>أكّد بريدك ليصل الطلب إلى فريق سبتليون.</p>")
 one("go('needDone'); sendWA(x);", "go('needDone'); SeptlionBridge.submit(x);")
-one("إرسال الطلب عبر واتساب</button>", "إرسال الطلب</button>")
+one('<button class="btn btn-primary" data-act="submit-rfq"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 18.8z"/><path d="M9.3 8.8c.2 2.6 3.1 5.4 5.9 5.9l1-1.3-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2z"/></svg>إرسال الطلب عبر واتساب</button>',
+    '<button class="btn btn-primary" data-act="submit-rfq"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4 18-7z"/></svg>إرسال الطلب</button>')
 one("يصلنا الطلب عند إرساله عبر واتساب أو البريد.", "يصلنا الطلب بعد تأكيد بريدك.")
 one("'يُرسل الطلب إلى SEPTLION عبر واتساب أو البريد'", "'يصل الطلب إلى SEPTLION بعد تأكيد بريدك'")
 # The platform is the main way to send; WhatsApp stays as a small fallback link.
