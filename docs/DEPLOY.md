@@ -18,7 +18,7 @@ anything.
 | Input | Values | Meaning |
 |---|---|---|
 | `mode` | `plan` (default), `publish`, `rollback` | What to do |
-| `site` | `nextjs` (default), `approved-client`, `customer-client` | What to publish: the platform in `apps/web`, the archived live client in `sites/approved-client`, or the new-app interface at `/` that sends requests to the platform (`sites/customer-client`, see its README) |
+| `site` | `nextjs` (default), `approved-client`, `customer-client`, `platform` | What to publish: the platform in `apps/web`, the archived live client in `sites/approved-client`, the new-app interface at `/` that sends requests to the platform (`sites/customer-client`, see its README), or `platform`: the `apps/web` pages (command center, accounts, offers) behind that interface, keeping its home page, routing file and bridge |
 | `plan_id` | text | Required for `publish`: the id printed by the plan run |
 | `backup_name` | text | Optional for `rollback`: which backup to restore (empty means the latest) |
 | `full_scan` | `false` (default), `true` | Off: read and back up only the live copies of the files in the package (a minute or two; same plan id). On: also scan and back up all of `public_html` (10 to 20 minutes) and list the files the package leaves untouched |

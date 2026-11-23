@@ -15,9 +15,9 @@ on:
         options: [plan, publish, rollback]
         default: plan
       site:
-        description: "nextjs = the platform in apps/web; approved-client = the archived live client in sites/approved-client; customer-client = the new-app interface at / that sends requests to the platform (sites/customer-client)"
+        description: "nextjs = the platform in apps/web; approved-client = the archived live client in sites/approved-client; customer-client = the new-app interface at / that sends requests to the platform (sites/customer-client); platform = the apps/web pages behind the customer client (keeps / and the routing file)"
         type: choice
-        options: [nextjs, approved-client, customer-client]
+        options: [nextjs, approved-client, customer-client, platform]
         default: nextjs
       plan_id:
         description: "publish only: the plan id printed by the plan run"
@@ -53,20 +53,20 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'hostinger_release_test.py'
 
       - name: Setup pnpm
-        if: inputs.mode != 'rollback' && inputs.site == 'nextjs'
+        if: inputs.mode != 'rollback' && (inputs.site == 'nextjs' || inputs.site == 'platform')
         uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
 
       - name: Setup Node
-        if: inputs.mode != 'rollback' && inputs.site == 'nextjs'
+        if: inputs.mode != 'rollback' && (inputs.site == 'nextjs' || inputs.site == 'platform')
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
       - name: Install, test and build the platform
-        if: inputs.mode != 'rollback' && inputs.site == 'nextjs'
+        if: inputs.mode != 'rollback' && (inputs.site == 'nextjs' || inputs.site == 'platform')
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD
@@ -81,6 +81,16 @@ jobs:
           fi
           node scripts/hostinger-production.mjs
           node scripts/generate-demand-pages.mjs
+
+      - name: Keep the customer client in front of the platform
+        if: inputs.mode != 'rollback' && inputs.site == 'platform'
+        run: |
+          # The home page, routing and bridge stay the customer client's (they match live, so
+          # they are not re-uploaded); the platform's own home, 404 and SEO files are left out.
+          node --test sites/customer-client/bridge.test.cjs
+          python3 scripts/package-customer-client.py customer-package
+          rm -f deploy/404.html deploy/robots.txt deploy/sitemap.xml
+          cp customer-package/index.html customer-package/septlion-bridge.js customer-package/.htaccess deploy/
 
       - name: Package the archived live client
         if: inputs.mode != 'rollback' && inputs.site == 'approved-client'
