@@ -148,9 +148,6 @@ export async function edge<T>(action: string, payload: Record<string, unknown> =
   if (b === null) throw new Error('تعذر قراءة نتيجة الطلب.');
   return b as T;
 }
-function revokeCommandCookie(){
- if(typeof window!=='undefined'&&window.location?.origin)void fetch('/api/command-session',{method:'DELETE',keepalive:true}).catch(()=>{});
-}
 // Public Edge Function call without a session (e.g. optional composer guidance).
 export function publicFunction(name: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<Response> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return Promise.reject(new Error('Supabase is not configured'));
@@ -160,12 +157,11 @@ export function publicFunction(name: string, body: Record<string, unknown>, sign
     body: JSON.stringify(body),
   });
 }
-export function saveSession(s: Session) { storeSession(s, crypto.randomUUID());window.localStorage.removeItem(PHONE_CHALLENGE_KEY);revokeCommandCookie(); }
+export function saveSession(s: Session) { storeSession(s, crypto.randomUUID());window.localStorage.removeItem(PHONE_CHALLENGE_KEY); }
 export function accessToken() { return readSession()?.access_token || null; }
 export function clearSession() {
   if (typeof window === 'undefined') return;
   for (const key of [SESSION_KEY, 'septlion_access', 'septlion_refresh', PHONE_CHALLENGE_KEY]) window.localStorage.removeItem(key);
-  revokeCommandCookie();
 }
 export function hasSession() { const s = readSession(); return Boolean(s?.access_token || s?.refresh_token); }
 // Only scopes local UI drafts. The API independently verifies organization access.
@@ -216,7 +212,7 @@ export async function confirmPhoneVerification(challenge:PhoneChallenge,code:str
  const user=b?.user;
  if(!user?.phone_confirmed_at||'+'+String(user.phone||'').replace(/^\+/,'')!==phone)throw new Error('لم يؤكد الخادم ملكية الرقم. أعد المحاولة.');
  if(before?.user?.id&&user.id!==before.user.id)throw new Error(SESSION_CHANGED);
- if(b.access_token&&b.refresh_token){storeSession(b,before?.session_key||crypto.randomUUID());if(!before)revokeCommandCookie();}
+ if(b.access_token&&b.refresh_token){storeSession(b,before?.session_key||crypto.randomUUID());}
  else if(!before)throw new Error('تعذر إنشاء جلسة رقم التواصل.');
  const verified=await verifiedPhone();if(verified!==phone)throw new Error('تعذر تأكيد الرقم الحالي.');window.localStorage.removeItem(PHONE_CHALLENGE_KEY);return verified;
 }

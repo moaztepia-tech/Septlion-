@@ -4,11 +4,13 @@ async function browserSession(page,token){await page.addInitScript(token=>{if(lo
 test('360px ADMIN draft/publication and BUYER discovery-to-RFQ flow with server authorization',async({page,context})=>{
  await page.setViewportSize({width:360,height:800});await page.goto('/command-center');
  await expect(page.getByRole('heading',{name:'الدخول إلى مركز القيادة'})).toBeVisible();await expect(page.getByText('ماذا تريد أن تنجز؟')).toHaveCount(0);
- const denied=await context.request.post('/api/command-session',{headers:{origin:'http://localhost:3200'},data:{token:'BUYER'}});expect(denied.status()).toBe(403);
- const cross=await context.request.post('/api/command-session',{headers:{origin:'https://attacker.invalid'},data:{token:'ADMIN'}});expect(cross.status()).toBe(403);
- await browserSession(page,'ADMIN');await page.reload();await page.getByRole('button',{name:'متابعة بالحساب الحالي'}).click();
+ // A session trade-api does not recognize as an operator never opens the command center.
+ await page.evaluate(()=>localStorage.setItem('septlion_session',JSON.stringify({access_token:'BUYER',refresh_token:'fixture',session_key:'browser',expires_at:4102444800,user:{id:'fixture'}})));
+ await page.reload();await page.getByRole('button',{name:'متابعة بالحساب الحالي'}).click();
+ await expect(page.locator('main [role=alert]')).toBeVisible();await expect(page.getByText('ماذا تريد أن تنجز؟')).toHaveCount(0);
+ await page.evaluate(()=>localStorage.removeItem('septlion_session'));
+ await browserSession(page,'ADMIN');await page.reload();
  await expect(page.getByText('ماذا تريد أن تنجز؟')).toBeVisible();
- const cookies=await context.cookies();const cookie=cookies.find(c=>c.name==='septlion_command_access');expect(cookie.httpOnly).toBe(true);expect(cookie.sameSite).toBe('Strict');
  await page.getByLabel('اسم المنتج',{exact:true}).fill('زيت زولانا');await page.getByLabel('رمز الرابط').fill('zollana-oil');await page.getByRole('combobox',{name:'القطاع',exact:true}).selectOption('food');await page.getByLabel('الوصف',{exact:true}).fill('زيت عباد الشمس · تُثبت المواصفة في العرض');await page.getByLabel('رمز الصنف').fill('ZO-OIL-1');await page.getByLabel('اسم التعبئة').fill('عبوة 1 لتر');await page.getByLabel('مواصفة التعبئة').fill('1 لتر × 12');
  await page.getByRole('button',{name:'حفظ كمسودة خاصة'}).click();await expect(page.getByText('DRAFT · PRIVATE')).toBeVisible();
  await page.getByRole('button',{name:'مراجعة النشر'}).click();await expect(page.getByRole('button',{name:'تأكيد النشر'})).toBeDisabled();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'تأكيد النشر'}).click();await expect(page.getByText('ACTIVE · PUBLIC')).toBeVisible();
@@ -37,7 +39,7 @@ test('360px ADMIN draft/publication and BUYER discovery-to-RFQ flow with server 
  await page.goto('/operations?transactionId='+transactionId);await page.getByLabel('مرجع التحديث وملاحظاته').fill('TEST — preparation reference recorded');await page.getByRole('button',{name:'بدء التجهيز',exact:true}).click();await expect(page.getByText('تم حفظ تحديث التنفيذ.')).toBeVisible();
  await page.evaluate(()=>localStorage.setItem('septlion_session',JSON.stringify({access_token:'PHONE',refresh_token:'fixture',session_key:'buyer',expires_at:4102444800,user:{id:'phone-buyer'}})));
  await page.goto('/execution?id='+transactionId);await expect(page.locator('.transaction-timeline .is-running')).toContainText('تجهيز الطلب');await page.goto('/receive?id='+transactionId);await expect(page.getByText('لم تصل الصفقة إلى مرحلة مراجعة الاستلام')).toBeVisible();
- await page.goto('/account');await page.getByRole('button',{name:'تسجيل الخروج',exact:true}).click();await expect.poll(async()=>(await context.cookies()).some(c=>c.name==='septlion_command_access')).toBe(false);
+ await page.goto('/account');await page.getByRole('button',{name:'تسجيل الخروج',exact:true}).click();await expect.poll(()=>page.evaluate(()=>localStorage.getItem('septlion_session'))).toBe(null);
  await page.goto('/account?next=/requests');const phoneLogin=page.getByRole('region',{name:'الدخول برقم واتساب'});await phoneLogin.getByLabel('رقم واتساب مع رمز الدولة').fill('+201012345678');await phoneLogin.getByRole('button',{name:'إرسال رمز واتساب'}).click();await phoneLogin.getByLabel('رمز واتساب',{exact:true}).fill('123456');await phoneLogin.getByRole('button',{name:'تأكيد الرقم',exact:true}).click();await expect(page).toHaveURL(/\/requests$/);
 
 });
