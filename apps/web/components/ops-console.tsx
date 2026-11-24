@@ -46,6 +46,7 @@ export function OpsFrame({active,children}:{active:'home'|'requests'|'radar';chi
    <nav className="ops-nav" aria-label="أقسام اللوحة">
     <Link href="/command-center" aria-current={active==='home'?'page':undefined}>الرئيسية</Link>
     <Link href="/operations" aria-current={active==='requests'?'page':undefined}>الطلبات</Link>
+    <Link href="/demand-intelligence/workbench">التشغيل</Link>
     <Link href="/demand-intelligence" aria-current={active==='radar'?'page':undefined}>الرادار</Link>
    </nav>
    <nav className="ops-icons" aria-label="اختصارات">

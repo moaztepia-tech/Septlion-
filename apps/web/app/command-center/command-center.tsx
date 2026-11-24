@@ -51,6 +51,11 @@ export default function CommandCenter({role}:{role:'ADMIN'|'SALES'}) {
       <Link href="/operations?tab=deals" className="ops-stat"><b>{health?health.activeTransactions??0:'–'}</b><small>صفقات نشطة</small></Link>
     </div>
 
+    <Link href="/demand-intelligence/workbench" className="ops-card ops-row" style={{textDecoration:'none',color:'inherit',gap:12}}>
+      <span><b className="ops-h2">لوحة تشغيل الطلبات</b><br/><small className="ops-sub">الطلبات الجديدة، والمشترون المحتملون، ومهام كل صفقة</small></span>
+      <span className="ops-link">افتح ←</span>
+    </Link>
+
     <section className="ops-card" aria-labelledby="latest">
       <div className="ops-row" style={{marginBottom:10}}><h2 id="latest" className="ops-h2">أحدث الطلبات</h2><Link href="/operations" className="ops-link">كل الطلبات ←</Link></div>
       {err&&<p className="ops-alert" role="alert">{err}</p>}
