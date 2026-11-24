@@ -84,3 +84,16 @@ test('every target market gets a page in its buyers’ language, with honest wor
  const xml=seo.sitemapXml(seo.siteEntries({markets:pages}));
  assert.ok(xml.includes('<loc>https://www.septlion.com/markets/sudan/</loc>'));
 });
+
+test('each market page states how cargo gets there: sea, road, or sea then road',async()=>{
+ const {allMarketPages,MARKETS,SHIPPING}=await import('../scripts/market-pages.mjs');
+ for(const slug of Object.keys(SHIPPING)) assert.ok(MARKETS.some(m=>m.slug===slug),slug);
+ const pages=allMarketPages(products);
+ const by=u=>pages.find(p=>p.url==='https://www.septlion.com/markets/'+u).html;
+ assert.ok(by('sudan/').includes('بحراً إلى بورتسودان') && by('sudan/').includes('حدربة'));
+ assert.ok(by('saudi-arabia/').includes('سفاجا–ضبا'));
+ assert.ok(by('qatar/').includes('سلوى'));
+ assert.ok(by('mali/').includes('puis par camion jusqu'));
+ assert.ok(by('ethiopia/').includes('Djibouti–Addis Ababa'));
+ assert.ok(!by('morocco/').includes('براً'));
+});

@@ -59,7 +59,7 @@ export const MARKETS = [
   // Middle East (completed)
   ['lebanon', ['ar'], 'me', {ar: 'لبنان', en: 'Lebanon'}, {ar: 'بيروت', en: 'Beirut'}],
   ['syria', ['ar'], 'me', {ar: 'سوريا', en: 'Syria'}, {ar: 'اللاذقية أو طرطوس', en: 'Latakia or Tartus'}],
-  ['palestine', ['ar'], 'me', {ar: 'فلسطين', en: 'Palestine'}, {ar: 'عبر الأردن أو الموانئ المجاورة حسب الوضع', en: 'via Jordan or nearby ports, depending on conditions'}],
+  ['palestine', ['ar'], 'me', {ar: 'فلسطين', en: 'Palestine'}, {ar: 'العقبة ثم براً', en: 'Aqaba, then overland'}],
   // West and Central Africa (completed)
   ['chad', ['fr', 'ar'], 'wa', {fr: 'Tchad', ar: 'تشاد', en: 'Chad'}, {fr: 'Douala, puis transport terrestre', ar: 'دوالا ثم براً', en: 'Douala, then overland'}],
   ['niger', ['fr'], 'wa', {fr: 'Niger', en: 'Niger'}, {fr: 'Cotonou ou Lomé, puis transport terrestre', en: 'Cotonou or Lomé, then overland'}],
@@ -216,18 +216,55 @@ const U = {
     bandH: 'Pronto para pedir uma cotação?', bandP: 'Envie a sua necessidade no WhatsApp e receba uma oferta clara.', email: 'E-mail', foot: ['Início', 'Todos os mercados', 'Rotas de procura'], allH: 'Todos os mercados'},
 };
 
-// Markets served by road. Filled in from the team's answer; each entry is
-// {mode: 'land' | 'both', route: {ar, fr, en}} and switches the page's facts,
-// wording and Incoterms from sea freight to trucks and border crossings.
-export const LAND = {
+// How each market is reached. Markets not listed here are served by sea to the
+// port in MARKETS. Two kinds of entry:
+//   both    — by sea to the port, or by road (trucks, Ro-Ro truck ferries and
+//             land border crossings). `route` says how the road option runs.
+//   transit — no sea access of its own (or the buyer sits inland): by sea to a
+//             corridor port, then by truck. `route` is the whole corridor.
+// Routes that depend on security or politics say so, so the page never promises
+// a crossing that may be closed on the day.
+export const SHIPPING = {
   sudan: {mode: 'both', route: {ar: 'من مصر عبر معابر أرقين وقسطل، وحدربة على طريق سفاجا والبحر الأحمر', en: 'from Egypt via the Argeen and Qastal crossings, and Hadarba on the Safaga–Red Sea road'}},
   libya: {mode: 'both', route: {ar: 'من مصر عبر منفذ السلوم وامساعد', en: 'from Egypt via the Salloum–Musaid crossing'}},
+  tunisia: {mode: 'both', route: {ar: 'من مصر عبر ليبيا ومعبر رأس جدير، حسب الوضع على الطريق', fr: "depuis l'Égypte via la Libye et le poste de Ras Jedir, selon la situation sur la route", en: 'from Egypt through Libya and the Ras Jedir crossing, subject to road conditions'}},
+  jordan: {mode: 'both', route: {ar: 'من مصر عبر عبّارة الشاحنات نويبع–العقبة، أو من السعودية عبر منفذ المدورة', en: 'from Egypt by truck on the Nuweiba–Aqaba ferry, or from Saudi Arabia via the Mudawwara crossing'}},
+  'saudi-arabia': {mode: 'both', route: {ar: 'من مصر عبر عبّارة الشاحنات سفاجا–ضبا، أو عبر الأردن ومنفذ الحديثة', en: 'from Egypt by truck on the Safaga–Duba ferry, or through Jordan and the Al-Haditha crossing'}},
+  kuwait: {mode: 'both', route: {ar: 'عبر السعودية ومنفذ النويصيب', en: 'through Saudi Arabia and the Al-Nuwaiseeb crossing'}},
+  qatar: {mode: 'both', route: {ar: 'عبر السعودية ومنفذ سلوى–أبو سمرة', en: 'through Saudi Arabia and the Salwa–Abu Samra crossing'}},
+  bahrain: {mode: 'both', route: {ar: 'عبر السعودية وجسر الملك فهد', en: 'through Saudi Arabia and the King Fahd Causeway'}},
+  'united-arab-emirates': {mode: 'both', route: {ar: 'عبر السعودية ومنفذ البطحاء–الغويفات', en: 'through Saudi Arabia and the Al-Batha–Ghuwaifat crossing'}},
+  oman: {mode: 'both', route: {ar: 'عبر السعودية وطريق الربع الخالي، أو عبر الإمارات', en: 'through Saudi Arabia on the Empty Quarter road, or through the UAE'}},
+  iraq: {mode: 'both', route: {ar: 'عبر الأردن ومنفذ الكرامة–طريبيل، أو عبر السعودية ومنفذ عرعر', en: 'through Jordan and the Karama–Trebil crossing, or through Saudi Arabia via Arar'}},
+  syria: {mode: 'both', route: {ar: 'عبر الأردن ومنفذ جابر–نصيب، حسب الوضع والقيود السارية', en: 'through Jordan and the Jaber–Nassib crossing, subject to conditions and sanctions checks'}},
+  lebanon: {mode: 'both', route: {ar: 'عبر الأردن وسوريا، حسب الوضع على الطريق', en: 'through Jordan and Syria, subject to road conditions'}},
+  palestine: {mode: 'transit', route: {ar: 'بحراً إلى العقبة ثم بالشاحنات عبر جسر الملك حسين، حسب التصاريح والوضع', en: 'By sea to Aqaba, then by truck across the King Hussein Bridge, subject to permits and conditions'}},
+  yemen: {mode: 'both', route: {ar: 'عبر السعودية ومنفذ الوديعة، حسب الوضع الأمني', en: 'through Saudi Arabia and the Al-Wadiah crossing, subject to security conditions'}},
+  // Landlocked: sea to a corridor port, then trucks.
+  ethiopia: {mode: 'transit', route: {en: 'By sea to Djibouti, then by truck on the Djibouti–Addis Ababa corridor'}, alt: {en: 'A road option from Sudan via Gallabat–Metema is possible when the border is open.'}},
+  'south-sudan': {mode: 'transit', route: {en: 'By sea to Mombasa, then by truck through Uganda to Juba'}, alt: {en: 'A road option from Sudan via Renk is possible when conditions allow.'}},
+  uganda: {mode: 'transit', route: {en: 'By sea to Mombasa, then by truck on the Northern Corridor to Kampala'}},
+  rwanda: {mode: 'transit', route: {en: 'By sea to Mombasa or Dar es Salaam, then by truck to Kigali', fr: "Par mer jusqu'à Mombasa ou Dar es Salaam, puis par camion jusqu'à Kigali"}},
+  burundi: {mode: 'transit', route: {fr: "Par mer jusqu'à Dar es Salaam, puis par camion sur le corridor central jusqu'à Bujumbura", en: 'By sea to Dar es Salaam, then by truck on the Central Corridor to Bujumbura'}},
+  chad: {mode: 'transit', route: {fr: "Par mer jusqu'à Douala, puis par camion jusqu'à N'Djamena", ar: 'بحراً إلى دوالا ثم بالشاحنات حتى أنجامينا', en: "By sea to Douala, then by truck to N'Djamena"}, alt: {fr: 'Une option par route depuis la Libye existe selon la situation sécuritaire.', ar: 'ويمكن أيضاً الشحن براً من ليبيا حسب الوضع الأمني.', en: 'A road option from Libya exists, subject to security.'}},
+  'central-african-republic': {mode: 'transit', route: {fr: "Par mer jusqu'à Douala, puis par camion sur le corridor Douala–Bangui", en: 'By sea to Douala, then by truck on the Douala–Bangui corridor'}},
+  mali: {mode: 'transit', route: {fr: "Par mer jusqu'à Dakar ou Abidjan, puis par camion jusqu'à Bamako", en: 'By sea to Dakar or Abidjan, then by truck to Bamako'}},
+  'burkina-faso': {mode: 'transit', route: {fr: "Par mer jusqu'à Abidjan, Lomé ou Tema, puis par camion jusqu'à Ouagadougou", en: 'By sea to Abidjan, Lomé or Tema, then by truck to Ouagadougou'}},
+  niger: {mode: 'transit', route: {fr: "Par mer jusqu'à Cotonou ou Lomé, puis par camion jusqu'à Niamey", en: 'By sea to Cotonou or Lomé, then by truck to Niamey'}},
+  zambia: {mode: 'transit', route: {en: 'By sea to Dar es Salaam, Durban or Walvis Bay, then by truck to Lusaka and the Copperbelt'}},
+  zimbabwe: {mode: 'transit', route: {en: 'By sea to Beira or Durban, then by truck to Harare'}},
+  malawi: {mode: 'transit', route: {en: 'By sea to Nacala or Beira, then by truck to Blantyre and Lilongwe'}},
+  botswana: {mode: 'transit', route: {en: 'By sea to Durban or Walvis Bay, then by truck to Gaborone'}},
+  lesotho: {mode: 'transit', route: {en: 'By sea to Durban, then by truck to Maseru'}},
+  eswatini: {mode: 'transit', route: {en: 'By sea to Maputo or Durban, then by truck to Manzini and Mbabane'}},
 };
+// Kept for older imports: the road-served markets.
+export const LAND = Object.fromEntries(Object.entries(SHIPPING).filter(([, v]) => v.mode === 'both'));
 const LAND_UI = {
-  pt: {route: 'Rota', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'Um contentor ou camião completo', note: r => `Entrega por estrada ${r}, de camião até ao seu armazém ou ao ponto acordado.`},
-  ar: {route: 'طريق الشحن', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'حاوية أو شاحنة كاملة', note: r => `الشحن براً ${r}، بالشاحنات حتى مستودعك أو نقطة التسليم المتفق عليها.`},
-  fr: {route: 'Acheminement', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'Un conteneur ou un camion complet', note: r => `Livraison par route ${r}, en camion jusqu'à votre entrepôt ou au point convenu.`},
-  en: {route: 'Route', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'One container or full truck', note: r => `Delivered by road ${r}, by truck to your warehouse or the agreed delivery point.`},
+  pt: {route: 'Rota', terms: {both: 'CFR · CIF · DAP', transit: 'CIF · DAP'}, moq: 'Um contentor ou camião completo', note: (r, port) => `Por mar até ${port}, ou por estrada ${r}, de camião até ao seu armazém.`, transit: r => `${r}, com entrega no seu armazém ou no ponto acordado.`},
+  ar: {route: 'طريق الشحن', terms: {both: 'CFR · CIF · DAP', transit: 'CIF · DAP'}, moq: 'حاوية أو شاحنة كاملة', note: (r, port) => `الشحن بحراً إلى ${port}، أو براً ${r}، بالشاحنات حتى مستودعك أو نقطة التسليم المتفق عليها.`, transit: r => `${r}، مع التسليم في مستودعك أو في النقطة المتفق عليها.`},
+  fr: {route: 'Acheminement', terms: {both: 'CFR · CIF · DAP', transit: 'CIF · DAP'}, moq: 'Un conteneur ou un camion complet', note: (r, port) => `Par mer jusqu'à ${port}, ou par route ${r}, en camion jusqu'à votre entrepôt ou au point convenu.`, transit: r => `${r}, avec livraison à votre entrepôt ou au point convenu.`},
+  en: {route: 'Route', terms: {both: 'CFR · CIF · DAP', transit: 'CIF · DAP'}, moq: 'One container or full truck', note: (r, port) => `By sea to ${port}, or by road ${r}, by truck to your warehouse or the agreed delivery point.`, transit: r => `${r}, with delivery to your warehouse or the agreed point.`},
 };
 const nameIn = (m, lang) => m.names[lang] || m.names.en;
 // French needs the country with its preposition: "au Sénégal", "en Côte d'Ivoire".
@@ -285,15 +322,14 @@ export function marketPage(m, lang, products) {
   const wa = waLink(u.msg(say));
   const alt = m.langs.filter(l => l !== lang).map(l => ({lang: l, href: marketUrl(m, l), label: {ar: 'العربية', fr: 'Français', en: 'English', pt: 'Português'}[l]}));
   const same = MARKETS.filter(x => x !== m && x.langs.includes(lang)).map(x => `<li><a href="${marketUrl(x, lang)}">${esc(nameIn(x, lang))}</a></li>`).join('');
-  const land = LAND[m.slug], lu = LAND_UI[lang], route = land && (land.route[lang] || land.route.en);
+  const ship = SHIPPING[m.slug], lu = LAND_UI[lang], route = ship && (ship.route[lang] || ship.route.en);
   const factVals = u.factVals.map(v => v ?? port);
   const factNames = [...u.facts];
-  if (land) {
-    factVals[1] = lu.terms[land.mode];
-    factVals[0] = lu.moq;
-    if (land.mode === 'land') { factNames[2] = lu.route; factVals[2] = route; }
+  if (ship) {
+    factVals[1] = lu.terms[ship.mode];
+    if (ship.mode === 'both') factVals[0] = lu.moq;
   }
-  const landNote = land ? `<p class="lead" style="margin-top:12px">${esc(lu.note(route))}</p>` : '';
+  const landNote = ship ? `<p class="lead" style="margin-top:12px">${esc(ship.mode === 'both' ? lu.note(route, port) : lu.transit(route) + (ship.alt ? ' ' + (ship.alt[lang] || ship.alt.en) : ''))}</p>` : '';
   const jsonld = [
     {'@context': 'https://schema.org', '@type': 'Service', name: t.h1(say), inLanguage: lang, serviceType: 'B2B wheat flour supply', url,
       areaServed: {'@type': 'Country', name: m.names.en}, provider: {'@type': 'Organization', '@id': SITE + '/#organization', name: 'SEPTLION', url: SITE + '/'},
