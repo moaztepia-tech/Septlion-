@@ -201,6 +201,17 @@ export async function loadProducts(fetchImpl = globalThis.fetch) {
   return {products: d.products, source: 'snapshot'};
 }
 
+// The lion and wordmark lockup the customer client draws in its header, saved as a file the
+// static pages can use. Taken from the client's own SVG sprite, so it always matches it.
+export function logoFromClient(html) {
+  const start = html.indexOf('<svg width="0" height="0" style="position:absolute"');
+  if (start < 0) return null;
+  const end = html.indexOf('</svg>', start);
+  const defs = html.slice(start, end).match(/<defs>[\s\S]*<\/defs>/)?.[0];
+  if (!defs || !defs.includes('id="lg-h"')) return null;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-58.7 -32.2 1291.5 387.0" style="color:#ffffff" role="img" aria-label="SEPTLION سبتليون">${defs}<use href="#lg-h"/></svg>\n`;
+}
+
 export async function applySeo(deployDir = path.join(ROOT, 'deploy'), {fetchImpl} = {}) {
   const {products, source} = await loadProducts(fetchImpl);
   const feedFile = path.join(deployDir, 'demand/feed.json');
@@ -209,6 +220,9 @@ export async function applySeo(deployDir = path.join(ROOT, 'deploy'), {fetchImpl
   await writeFile(home, homepageSeo(await readFile(home, 'utf8'), products));
   await mkdir(path.join(deployDir, 'en'), {recursive: true});
   await writeFile(path.join(deployDir, 'en/index.html'), englishHome(products, demand));
+  const logo = logoFromClient(await readFile(home, 'utf8'));
+  if (logo) { await mkdir(path.join(deployDir, 'brand'), {recursive: true}); await writeFile(path.join(deployDir, 'brand/septlion-lockup-white.svg'), logo); }
+  else throw new Error('Home page: logo sprite not found; the static pages would show no logo');
   const markets = allMarketPages(products);
   for (const m of markets) {
     await mkdir(path.dirname(path.join(deployDir, m.path)), {recursive: true});

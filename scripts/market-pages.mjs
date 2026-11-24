@@ -256,14 +256,14 @@ ${jsonld.map(j => `<script type="application/ld+json">${ld(j)}</script>`).join('
 
 export function topBar(lang, {home, alt = [], wa, anchors = true}) {
   const u = U[lang];
-  return `<header class="top"><div class="wrap"><a class="logo" href="${home}" aria-label="SEPTLION"><img src="/brand/septlion-wordmark-white.svg" alt="SEPTLION" width="124" height="44"></a>
+  return `<header class="top"><div class="wrap"><a class="logo" href="${home}" aria-label="SEPTLION"><img src="/brand/septlion-lockup-white.svg" alt="SEPTLION سبتليون" width="150" height="45"></a>
 <nav aria-label="SEPTLION">${anchors ? `<a class="hide-s" href="#products">${u.products}</a><a class="hide-s" href="#how">${u.how}</a>` : ''}<a href="/markets/">${u.markets}</a>${alt.map(a => `<a class="lang" href="${a.href}" hreflang="${a.lang}" lang="${a.lang}">${a.label}</a>`).join('')}</nav>
 <a class="btn pri" href="${esc(wa)}">${ICON_WA}${u.quote}</a></div></header>`;
 }
 
 export function footer(lang, home) {
   const u = U[lang], t = T[lang];
-  return `<footer class="foot"><div class="wrap"><img src="/brand/septlion-wordmark-white.svg" alt="SEPTLION" width="110" height="40"><nav><a href="${home}">${u.foot[0]}</a><a href="/markets/">${u.foot[1]}</a><a href="/demand/">${u.foot[2]}</a><a href="mailto:${EMAIL}">${EMAIL}</a></nav><span>${esc(t.footer)}</span></div></footer>`;
+  return `<footer class="foot"><div class="wrap"><img src="/brand/septlion-lockup-white.svg" alt="SEPTLION سبتليون" width="134" height="40"><nav><a href="${home}">${u.foot[0]}</a><a href="/markets/">${u.foot[1]}</a><a href="/demand/">${u.foot[2]}</a><a href="mailto:${EMAIL}">${EMAIL}</a></nav><span>${esc(t.footer)}</span></div></footer>`;
 }
 
 export const dock = (lang, wa) => `<div class="dock"><a class="btn pri" href="${esc(wa)}">${ICON_WA}${U[lang].quote}</a></div>`;
