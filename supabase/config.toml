@@ -9,3 +9,7 @@ verify_jwt = false
 # apply, and any failure leaves the browser on its local parser.
 [functions.interpret-requirement]
 verify_jwt = false
+
+# Public page-view counter: no cookies, no stored IP; only accepts septlion.com origins.
+[functions.track-visit]
+verify_jwt = false

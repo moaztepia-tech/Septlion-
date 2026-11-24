@@ -92,3 +92,12 @@ body:has(.ops){margin:0;background:#071a30}
 @media(max-width:560px){.ops-nav a{padding:7px 8px}}
 .ops-item-top>span:last-child{white-space:nowrap;flex:none}
 .ops-market{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;unicode-bidi:isolate}
+.ops-visit-bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;margin:14px 0 4px;min-height:96px}
+.ops-visit-bar{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ops-visit-bar i{display:block;width:70%;max-width:34px;border-radius:6px 6px 2px 2px;background:var(--gold,#d4a94e)}
+.ops-visit-bar small{color:var(--muted);font-size:11.5px}.ops-visit-bar .n{font-size:12px;font-variant-numeric:tabular-nums;min-height:15px}
+.ops-visit-lists{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.ops-visit-lists ul{list-style:none;margin:0;padding:0}.ops-visit-lists li{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ops-visit-lists li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ops-visit-lists li b{font-variant-numeric:tabular-nums}
+.ops-visit-h{font-size:13px;color:var(--muted);margin:0 0 4px;font-weight:600}
+@media(max-width:520px){.ops-visit-lists{grid-template-columns:1fr}}

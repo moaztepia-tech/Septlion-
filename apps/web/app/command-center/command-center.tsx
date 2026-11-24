@@ -3,6 +3,7 @@
 import {useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import CatalogManager from './catalog-manager';
+import {VisitorsCard} from './visitors-card';
 import {edge} from '../../lib/api';
 import {OpsFrame,OpsRfq,place,statusOf,isTest,amount,packingOf,ago,nNew} from '../../components/ops-console';
 
@@ -61,6 +62,8 @@ export default function CommandCenter({role}:{role:'ADMIN'|'SALES'}) {
         <div className="ops-item-foot"><span className="ops-item-meta">{[amount(q),packingOf(q),q?.buyer?.name].filter(Boolean).join(' · ')}</span><span className={'ops-badge '+st.tone}>{st.label}</span></div>
       </Link>})}</div>}
     </section>
+
+    <VisitorsCard/>
 
     <section aria-label="أقسام العمل" className="ops-tiles">
       <Link href="/operations" className="ops-tile"><b>الطلبات وعروض الأسعار</b><small>راجع الطلب وأصدر عرض السعر للعميل</small></Link>

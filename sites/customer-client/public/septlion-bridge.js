@@ -396,6 +396,16 @@
 
   const hookPage = () => enhancePhone(document.getElementById('fPhone'));
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookPage); else hookPage();
+  // Visitor counter: no cookies, nothing stored, the server never keeps the IP address.
+  (function countVisit() {
+    try {
+      if (navigator.doNotTrack === '1' || !/(^|\.)septlion\.com$/.test(location.hostname)) return;
+      const body = JSON.stringify({ p: location.pathname, r: document.referrer || '' });
+      const url = SUPABASE_URL + '/functions/v1/track-visit';
+      if (!(navigator.sendBeacon && navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }))))
+        fetch(url, { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(() => {});
+    } catch (e) { /* counting must never break the page */ }
+  })();
 
   api.submit = function (x) {
     current = x; step = 'contact'; ensureSheet(); render();
