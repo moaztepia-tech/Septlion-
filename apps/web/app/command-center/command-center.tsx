@@ -68,6 +68,7 @@ export default function CommandCenter({role}:{role:'ADMIN'|'SALES'}) {
     <section aria-label="أقسام العمل" className="ops-tiles">
       <Link href="/operations" className="ops-tile"><b>الطلبات وعروض الأسعار</b><small>راجع الطلب وأصدر عرض السعر للعميل</small></Link>
       <Link href="/operations?tab=deals" className="ops-tile"><b>تنفيذ الصفقات</b><small>مراحل الشحن والمستندات بعد قبول العرض</small></Link>
+      <Link href="/demand-intelligence/workbench" className="ops-tile"><b>لوحة تشغيل الطلبات</b><small>الطلبات الجديدة والمشترون المحتملون والمهام</small></Link>
       <Link href="/demand-intelligence" className="ops-tile"><b>الفرص والتقييم</b><small>فرص الطلب في الأسواق قبل الالتزام</small></Link>
       <Link href="/discover" className="ops-tile"><b>ما يراه العميل</b><small>معاينة الكتالوج كما يظهر في الموقع</small></Link>
     </section>
