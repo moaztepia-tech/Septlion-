@@ -298,9 +298,14 @@ export function topBar(lang, {home, alt = [], wa, anchors = true}) {
 <a class="btn pri" href="${esc(wa)}">${ICON_WA}${u.quote}</a></div></header>`;
 }
 
+// Same privacy-friendly counter as the customer site (track-visit): the page view,
+// plus a WhatsApp or email click counted as /e/wa or /e/email, so the team sees
+// which market pages bring buyers to write. No cookies, nothing stored.
+export const VISIT_SCRIPT = `<script>(function(){try{if(navigator.doNotTrack==='1'||!/(^|\\.)septlion\\.com$/.test(location.hostname))return;var u='https://jfbmxowdmfdzyoauqgwn.supabase.co/functions/v1/track-visit';var s=function(p,r){var b=JSON.stringify({p:p,r:r||''});if(!(navigator.sendBeacon&&navigator.sendBeacon(u,new Blob([b],{type:'text/plain'}))))fetch(u,{method:'POST',body:b,keepalive:true,headers:{'Content-Type':'text/plain'}}).catch(function(){})};s(location.pathname,document.referrer);document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href]');if(!a)return;var h=a.getAttribute('href');if(/^https:\\/\\/wa\\.me\\//.test(h))s('/e/wa'+location.pathname);else if(/^mailto:/.test(h))s('/e/email'+location.pathname)},true)}catch(e){}})();</script>`;
+
 export function footer(lang, home) {
   const u = U[lang], t = T[lang];
-  return `<footer class="foot"><div class="wrap"><img src="/brand/septlion-lockup-white.svg" alt="SEPTLION سبتليون" width="134" height="40"><nav><a href="${home}">${u.foot[0]}</a><a href="/markets/">${u.foot[1]}</a><a href="/demand/">${u.foot[2]}</a><a href="mailto:${EMAIL}">${EMAIL}</a></nav><span>${esc(t.footer)}</span></div></footer>`;
+  return `<footer class="foot"><div class="wrap"><img src="/brand/septlion-lockup-white.svg" alt="SEPTLION سبتليون" width="134" height="40"><nav><a href="${home}">${u.foot[0]}</a><a href="/markets/">${u.foot[1]}</a><a href="/demand/">${u.foot[2]}</a><a href="mailto:${EMAIL}">${EMAIL}</a></nav><span>${esc(t.footer)}</span></div></footer>${VISIT_SCRIPT}`;
 }
 
 export const dock = (lang, wa) => `<div class="dock"><a class="btn pri" href="${esc(wa)}">${ICON_WA}${U[lang].quote}</a></div>`;

@@ -40,7 +40,15 @@ as $$
        from (select coalesce(country, '??') c, count(distinct visitor) n from core."SiteVisit", today
              where day > today.d - 7 group by 1 order by 2 desc limit 10) x), '[]'::jsonb),
     'pages', coalesce((select jsonb_agg(jsonb_build_object('path', path, 'views', n) order by n desc)
-       from (select path, count(*) n from core."SiteVisit", today where day > today.d - 7 group by 1 order by 2 desc limit 8) x), '[]'::jsonb),
+       from (select path, count(*) n from core."SiteVisit", today where day > today.d - 7 and path not like '/e/%' group by 1 order by 2 desc limit 8) x), '[]'::jsonb),
+    -- Request steps over 7 days, by distinct visitor: opened the form, sent it,
+    -- hit an error, or went to WhatsApp / email from a page.
+    'steps', jsonb_build_object(
+      'requestOpen', (select count(distinct visitor) from core."SiteVisit", today where day > today.d - 7 and path = '/e/request-open'),
+      'requestSent', (select count(distinct visitor) from core."SiteVisit", today where day > today.d - 7 and path = '/e/request-sent'),
+      'requestError', (select count(distinct visitor) from core."SiteVisit", today where day > today.d - 7 and path = '/e/request-error'),
+      'whatsapp', (select count(distinct visitor) from core."SiteVisit", today where day > today.d - 7 and (path = '/e/request-whatsapp' or path like '/e/wa/%')),
+      'email', (select count(distinct visitor) from core."SiteVisit", today where day > today.d - 7 and path like '/e/email/%')),
     'devices', coalesce((select jsonb_object_agg(coalesce(device, 'other'), n)
        from (select device, count(distinct visitor) n from core."SiteVisit", today where day > today.d - 7 group by 1) x), '{}'::jsonb)
   );

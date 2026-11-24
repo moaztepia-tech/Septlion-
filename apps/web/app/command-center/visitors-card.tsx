@@ -4,14 +4,15 @@ import {edge} from '../../lib/api';
 
 type Visits = {now:number; today:number; todayViews:number; week:number;
   days:{day:string; visitors:number}[]; countries:{country:string; visitors:number}[];
-  pages:{path:string; views:number}[]; devices:Record<string,number>};
+  pages:{path:string; views:number}[]; devices:Record<string,number>;
+  steps?:{requestOpen:number; requestSent:number; requestError:number; whatsapp:number; email:number}};
 
 const isoFlag=(c:string)=>/^[A-Z]{2}$/.test(c)?String.fromCodePoint(...[...c].map(x=>0x1F1E6+x.charCodeAt(0)-65)):'';
 const names=(()=>{try{return new Intl.DisplayNames(['ar'],{type:'region'})}catch{return null}})();
 const countryName=(c:string)=>/^[A-Z]{2}$/.test(c)?(names?.of(c)||c):'غير معروف';
 const dayName=(d:string)=>new Date(d+'T12:00:00Z').toLocaleDateString('ar',{weekday:'short'});
-const PAGE:Record<string,string>={'/':'الصفحة الرئيسية','/discover':'اكتشف','/require':'الطلب','/demand-intelligence':'الرادار'};
-const pageName=(p:string)=>PAGE[p]||(p.startsWith('/demand/')?'صفحة طلب: '+decodeURIComponent(p.slice(8)):p);
+const PAGE:Record<string,string>={'/':'الصفحة الرئيسية','/discover':'اكتشف','/require':'الطلب','/demand-intelligence':'الرادار','/markets':'فهرس الأسواق','/en':'الصفحة الإنجليزية'};
+const pageName=(p:string)=>PAGE[p]||(p.startsWith('/demand/')?'صفحة طلب: '+decodeURIComponent(p.slice(8)):p.startsWith('/markets/')?'سوق: '+decodeURIComponent(p.slice(9)):p);
 
 export function VisitorsCard(){
   const [v,setV]=useState<Visits|null>(null);
@@ -31,6 +32,12 @@ export function VisitorsCard(){
       <div className="ops-visit-bars" role="img" aria-label={'الزوار يوميًا: '+v.days.map(d=>`${dayName(d.day)} ${d.visitors}`).join('، ')}>
         {v.days.map(d=><div key={d.day} className="ops-visit-bar"><span className="n">{d.visitors||''}</span><i style={{height:`${Math.max(4,d.visitors/max*64)}px`}}/><small>{dayName(d.day)}</small></div>)}
       </div>
+      {v.steps&&<div className="ops-stats" aria-label="خطوات الطلب في 7 أيام" style={{marginTop:12}}>
+        <div className="ops-stat"><b>{v.steps.requestOpen}</b><small>فتح نموذج الطلب</small></div>
+        <div className="ops-stat hl"><b>{v.steps.requestSent}</b><small>أرسل الطلب</small></div>
+        <div className="ops-stat"><b>{v.steps.whatsapp}</b><small>ضغط واتساب</small></div>
+        <div className="ops-stat"><b>{v.steps.requestError}</b><small>واجه خطأ</small></div>
+      </div>}
       {v.week===0?<div className="ops-empty">لم تُسجَّل زيارات بعد. ستظهر هنا فور دخول أول زائر.</div>:<div className="ops-visit-lists">
         <div><h3 className="ops-visit-h">من أين يأتون (7 أيام)</h3><ul>{v.countries.map(c=><li key={c.country}><span>{isoFlag(c.country)} {countryName(c.country)}</span><b>{c.visitors}</b></li>)}</ul></div>
         <div><h3 className="ops-visit-h">أكثر الصفحات زيارة</h3><ul>{v.pages.map(p=><li key={p.path}><span dir="auto">{pageName(p.path)}</span><b>{p.views}</b></li>)}</ul></div>

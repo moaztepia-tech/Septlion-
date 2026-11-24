@@ -1,6 +1,8 @@
 /* SEPTLION bridge: the customer interface stays as it is, and every request it
-   saves is also sent to the SEPTLION platform (Supabase trade-api), after the
-   customer confirms an email address with a one-time code.
+   saves is also sent to the SEPTLION team. A buyer sends it with a name, company
+   and WhatsApp number only (email optional), straight to the public intake
+   (submit-demand-rfq); a buyer already signed in with a confirmed email keeps
+   the platform path (trade-api).
    The pure helpers are exported for node tests; the UI part runs only in a browser. */
 (function (root, factory) {
   'use strict';
@@ -111,6 +113,47 @@
     });
   }
 
+  /**
+   * Builds the public intake payload (submit-demand-rfq) from a saved request,
+   * the contact and the extra answers. No email code: the WhatsApp number is
+   * required, the email optional. Throws an Arabic message when something is absent.
+   */
+  function buildIntake(x, contact, extra) {
+    extra = extra || {};
+    const name = clean(contact.name, 120), company = clean(contact.company, 160);
+    const email = clean(contact.email, 200).toLowerCase();
+    const wa = digits(contact.whatsapp).replace(/[\s()-]/g, '').replace(/^\+/, '').replace(/^00/, '');
+    if (!name) throw new Error('اكتب اسمك.');
+    if (!company) throw new Error('اكتب اسم الشركة، أو اسمك إن لم تكن شركة.');
+    if (!/^[1-9]\d{7,14}$/.test(wa)) throw new Error('اكتب رقم واتساب صحيحًا مع رمز الدولة.');
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) throw new Error('البريد غير صحيح. صحّحه أو اتركه فارغًا.');
+    const base = { contactName: name, companyName: company, phone: '+' + wa, email: email || undefined, channel: 'customer_site' };
+    const pay = { LC: 'اعتماد مستندي', TT: 'تحويل بنكي' }[String(extra.payment || x.payment || '').toUpperCase().slice(0, 2)] || '';
+    if (x.kind === 'sku') {
+      const n = Number(x.qty);
+      if (!Number.isSafeInteger(n) || n < 1) throw new Error('حدد عدد الحاويات.');
+      const country = clean(x.dest, 120);
+      if (!country) throw new Error('حدد وجهة التسليم.');
+      return Object.assign(base, {
+        product: clean(x.title, 300), country, destinationPort: clean(x.port, 160) || undefined,
+        quantity: n + ' FCL', packing: clean(x.description, 120) || undefined,
+        incoterm: INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF',
+        notes: [pay && 'الدفع: ' + pay, clean(x.note, 1000)].filter(Boolean).join(' · ') || undefined,
+      });
+    }
+    const q = parseQuantity(x.quantity) || (extra.amount ? { amount: Number(digits(extra.amount)), unit: extra.unit } : null);
+    if (!q || !Number.isFinite(q.amount) || q.amount <= 0 || !['FCL', 'MT', 'KG'].includes(q.unit)) throw new Error('حدد الكمية ووحدتها.');
+    const country = clean(x.destination, 120) || clean(extra.destination, 120);
+    if (!country) throw new Error('حدد بلد أو مدينة التسليم.');
+    const product = clean(x.description, 300) || clean(x.title, 300);
+    if (!product) throw new Error('صف المنتج الذي تحتاجه.');
+    return Object.assign(base, {
+      product, country, quantity: clean(x.quantity, 120) || (q.amount + ' ' + q.unit),
+      incoterm: INCOTERMS.includes(extra.incoterm) ? extra.incoterm : undefined,
+      notes: [pay && 'الدفع: ' + pay, clean(x.terms, 1000)].filter(Boolean).join(' · ') || undefined,
+    });
+  }
+
   /* ------------------------------------------------------------ phone numbers */
   // [iso, dial code, Arabic name, national length min, max]. Sudan first: most buyers start there.
   const COUNTRIES = [
@@ -167,7 +210,7 @@
     return n ? '+' + countryOf(iso)[1] + ' ' + formatNational(n) : '';
   }
 
-  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput, splitPhone, formatNational, checkPhone, joinPhone, COUNTRIES };
+  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput, buildIntake, splitPhone, formatNational, checkPhone, joinPhone, COUNTRIES };
   if (typeof document === 'undefined') return api;
 
   /* ------------------------------------------------------------------ browser */
@@ -220,6 +263,12 @@
       const r = await fetch(SUPABASE_URL + '/functions/v1/trade-api', { method: 'POST', headers: headers(), body: JSON.stringify({ action: 'catalog.public' }) });
       const b = await body(r); return r.ok && b && Array.isArray(b.items) ? b.items : [];
     } catch (e) { return []; }
+  }
+  async function sendIntake(payload) {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/submit-demand-rfq', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const b = await body(r);
+    if (!r.ok) throw new Error(r.status === 429 ? 'طلبات كثيرة في وقت قصير. انتظر قليلًا ثم أعد المحاولة.' : 'تعذر إرسال الطلب الآن. طلبك محفوظ؛ يمكنك إرساله عبر واتساب.');
+    return b || {};
   }
   async function createRequirement(session, input) {
     const r = await fetch(SUPABASE_URL + '/functions/v1/trade-api', { method: 'POST', headers: headers(session.access_token), body: JSON.stringify({ action: 'requirements.create', input }) });
@@ -309,10 +358,10 @@
     sheet = document.createElement('div');
     sheet.className = 'sheet'; sheet.id = 'sbVerify';
     sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-labelledby', 'sbTitle'); sheet.setAttribute('aria-hidden', 'true'); sheet.inert = true;
-    sheet.innerHTML = '<div class="sheet-head"><strong id="sbTitle">أكّد بريدك ليصلنا طلبك</strong><button class="x" data-act="close-sheet" aria-label="إغلاق">×</button></div><div class="sheet-body"><form id="sbForm" novalidate></form></div>';
+    sheet.innerHTML = '<div class="sheet-head"><strong id="sbTitle">أرسل طلبك إلى سبتليون</strong><button class="x" data-act="close-sheet" aria-label="إغلاق">×</button></div><div class="sheet-body"><form id="sbForm" novalidate></form></div>';
     document.body.appendChild(sheet);
     sheet.querySelector('#sbForm').addEventListener('submit', onSubmit);
-    sheet.addEventListener('click', e => { if (e.target.closest('[data-sb="wa"]') && current && page().sendWA) page().sendWA(current); if (e.target.closest('[data-sb="back"]')) { step = 'contact'; render(); } });
+    sheet.addEventListener('click', e => { if (e.target.closest('[data-sb="wa"]') && current && page().sendWA) { track('/e/request-whatsapp'); page().sendWA(current); } if (e.target.closest('[data-sb="back"]')) { step = 'contact'; render(); } });
     return sheet;
   }
   const field = (id, label, attrs, value) => '<div class="field"><label for="' + id + '">' + label + '</label><input class="input" id="' + id + '" ' + attrs + ' value="' + escH(value || '') + '"></div>';
@@ -321,17 +370,17 @@
     const x = current, f = sheet.querySelector('#sbForm'), need = missing(x), saved = store.get('septlion.bridge.contact', {});
     let h = '';
     if (step === 'contact') {
-      h += '<p class="hint">نرسل رمزًا إلى بريدك للتأكد أن الطلب منك، ثم يصل الطلب مباشرة إلى فريق سبتليون.</p>';
+      h += '<p class="hint">يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب بعرض واضح.</p>';
       h += field('sbName', 'الاسم', 'autocomplete="name" required', saved.name);
       h += field('sbCompany', 'الشركة <small>أو اسمك إن لم تكن شركة</small>', 'autocomplete="organization" required', x.company || saved.company);
       h += field('sbWa', 'رقم واتساب', 'type="tel" inputmode="tel" dir="ltr" autocomplete="tel" required', x.phone || saved.whatsapp);
-      h += field('sbEmail', 'البريد الإلكتروني', 'type="email" inputmode="email" dir="ltr" autocomplete="email" placeholder="name@company.com" required', saved.email);
+      h += field('sbEmail', 'البريد الإلكتروني <small>اختياري</small>', 'type="email" inputmode="email" dir="ltr" autocomplete="email" placeholder="name@company.com"', saved.email);
       if (need.includes('destination')) h += field('sbDest', 'بلد أو مدينة التسليم', 'autocomplete="off" required', '');
       if (need.includes('quantity')) h += '<div class="sb-row">' + field('sbAmount', 'الكمية', 'inputmode="decimal" dir="ltr" required', '') + '<div class="field"><label for="sbUnit">الوحدة</label><select class="input" id="sbUnit"><option value="FCL">حاوية</option><option value="MT">طن</option><option value="KG">كجم</option></select></div></div>';
       if (need.includes('incoterm')) h += seg('sbInco', 'التسليم', [['CIF', 'CIF · إلى ميناء الوصول'], ['CFR', 'CFR'], ['FOB', 'FOB · من ميناء الشحن']], saved.incoterm || 'CIF');
       if (need.includes('payment')) h += seg('sbPay', 'الدفع', [['LC', 'اعتماد مستندي'], ['TT', 'تحويل بنكي'], ['OTHER', 'نتفق لاحقًا']], saved.payment || 'OTHER');
       h += '<p class="err" id="sbErr" role="alert">' + escH(message || '') + '</p>';
-      h += '<button class="btn btn-primary" type="submit" style="margin-top:14px">أرسل رمز التحقق <span class="arrow">←</span></button>';
+      h += '<button class="btn btn-primary" type="submit" style="margin-top:14px">أرسل الطلب <span class="arrow">←</span></button>';
     } else {
       h += '<p class="hint">أرسلنا رمزًا إلى <b dir="ltr">' + escH(api._pending.contact.email) + '</b>. اكتبه هنا. قد يصل إلى مجلد الرسائل غير المرغوبة.</p>';
       h += field('sbCode', 'رمز التحقق', 'class="input sb-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required', '');
@@ -354,21 +403,23 @@
       if (step === 'contact') {
         const contact = { name: val('sbName'), company: val('sbCompany'), whatsapp: val('sbWa'), email: val('sbEmail') };
         const extra = { destination: val('sbDest'), amount: val('sbAmount'), unit: val('sbUnit'), incoterm: radio('sbInco'), payment: radio('sbPay') };
-        buildInput(current, contact, extra, null); // validates before any code is sent
+        const intake = buildIntake(current, contact, extra); // validates before anything is sent
         store.set('septlion.bridge.contact', { countryIso: (store.get('septlion.bridge.contact', {}) || {}).countryIso, name: contact.name, company: contact.company, whatsapp: contact.whatsapp, email: contact.email.trim().toLowerCase(), incoterm: extra.incoterm, payment: extra.payment });
         api._pending = { contact, extra };
-        const session = await currentSession().catch(() => null);
-        if (session && await confirmedEmailOf(session).catch(() => null) === contact.email.trim().toLowerCase()) return await finish(session);
-        await sendCode(contact.email.trim().toLowerCase());
-        step = 'code'; render();
-        setTimeout(() => { const c = sheet.querySelector('#sbCode'); c && c.focus(); }, 60);
+        // Already signed in with this confirmed email: keep the platform path, so the
+        // request also shows in the buyer's account. Everyone else sends it directly.
+        const email = contact.email.trim().toLowerCase();
+        const session = email ? await currentSession().catch(() => null) : null;
+        if (session && await confirmedEmailOf(session).catch(() => null) === email) return await finish(session);
+        const res = await sendIntake(intake);
+        done(res && res.reference ? String(res.reference) : '');
       } else {
         const code = digits(val('sbCode')).replace(/\D/g, '');
         if (!/^\d{6,10}$/.test(code)) throw new Error('اكتب الرمز كما وصلك.');
         const s = await verifyCode(api._pending.contact.email.trim().toLowerCase(), code);
         await finish(s);
       }
-    } catch (err) { showErr(err && err.message ? err.message : 'حدث خطأ. حاول مجددًا.'); }
+    } catch (err) { track('/e/request-error'); showErr(err && err.message ? err.message : 'حدث خطأ. حاول مجددًا.'); }
     finally { busy(false); }
   }
 
@@ -376,12 +427,15 @@
     const catalog = await fetchCatalog();
     const input = buildInput(current, api._pending.contact, api._pending.extra, catalog);
     const res = await createRequirement(session, input);
-    const ref = res && res.rfq && res.rfq.reference ? String(res.rfq.reference) : '';
+    done(res && res.rfq && res.rfq.reference ? String(res.rfq.reference) : '');
+  }
+  function done(ref) {
+    track('/e/request-sent');
     markSent(current.id, ref);
     if (page().closeSheets) page().closeSheets(true);
-    const done = $('#doneBox');
-    if (done && $('#needDone') && current.kind === 'free') {
-      done.innerHTML = '<div class="mk">✓</div><h1>تم استلام طلبك.</h1><p>' + (ref ? 'رقم الطلب <b class="latin">' + escH(ref) + '</b>. ' : '') + 'سيتواصل معك فريقنا عبر واتساب أو البريد بعرض مناسب.</p><button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>';
+    const box = $('#doneBox');
+    if (box && $('#needDone') && current.kind === 'free') {
+      box.innerHTML = '<div class="mk">✓</div><h1>تم استلام طلبك.</h1><p>' + (ref ? 'رقم الطلب <b class="latin">' + escH(ref) + '</b>. ' : '') + 'سيتواصل معك فريقنا عبر واتساب أو البريد بعرض مناسب.</p><button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>';
     }
     if (page().toast) page().toast('تم استلام طلبك' + (ref ? ' — رقم الطلب ' + ref : ''), { label: 'طلباتي', go: 'orders' });
     step = 'contact'; current = null;
@@ -397,18 +451,20 @@
   const hookPage = () => enhancePhone(document.getElementById('fPhone'));
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookPage); else hookPage();
   // Visitor counter: no cookies, nothing stored, the server never keeps the IP address.
-  (function countVisit() {
+  // Steps of a request are counted as paths under /e/ so the team sees where buyers stop.
+  function track(path) {
     try {
       if (navigator.doNotTrack === '1' || !/(^|\.)septlion\.com$/.test(location.hostname)) return;
-      const body = JSON.stringify({ p: location.pathname, r: document.referrer || '' });
+      const body = JSON.stringify({ p: path, r: path === location.pathname ? document.referrer || '' : '' });
       const url = SUPABASE_URL + '/functions/v1/track-visit';
       if (!(navigator.sendBeacon && navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }))))
         fetch(url, { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(() => {});
     } catch (e) { /* counting must never break the page */ }
-  })();
+  }
+  track(location.pathname);
 
   api.submit = function (x) {
-    current = x; step = 'contact'; ensureSheet(); render();
+    current = x; step = 'contact'; ensureSheet(); render(); track('/e/request-open');
     if (page().open) page().open(sheet, document.activeElement);
     else { sheet.inert = false; sheet.setAttribute('aria-hidden', 'false'); sheet.classList.add('open'); }
   };
