@@ -22,9 +22,16 @@ class FakeFTP:
 
     def __init__(self, files):
         self.files = dict(files)  # absolute path -> bytes
+        self.clock = 0
+        self.mtime = {path: self._tick() for path in self.files}
+        self.downloads = []
         self.dirs = {"/domains/septlion.com", ROOT}
         for path in self.files:
             self._add_parents(path)
+
+    def _tick(self):
+        self.clock += 1
+        return "20261124%06d" % self.clock
 
     def _add_parents(self, path):
         parts = path.split("/")
@@ -42,17 +49,23 @@ class FakeFTP:
                 if name in seen or name.startswith("."):
                     continue
                 seen.add(name)
-                yield name, {"type": "dir" if (prefix + name) in self.dirs else "file"}
+                full = prefix + name
+                if full in self.dirs:
+                    yield name, {"type": "dir"}
+                else:
+                    yield name, {"type": "file", "size": str(len(self.files[full])), "modify": self.mtime[full]}
 
     def retrbinary(self, command, callback):
         path = command[5:]
         if path not in self.files:
             raise ftplib.error_perm("550 not found")
+        self.downloads.append(path)
         callback(self.files[path])
 
     def storbinary(self, command, stream):
         path = command[5:]
         self.files[path] = stream.read()
+        self.mtime[path] = self._tick()
         self._add_parents(path)
 
     def mkd(self, path):
@@ -64,6 +77,7 @@ class FakeFTP:
         if old not in self.files:
             raise ftplib.error_perm("550 not found")
         self.files[new] = self.files.pop(old)
+        self.mtime[new] = self.mtime.pop(old, self._tick())
 
     def close(self):
         pass
@@ -231,6 +245,36 @@ class ReleaseTest(unittest.TestCase):
             self.run_cmd("release")
         for i in range(40):
             self.assertEqual(public(self.fake, "discover/p%02d.html" % i), b"page %d" % i)
+
+    def test_second_release_downloads_only_changed_files(self):
+        self.run_cmd("release")
+        (self.pkg / "discover/index.html").write_bytes(b"<html>discover v2</html>")
+        self.fake.downloads.clear()
+        self.run_cmd("release")
+        self.assertEqual(public(self.fake, "discover/index.html"), b"<html>discover v2</html>")
+        live_reads = {p[len(ROOT) + 1:] for p in self.fake.downloads if p.startswith(ROOT + "/")}
+        # The changed page (to back it up), the hidden file and read-backs; never the unchanged pages.
+        self.assertNotIn("same.txt", live_reads)
+        self.assertNotIn("index.html", live_reads)
+        self.assertIn("discover/index.html", live_reads)
+        self.assertIn(".htaccess", live_reads)
+
+    def test_file_edited_by_hand_on_the_server_is_downloaded_and_backed_up(self):
+        self.run_cmd("release")
+        self.fake.files[ROOT + "/same.txt"] = b"hand edit"
+        self.fake.mtime[ROOT + "/same.txt"] = self.fake._tick()
+        self.run_cmd("release")
+        self.assertEqual(public(self.fake, "same.txt"), b"same")
+        backups = sorted(p for p in self.fake.files if p.startswith(release.REMOTE_BACKUPS) and p.endswith(".tar.gz"))
+        self.assertEqual(release.read_archive(self.fake.files[backups[-1]])["same.txt"], b"hand edit")
+
+    def test_listing_without_sizes_never_treats_live_files_as_new(self):
+        self.run_cmd("release")
+        self.fake.mlsd = lambda d, facts=(): iter(())  # a host that lists nothing
+        (self.pkg / "index.html").write_bytes(b"<html>v3</html>")
+        self.run_cmd("release")
+        backups = sorted(p for p in self.fake.files if p.startswith(release.REMOTE_BACKUPS) and p.endswith(".tar.gz"))
+        self.assertEqual(release.read_archive(self.fake.files[backups[-1]])["index.html"], b"<html>new home</html>")
 
     def test_never_deletes(self):
         self.assertFalse(hasattr(FakeFTP, "delete"))

@@ -49,6 +49,7 @@ import urllib.request
 
 REMOTE_ROOT = "/domains/septlion.com/public_html"
 REMOTE_BACKUPS = "/domains/septlion.com/septlion-release-backups"
+MANIFEST = REMOTE_BACKUPS + "/live-manifest.json"
 ORIGIN = "https://www.septlion.com"
 SECRET_NAMES = ("HOSTINGER_FTP_SERVER", "HOSTINGER_FTP_USERNAME", "HOSTINGER_FTP_PASSWORD")
 WORKERS = max(1, min(8, int(os.environ.get("SEPTLION_FTP_WORKERS", "4") or 4)))
@@ -227,6 +228,81 @@ def store(ftp, root, relative, data, tag):
     ftp.rename(temporary, target)
 
 
+def list_facts(paths):
+    """{relative: (size, modify)} for the listed regular files in the folders of `paths`.
+
+    One MLSD per folder, over the parallel connections. A missing folder lists
+    as empty. Hidden files (names starting with a dot) are never trusted from a
+    listing, because some hosts leave them out.
+    """
+    folders = sorted({str(PurePosixPath(p).parent) for p in paths})
+
+    def listing(conn, folder):
+        directory = REMOTE_ROOT + ("" if folder == "." else "/" + folder)
+        found = {}
+        try:
+            for name, facts in conn.mlsd(directory, facts=["type", "size", "modify"]):
+                if facts.get("type") == "file" and facts.get("size") and facts.get("modify"):
+                    found[name if folder == "." else folder + "/" + name] = (facts["size"], facts["modify"])
+        except ftplib.error_perm as error:
+            if not is_missing(error):
+                raise
+        return found
+
+    facts = {}
+    for found in in_parallel(folders, listing).values():
+        facts.update(found)
+    return facts
+
+
+def read_manifest(ftp):
+    try:
+        raw = try_fetch(ftp, MANIFEST)
+        data = json.loads(raw) if raw else {}
+        return data.get("files", {}) if data.get("v") == 1 else {}
+    except (ValueError, AttributeError):
+        return {}
+
+
+def write_manifest(ftp, package, tag):
+    """Record size, time and checksum of every package file as it is live now."""
+    facts = list_facts(package)
+    files = {path: {"size": facts[path][0], "modify": facts[path][1], "sha256": digest(data)}
+             for path, data in package.items() if path in facts}
+    ensure_directory(ftp, "/domains/septlion.com", PurePosixPath(REMOTE_BACKUPS).name)
+    store(ftp, REMOTE_BACKUPS, "live-manifest.json", json.dumps({"v": 1, "files": files}, sort_keys=True).encode(), tag + "-m")
+    log("Live manifest updated for %d files." % len(files))
+
+
+def quick_snapshot(ftp, package):
+    """Like snapshot(ftp, package), but downloads only what may differ.
+
+    A live file whose size and modification time still match the manifest
+    written by the last release, and whose recorded checksum equals the new
+    file, is identical: it is taken from the package without downloading.
+    Everything else (changed, unknown, hidden, or edited by hand on the server,
+    which changes its time) is downloaded as before.
+    """
+    manifest = read_manifest(ftp)
+    if not manifest:
+        log("No live manifest yet: downloading every package file once.")
+        return snapshot(ftp, package)
+    facts = list_facts(package)
+    same, fetch_list = {}, []
+    for path, data in package.items():
+        entry = manifest.get(path)
+        known = path in facts and entry and (entry.get("size"), entry.get("modify")) == facts[path]
+        if known and not PurePosixPath(path).name.startswith(".") and entry.get("sha256") == digest(data):
+            same[path] = data
+        else:
+            # Changed, unknown, hidden or new: read it from the server (a missing file reads as new).
+            fetch_list.append(path)
+    live = snapshot(ftp, fetch_list)
+    live.update(same)
+    log("Compared %d files from the manifest; downloaded %d." % (len(same), len(fetch_list)))
+    return live
+
+
 def snapshot(ftp, probe=(), full=False):
     """Download live files: {relative path: bytes}.
 
@@ -388,7 +464,7 @@ def cmd_plan(args):
     package = read_package(args.package)
     ftp = connect()
     try:
-        live = snapshot(ftp, package, args.full)
+        live = snapshot(ftp, package, True) if args.full else quick_snapshot(ftp, package)
     finally:
         ftp.close()
     plan = make_plan(live, package, args.full)
@@ -413,7 +489,7 @@ def cmd_publish(args, approve_current=False):
     name = time.strftime("%Y%m%d-%H%M%S") + "-run" + tag
     ftp = connect()
     try:
-        live = snapshot(ftp, package, args.full)
+        live = snapshot(ftp, package, True) if args.full else quick_snapshot(ftp, package)
         ftp = fresh(ftp)
         plan = make_plan(live, package, args.full)
         if approve_current:
@@ -473,6 +549,11 @@ def cmd_publish(args, approve_current=False):
             restore(ftp, live, record, tag)
             summary("## Release failed and was rolled back\n\nBackup `%s` restored. Cause: %s" % (name, error))
             raise
+        try:
+            ftp = fresh(ftp)
+            write_manifest(ftp, package, tag)
+        except Exception as error:  # noqa: BLE001 - the release itself is done
+            log("Note: live manifest not updated (%s); the next release downloads all files." % error)
         summary("## Released\n\nPlan `%s`, backup `%s`. %d files uploaded. To undo: run mode = rollback, backup_name = `%s`." % (plan["plan_id"], name, len(order), name))
         log("Released. Backup name for rollback: " + name)
     finally:
