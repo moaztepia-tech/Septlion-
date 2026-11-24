@@ -12,8 +12,8 @@ test('360px ADMIN draft/publication and BUYER discovery-to-RFQ flow with server 
  await browserSession(page,'ADMIN');await page.reload();
  await expect(page.getByText('أحدث الطلبات')).toBeVisible();await page.getByText('المنتجات والقطاعات').click();
  await page.getByLabel('اسم المنتج',{exact:true}).fill('زيت زولانا');await page.getByLabel('رمز الرابط').fill('zollana-oil');await page.getByRole('combobox',{name:'القطاع',exact:true}).selectOption('food');await page.getByLabel('الوصف',{exact:true}).fill('زيت عباد الشمس · تُثبت المواصفة في العرض');await page.getByLabel('رمز الصنف').fill('ZO-OIL-1');await page.getByLabel('اسم التعبئة').fill('عبوة 1 لتر');await page.getByLabel('مواصفة التعبئة').fill('1 لتر × 12');
- await page.getByRole('button',{name:'حفظ كمسودة خاصة'}).click();await expect(page.getByText('DRAFT · PRIVATE')).toBeVisible();
- await page.getByRole('button',{name:'مراجعة النشر'}).click();await expect(page.getByRole('button',{name:'تأكيد النشر'})).toBeDisabled();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'تأكيد النشر'}).click();await expect(page.getByText('ACTIVE · PUBLIC')).toBeVisible();
+ await page.getByRole('button',{name:'حفظ كمسودة خاصة'}).click();await expect(page.getByText('مسودة · خاص بالفريق')).toBeVisible();
+ await page.getByRole('button',{name:'مراجعة النشر'}).click();await expect(page.getByRole('button',{name:'تأكيد النشر'})).toBeDisabled();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'تأكيد النشر'}).click();await expect(page.getByText('منشور · ظاهر للعملاء')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:'test-results/command-center-360.png',fullPage:true});
 
