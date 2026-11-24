@@ -220,7 +220,7 @@ const U = {
 // {mode: 'land' | 'both', route: {ar, fr, en}} and switches the page's facts,
 // wording and Incoterms from sea freight to trucks and border crossings.
 export const LAND = {
-  sudan: {mode: 'both', route: {ar: 'من مصر عبر معبري أرقين وقسطل', en: 'from Egypt via the Argeen and Qastal crossings'}},
+  sudan: {mode: 'both', route: {ar: 'من مصر عبر معابر أرقين وقسطل، وحدربة على طريق سفاجا والبحر الأحمر', en: 'from Egypt via the Argeen and Qastal crossings, and Hadarba on the Safaga–Red Sea road'}},
   libya: {mode: 'both', route: {ar: 'من مصر عبر منفذ السلوم وامساعد', en: 'from Egypt via the Salloum–Musaid crossing'}},
 };
 const LAND_UI = {
