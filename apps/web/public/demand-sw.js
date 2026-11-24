@@ -1,8 +1,11 @@
 self.addEventListener('push',event=>{
-  event.waitUntil(self.registration.showNotification('Septlion — RFQ جديد',{
-    body:'وصل طلب عرض سعر جديد إلى محرك الطلب. افتح Workbench للمراجعة.',
-    icon:'/brand/septlion-primary-navy.png',
-    badge:'/brand/septlion-primary-navy.png',
+  event.waitUntil(self.registration.showNotification('سبتليون — طلب جديد من مشتري',{
+    body:'وصل طلب جديد من الموقع. اضغط هنا لفتحه والرد على المشتري.',
+    icon:'/brand/notify-icon-192.png',
+    badge:'/brand/notify-badge-96.png',
+    dir:'rtl',
+    lang:'ar',
+    vibrate:[200,100,200],
     tag:'septlion-new-rfq',
     renotify:true,
     requireInteraction:true,
