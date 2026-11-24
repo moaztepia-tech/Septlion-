@@ -31,7 +31,7 @@ await pg.exec(`create extension pgcrypto; create schema extensions; create schem
   try{await pg.exec(sql)}catch(e){assert.fail(f+': '+e.message)}
  }
  const counts=Object.fromEntries((await pg.query("select table_schema s,count(*)::int n from information_schema.tables where table_schema in ('public','core') and table_type='BASE TABLE' group by 1")).rows.map(r=>[r.s,r.n]));
- assert.deepEqual(counts,{core:48,public:26});
+ assert.deepEqual(counts,{core:48,public:30});
  await pg.close();
 });
 test('repository migrations hold no secret literals',async()=>{
