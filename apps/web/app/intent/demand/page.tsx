@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import {PlatformHeader} from '../../../components/platform-header';
 import {useEffect,useState} from 'react';
-import RfqForm from '../RfqForm';
+import QuoteSheet,{marketAr,productAr} from '../QuoteSheet';
+import '../quote-sheet.css';
 
 type IntentPage={
  id:string;slug:string;title:string;productKey?:string|null;market:string;searchIntent:string;
@@ -12,6 +11,10 @@ type IntentPage={
 
 const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL||'https://jfbmxowdmfdzyoauqgwn.supabase.co';
 const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD';
+
+function Top(){
+ return <header className="qs-top" dir="rtl"><a href="/" aria-label="سبتليون — الرئيسية"><img src="/brand/septlion-header-white.png" alt="SEPTLION"/></a><a href="/">الرئيسية ←</a></header>;
+}
 
 export default function DemandIntentPage(){
  const [page,setPage]=useState<IntentPage|null|undefined>(undefined);
@@ -26,39 +29,18 @@ export default function DemandIntentPage(){
    .catch(()=>setPage(null));
  },[]);
 
- if(page===undefined)return <main className="di" dir="ltr"><PlatformHeader lang="en"/><div className="shell di-section"><p className="kicker">INTENT PAGE</p><h2>Loading demand route…</h2></div></main>;
+ // A page that is no longer public still takes the request, as a general wheat flour request.
+ const product=page?.content?.product||page?.title||'Wheat Flour';
+ const slug=page?.slug||'wheat-flour';
 
- if(!page)return <main className="di" dir="ltr">
-  <PlatformHeader lang="en"/>
-  <section className="di-hero shell"><p className="kicker">NOT PUBLISHED</p><h1>This demand route<br/><em>is not public.</em></h1><p>The requested intent page is unavailable or still under internal qualification.</p><div className="di-actions"><Link href="/intent/wheat-flour">Wheat Flour RFQ →</Link></div></section>
+ return <main className="qs-page" dir="rtl">
+  <Top/>
+  {page===undefined?<p className="qs-intro">جارٍ التحميل…</p>:<>
+   <div className="qs-intro">
+    <h1>{productAr(product)}{page?.market?' إلى '+marketAr(page.market):''}</h1>
+    <p style={{margin:0}}>هناك طلب حالي على هذا الصنف في {page?.market?marketAr(page.market):'السوق'}. حدد الكمية والوجهة والشروط، ونرد عليك بعرض سعر واحد واضح.</p>
+   </div>
+   <div id="live-rfq"><QuoteSheet intentSlug={slug} product={product} market={page?.market}/></div>
+  </>}
  </main>;
-
- const product=page.content?.product||page.title;
-
- return <main className="di" dir="ltr">
-  <PlatformHeader lang="en"/>
-
-  <section className="di-hero shell">
-   <p className="kicker">MARKET-SPECIFIC SUPPLY INTENT</p>
-   <h1>{product}<br/><em>{page.market}</em></h1>
-   <p>This supply route was created from recent public B2B buying signals. Submit your requirement to turn the route into a live Septlion RFQ.</p>
-   <div className="di-actions"><a href="#live-rfq">Create live RFQ ↗</a><Link href="/demand-intelligence">Demand Intelligence →</Link></div>
-  </section>
-
-  <section className="di-section shell">
-   <div className="di-head"><div><p className="kicker">REQUIREMENT STRUCTURE</p><h2>Built from demand, not catalogue inventory.</h2></div><p>{page.searchIntent}</p></div>
-   <div className="di-cards">
-    <article><small>MARKET</small><h3>{page.market}</h3><p>Destination-specific route generated from the Demand Intelligence pipeline.</p><b>{page.productKey||'commercial supply'}</b></article>
-    <article><small>VOLUME SIGNAL</small><h3>{page.content?.quantity||'Buyer-defined'}</h3><p>Final commercial scale is confirmed from the buyer's submitted requirement.</p><b>Qualification before quotation</b></article>
-    <article><small>DELIVERY STRUCTURE</small><h3>{page.content?.incoterm||'FOB / CFR / CIF'}</h3><p>{page.content?.packing?'Packing signal: '+page.content.packing:'Packing configured by requirement.'}</p><b>{page.content?.deadline?'Demand deadline: '+page.content.deadline.slice(0,10):'Delivery window required'}</b></article>
-   </div>
-  </section>
-
-  <section className="di-section ir-section" id="live-rfq">
-   <div className="shell">
-    <div className="di-head"><div><p className="kicker">LIVE RFQ</p><h2>Enter the Septlion execution pipeline.</h2></div><p>Your submitted requirement becomes a new RFQ signal linked back to this demand route and appears in the internal operator workbench.</p></div>
-    <RfqForm intentSlug={page.slug} product={product} market={page.market}/>
-   </div>
-  </section>
- </main>
 }
