@@ -41,7 +41,7 @@ const quantityAr = q => String(q || '')
   .replace(/FCL commercial supply/i, 'توريد تجاري بالحاويات الكاملة')
   .replace(/Commercial \/ FCL volume/i, 'كميات تجارية بالحاويات الكاملة');
 
-export function arabicDemandPage({p, c = {}, product, englishUrl, intentUrl, signals, latest, quantities, shellCss, esc, json}) {
+export function arabicDemandPage({beacon, p, c = {}, product, englishUrl, intentUrl, signals, latest, quantities, shellCss, esc, json}) {
   const market = arabicMarket(p.market);
   const prod = arabicProduct(product);
   const url = englishUrl + 'ar/';
@@ -87,5 +87,5 @@ body{font-family:"IBM Plex Sans Arabic","Noto Kufi Arabic",Tahoma,var(--font-ui)
 <div class="faq"><article><h3>ماذا أرسل؟</h3><p>ميناء الوصول، والكمية، والتعبئة المفضلة، ومواصفات المنتج، وموعد التسليم، وشرط الشحن (FOB أو CFR أو CIF).</p></article><article><h3>ماذا يحدث بعد ذلك؟</h3><p>يراجع فريق SEPTLION طلبك، ويختار مسار التوريد المناسب، ثم يرسل لك عرضاً تجارياً واحداً واضحاً.</p></article><article><h3>هل السعر ثابت؟</h3><p>لا. السعر يُبنى على طلبك الفعلي والوجهة وطريقة التوريد.</p></article></div>
 <a class="cta" href="${intentUrl}">أرسل طلب عرض سعر لـ${esc(market)} ↖</a></div></section>
 </main><footer class="footer shell">SEPTLION LLC · مسجلة في الولايات المتحدة · <a href="${englishUrl}" hreflang="en" lang="en">English version</a></footer>
-</body></html>`;
+${beacon||''}</body></html>`;
 }

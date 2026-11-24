@@ -2,10 +2,12 @@ import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 import {arabicMarket,arabicDemandPage} from './demand-page-ar.mjs';
+import {visitBeacon} from './visit-beacon-snippet.mjs';
 
 const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL||'https://jfbmxowdmfdzyoauqgwn.supabase.co';
 const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD';
 
+const beacon=visitBeacon(SUPABASE_URL);
 const headers={apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
 const url=SUPABASE_URL+'/rest/v1/PublicDemandIntentPage?select=slug,title,productKey,market,searchIntent,content,updatedAt&order=updatedAt.desc&limit=250';
 const res=await fetch(url,{headers});
@@ -142,13 +144,13 @@ for(const p of pages){
 <div class="faq"><article><h3>What should I send?</h3><p>Destination, quantity, preferred packing, product specification, target delivery window and preferred Incoterm.</p></article><article><h3>What happens next?</h3><p>Your RFQ enters Septlion Demand Intelligence for qualification, supplier-route matching and commercial offer construction.</p></article><article><h3>Is this a fixed-price listing?</h3><p>No. This is a demand route. Pricing is built against the actual requirement and supply path.</p></article></div>
 <a class="cta" href="${intent}">Create RFQ for ${esc(p.market)} ↗</a></div></section>
 </main><footer class="footer shell">Septlion LLC · Demand Intelligence · Demand score ${esc(score??'—')} · Updated ${esc(displayDate(p.updatedAt))}</footer>
-</body></html>`;
+${beacon}</body></html>`;
 
  const dir=path.join(demandRoot,p.slug);
  await mkdir(dir,{recursive:true});
  await writeFile(path.join(dir,'index.html'),html);
  await writeFile(path.join(dir,'ai.json'),JSON.stringify(aiFacts,null,2));
- if(arUrl){await mkdir(path.join(dir,'ar'),{recursive:true});await writeFile(path.join(dir,'ar','index.html'),arabicDemandPage({p,c,product,englishUrl:canonical,intentUrl:intent,signals,latest,quantities,shellCss,esc,json}));}
+ if(arUrl){await mkdir(path.join(dir,'ar'),{recursive:true});await writeFile(path.join(dir,'ar','index.html'),arabicDemandPage({beacon,p,c,product,englishUrl:canonical,intentUrl:intent,signals,latest,quantities,shellCss,esc,json}));}
  generated.push({slug:p.slug,title:p.title,market:p.market,product,description,updatedAt:p.updatedAt,answerSummary,aiUrl:canonical+'ai.json',arUrl});
 }
 
@@ -156,7 +158,7 @@ const indexHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><met
 <header class="nav shell"><a class="brand" href="/" aria-label="Septlion Home"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="144" height="52"></a><nav aria-label="Main navigation"><a class="nav-home" href="/">Home</a><a href="/discover">Discover</a><a href="/requests">Trade</a><a href="/require">Start a requirement</a></nav></header>
 <main class="shell"><section class="hero"><p class="kicker">Find demand → attract demand</p><h1>What buyers are<br><em>asking for now.</em></h1><p class="lead">Market-specific supply pages generated from recent public B2B buying signals. Choose a route and submit the exact requirement to Septlion.</p></section>
 <div class="index-grid">${generated.map(p=>`<a class="index-card" href="/demand/${p.slug}/"><small>${esc(p.market)}</small><h3>${esc(p.product)}</h3><p>${esc(p.description)}</p></a>`).join('')}</div></main>
-<footer class="footer shell">Septlion LLC · Demand Intelligence · ${generated.length} live demand routes</footer></body></html>`;
+<footer class="footer shell">Septlion LLC · Demand Intelligence · ${generated.length} live demand routes</footer>${beacon}</body></html>`;
 await writeFile(path.join(demandRoot,'index.html'),indexHtml);
 await writeFile(path.join(demandRoot,'feed.json'),JSON.stringify({generatedAt:new Date().toISOString(),count:generated.length,pages:generated},null,2));
 await writeFile(path.join(demandRoot,'ai-index.json'),JSON.stringify({

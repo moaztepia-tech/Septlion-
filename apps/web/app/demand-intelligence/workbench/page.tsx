@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {accessToken} from '../../../lib/api';
 import Link from 'next/link';
 import {OpsFrame} from '../../../components/ops-console';
+import {DemandPageRef,buyerReply,fetchDemandPages,replyLink} from '../../../lib/buyer-reply';
 import './workbench.css';
 
 type QueueItem={
@@ -99,6 +100,13 @@ export default function DemandWorkbench(){
  const [stageFilter,setStageFilter]=useState('ALL');
  const [taskLimit,setTaskLimit]=useState(PAGE);
  const [buyerLimit,setBuyerLimit]=useState(PAGE);
+ const [demandPages,setDemandPages]=useState<DemandPageRef[]>([]);
+ const [replyFor,setReplyFor]=useState('');
+ const [copied,setCopied]=useState('');
+ useEffect(()=>{fetchDemandPages().then(setDemandPages).catch(()=>{});},[]);
+ async function copyReply(id:string,text:string){
+  try{await navigator.clipboard.writeText(text);setCopied(id);setTimeout(()=>setCopied(c=>c===id?'':c),2500);}catch{setCopied('');}
+ }
 
  async function load(silent=false){
   if(!silent)setBusy(true);setError('');
@@ -240,7 +248,14 @@ export default function DemandWorkbench(){
       <div><dt>المصدر</dt><dd>{item.sourceUrl?<a href={item.sourceUrl} target="_blank" rel="noreferrer">{item.source} ↗</a>:item.source}</dd></div>
      </dl>
      {(item.rfqReference||item.nextAction||statusLine)&&<div className="dw-next"><span>الخطوة التالية</span><b>{item.rfqReference||item.nextAction||taskAr[item.taskType]}</b>{statusLine&&<small>{statusLine}</small>}</div>}
+     {replyFor===item.taskId&&item.sourceUrl&&(()=>{const text=buyerReply({buyerName:item.buyerName,product:item.product,market:item.market,quantity:item.quantity,link:replyLink(item.market,demandPages)});return <div className="dw-reply">
+      <span>الرد على المشتري</span>
+      <p>انسخ الرد، وافتح الطلب في {item.source}، ثم الصقه في خانة الرد هناك. بعد الإرسال اضغط «تم، انقل للمرحلة التالية».</p>
+      <textarea readOnly value={text} rows={9} dir="auto" aria-label="نص الرد على المشتري"/>
+      <div className="dw-reply-actions"><button className="dw-primary" onClick={()=>copyReply(item.taskId,text)}>{copied===item.taskId?'تم النسخ ✓':'نسخ الرد'}</button><a className="dw-btn" href={item.sourceUrl} target="_blank" rel="noreferrer">فتح الطلب في {item.source} ↗</a></div>
+     </div>})()}
      <div className="dw-actions">
+      {item.stage==='BUYER_RESOLUTION'&&item.sourceUrl&&<button className={replyFor===item.taskId?'':'dw-primary'} onClick={()=>setReplyFor(replyFor===item.taskId?'':item.taskId)}>{replyFor===item.taskId?'إخفاء الرد':'تجهيز رد للمشتري'}</button>}
       {item.stage!=='RFQ'&&item.stage!=='INTENT_PAGE'&&<button className="dw-primary" onClick={()=>act(item,'advance')}>{item.stage==='QUALIFICATION'?'اعتماد التأهيل وبناء العرض':item.stage==='OFFER_BUILD'?'اعتماد العرض':'تم، انقل للمرحلة التالية'}</button>}
       {item.stage==='INTENT_PAGE'&&item.intentStatus!=='READY'&&item.intentStatus!=='PUBLISHED'&&<button className="dw-primary" onClick={()=>act(item,'advance')}>تجهيز صفحة الطلب</button>}
       {item.stage==='INTENT_PAGE'&&item.intentStatus==='READY'&&<button className="dw-primary" onClick={()=>act(item,'publish_intent')}>نشر صفحة الطلب</button>}

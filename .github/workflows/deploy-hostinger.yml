@@ -95,6 +95,7 @@ jobs:
           # Search and AI-assistant files: readable products and structured data on the home page,
           # the English home at /en/, and a sitemap and llms.txt that list every public demand page.
           node scripts/customer-seo.mjs deploy
+          node scripts/indexnow.mjs key deploy
 
       - name: Package the archived live client
         if: inputs.mode != 'rollback' && inputs.site == 'approved-client'
@@ -121,6 +122,11 @@ jobs:
           extra=""
           if [ "$FULL_SCAN" = "true" ]; then extra="--full"; fi
           python3 scripts/hostinger-release.py "$MODE" --package deploy --plan-id "$PLAN_ID" --backup-name "$BACKUP_NAME" --out release-backup $extra
+
+      - name: Tell search engines about new and changed pages (IndexNow)
+        if: (inputs.mode == 'release' || inputs.mode == 'publish') && inputs.site == 'platform'
+        continue-on-error: true
+        run: node scripts/indexnow.mjs ping deploy/sitemap.xml
 
       - name: Keep backups and plan as an artifact
         if: always()
