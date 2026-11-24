@@ -56,6 +56,11 @@ export default function CommandCenter({role}:{role:'ADMIN'|'SALES'}) {
       <span className="ops-link">افتح ←</span>
     </Link>
 
+    <Link href="/site-content" className="ops-card ops-row" style={{textDecoration:'none',color:'inherit',gap:12}}>
+      <span><b className="ops-h2">محتوى الموقع</b><br/><small className="ops-sub">عدّل عناوين ونصوص الصفحة الرئيسية بنفسك</small></span>
+      <span className="ops-link">عدّل ←</span>
+    </Link>
+
     <section className="ops-card" aria-labelledby="latest">
       <div className="ops-row" style={{marginBottom:10}}><h2 id="latest" className="ops-h2">أحدث الطلبات</h2><Link href="/operations" className="ops-link">كل الطلبات ←</Link></div>
       {err&&<p className="ops-alert" role="alert">{err}</p>}

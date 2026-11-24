@@ -148,6 +148,20 @@ export async function edge<T>(action: string, payload: Record<string, unknown> =
   if (b === null) throw new Error('تعذر قراءة نتيجة الطلب.');
   return b as T;
 }
+// Signed-in call to a Postgres function (the function itself checks who may run it).
+export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  configured();
+  const initial = readSession();
+  if (!initial) throw new Error('يلزم تسجيل الدخول');
+  let token = needsRefresh(initial) ? await refreshSession(initial) : initial.access_token;
+  const request = () => fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {method: 'POST', headers: headers(token), body: JSON.stringify(args)});
+  let r = await request();
+  if (r.status === 401) { token = await refreshSession(initial, token); r = await request(); }
+  const b = await responseBody(r);
+  if (r.status === 401) throw new Error(SIGN_IN_REQUIRED);
+  if (!r.ok) throw new Error(message(b, 'تعذر الحفظ'));
+  return b as T;
+}
 // Public Edge Function call without a session (e.g. optional composer guidance).
 export function publicFunction(name: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<Response> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return Promise.reject(new Error('Supabase is not configured'));
