@@ -1,0 +1,15 @@
+project_id = "septlion"
+
+# Public catalog reads are intentional. Every private action validates Auth via
+# getUser and verifies active core membership inside the handler/RPC.
+[functions.trade-api]
+verify_jwt = false
+
+# Public composer guidance. It holds no buyer data; origin allowlist and rate limit
+# apply, and any failure leaves the browser on its local parser.
+[functions.interpret-requirement]
+verify_jwt = false
+
+# Public page-view counter: no cookies, no stored IP; only accepts septlion.com origins.
+[functions.track-visit]
+verify_jwt = false

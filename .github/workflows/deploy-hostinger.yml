@@ -1,210 +1,132 @@
 name: Deploy Septlion to Hostinger
 
+# The only path that changes www.septlion.com. Manual start only; see docs/DEPLOY.md.
+#   1. mode=plan      builds the package and shows which live files would be replaced. Changes nothing.
+#   2. mode=publish   with the plan_id from step 1: backup of touched files (all with full_scan), upload, read-back, public check, auto-restore.
+#   3. mode=rollback  restores a backup made by an earlier publish (latest if backup_name is empty).
+#   mode=release      plan and publish in one run (same backup, read-back, public check and auto-restore).
+# Nothing is ever deleted on the server.
+
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "plan, publish, release (plan + publish in one run) or rollback"
+        type: choice
+        options: [plan, publish, release, rollback]
+        default: release
+      site:
+        description: "nextjs = the platform in apps/web; approved-client = the archived live client in sites/approved-client; customer-client = the new-app interface at / that sends requests to the platform (sites/customer-client); platform = the apps/web pages behind the customer client (keeps / and the routing file)"
+        type: choice
+        options: [nextjs, approved-client, customer-client, platform]
+        default: platform
+      plan_id:
+        description: "publish only: the plan id printed by the plan run"
+        type: string
+        default: ""
+      backup_name:
+        description: "rollback only: backup to restore (empty = latest)"
+        type: string
+        default: ""
+      full_scan:
+        description: "Scan and back up all of public_html (slow, ~10-20 min). Off = only the files in the package (fast, same plan id)."
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
 
 concurrency:
   group: septlion-production
   cancel-in-progress: false
 
 jobs:
-  smart_need:
-    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[smart-need-only]') && contains(github.event.head_commit.message, '[release-smart-need]') }}
+  release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout approved smart-need patch only
-        uses: actions/checkout@v4
-        with:
-          ref: c06a76f70bb95dc6d3fab077e2b93cc37ee348d5
-          persist-credentials: false
-      - name: Install protected FTPS client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
-      - name: Download existing Hostinger index.html
-        env:
-          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-        run: |
-          set -euo pipefail
-          test -n "$H_SERVER" && test -n "$H_USER" && test -n "$H_PASS"
-          # Hostinger's FTP_IP presents a CA-valid certificate for the server hostname rather than the IP.
-          # Pin the observed server certificate before allowing that documented hostname exception.
-          fp=$(timeout 20 openssl s_client -starttls ftp -connect "$H_SERVER:21" -showcerts </dev/null 2>/dev/null | openssl x509 -noout -fingerprint -sha1 | sed 's/.*=//')
-          if [ "$fp" != 'D5:F8:12:83:AA:BE:1E:92:51:FF:84:B3:A5:65:D6:51:91:C9:A5:28' ]; then
-            echo 'SAFETY STOP: FTP TLS certificate fingerprint is not the previously verified Hostinger certificate.'
-            exit 1
-          fi
-          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html/; get index.html -o /tmp/septlion-index-before.html; bye'
-          test -s /tmp/septlion-index-before.html
-      - name: Back up live index for one-file rollback
-        uses: actions/upload-artifact@v4
-        with:
-          name: septlion-index-before-smart-need
-          path: /tmp/septlion-index-before.html
-          retention-days: 14
-      - name: Check compatibility and create one-file smart patch
-        run: |
-          node --check scripts/smart-need-intake-send.js
-          python3 scripts/patch-live-intake.py /tmp/septlion-index-before.html scripts/smart-need-intake-send.js /tmp/septlion-index-next.html
-      - name: Verify Gemini extraction before publishing
-        run: |
-          curl --fail-with-body --silent --show-error --max-time 30 -H 'Origin: https://www.septlion.com' -H 'Content-Type: application/json' --data '{"text":"أحتاج حاويتين دقيق قمح إلى مومباسا"}' 'https://septlion-web-production.up.railway.app/api/interpret-requirement' > /tmp/gemini-test.json
-          python3 -c "import json; x=json.load(open('/tmp/gemini-test.json')); assert x.get('fields',{}).get('product') and x.get('fields',{}).get('quantity') and x.get('result'), 'Gemini returned incomplete data'"
-      - name: Upload only index.html and read it back
-        env:
-          H_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          H_USER: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          H_PASS: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-        run: |
-          set -euo pipefail
-          lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; set ssl:verify-certificate yes; set ssl:check-hostname no; set net:max-retries 2; cd /domains/septlion.com/public_html/; put /tmp/septlion-index-next.html -o index.html; get index.html -o /tmp/septlion-index-verified.html; bye'
-          if ! cmp -s /tmp/septlion-index-next.html /tmp/septlion-index-verified.html; then
-            echo "Verification failed. Restoring original site."
-            lftp -u "$H_USER","$H_PASS" -p 21 "ftp://$H_SERVER" -e 'set ftp:ssl-force yes; set ftp:ssl-protect-data yes; cd /domains/septlion.com/public_html/; put /tmp/septlion-index-before.html -o index.html; bye'
-            exit 1
-          fi
-          echo 'PASS: only the live index.html updated; remote file read-back matches exact approved smart need HTML.'
-  deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[approved-full-release]')) }}
-    runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Release script tests
+        run: python3 -m unittest discover -s tests -p 'hostinger_release_test.py'
 
       - name: Setup pnpm
+        if: inputs.mode != 'rollback' && (inputs.site == 'nextjs' || inputs.site == 'platform')
         uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
 
       - name: Setup Node
+        if: inputs.mode != 'rollback' && (inputs.site == 'nextjs' || inputs.site == 'platform')
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Build website
+      - name: Install, test and build the platform
+        if: inputs.mode != 'rollback' && (inputs.site == 'nextjs' || inputs.site == 'platform')
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://jfbmxowdmfdzyoauqgwn.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD
-        run: pnpm --filter @septlion/web build
-
-      - name: Prepare static deployment
         run: |
-          rm -rf deploy
-          mkdir -p deploy/_next deploy/discover deploy/maritime-rfq deploy/demand-intelligence deploy/demand-intelligence/workbench deploy/intent/wheat-flour deploy/intent/demand deploy/require
-          cp apps/web/.next/server/app/index.html deploy/index.html
-          cp apps/web/.next/server/app/index.html deploy/404.html
-          DISCOVER_HTML="$(find apps/web/.next/server/app -type f -path '*/discover.html' | head -n 1)"
-          test -n "$DISCOVER_HTML"
-          cp "$DISCOVER_HTML" deploy/discover/index.html
-          test -s deploy/discover/index.html
-          mkdir -p deploy/requests
-          REQUESTS_HTML="$(find apps/web/.next/server/app -type f -path '*/requests.html' | head -n 1)"
-          test -n "$REQUESTS_HTML"
-          cp "$REQUESTS_HTML" deploy/requests/index.html
-          test -s deploy/requests/index.html
-          mkdir -p deploy/request
-          REQUEST_HTML="$(find apps/web/.next/server/app -type f -path '*/request.html' | head -n 1)"
-          test -n "$REQUEST_HTML"
-          cp "$REQUEST_HTML" deploy/request/index.html
-          test -s deploy/request/index.html
-          mkdir -p deploy/offer
-          OFFER_HTML="$(find apps/web/.next/server/app -type f -path '*/offer.html' | head -n 1)"
-          test -n "$OFFER_HTML"
-          cp "$OFFER_HTML" deploy/offer/index.html
-          test -s deploy/offer/index.html
-          mkdir -p deploy/offer-document
-          OFFER_DOCUMENT_HTML="$(find apps/web/.next/server/app -type f -path '*/offer-document.html' | head -n 1)"
-          test -n "$OFFER_DOCUMENT_HTML"
-          cp "$OFFER_DOCUMENT_HTML" deploy/offer-document/index.html
-          test -s deploy/offer-document/index.html
-          mkdir -p deploy/commit
-          COMMIT_HTML="$(find apps/web/.next/server/app -type f -path '*/commit.html' | head -n 1)"
-          test -n "$COMMIT_HTML"
-          cp "$COMMIT_HTML" deploy/commit/index.html
-          test -s deploy/commit/index.html
-          mkdir -p deploy/execution
-          EXECUTION_HTML="$(find apps/web/.next/server/app -type f -path '*/execution.html' | head -n 1)"
-          test -n "$EXECUTION_HTML"
-          cp "$EXECUTION_HTML" deploy/execution/index.html
-          test -s deploy/execution/index.html
-          mkdir -p deploy/receive
-          RECEIVE_HTML="$(find apps/web/.next/server/app -type f -path '*/receive.html' | head -n 1)"
-          test -n "$RECEIVE_HTML"
-          cp "$RECEIVE_HTML" deploy/receive/index.html
-          test -s deploy/receive/index.html
-          mkdir -p deploy/reorder
-          REORDER_HTML="$(find apps/web/.next/server/app -type f -path '*/reorder.html' | head -n 1)"
-          test -n "$REORDER_HTML"
-          cp "$REORDER_HTML" deploy/reorder/index.html
-          test -s deploy/reorder/index.html
-          mkdir -p deploy/notifications
-          NOTIFICATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/notifications.html' | head -n 1)"
-          test -n "$NOTIFICATIONS_HTML"
-          cp "$NOTIFICATIONS_HTML" deploy/notifications/index.html
-          test -s deploy/notifications/index.html
-          mkdir -p deploy/account
-          ACCOUNT_HTML="$(find apps/web/.next/server/app -type f -path '*/account.html' | head -n 1)"
-          test -n "$ACCOUNT_HTML"
-          cp "$ACCOUNT_HTML" deploy/account/index.html
-          test -s deploy/account/index.html
-          mkdir -p deploy/operations
-          OPERATIONS_HTML="$(find apps/web/.next/server/app -type f -path '*/operations.html' | head -n 1)"
-          test -n "$OPERATIONS_HTML"
-          cp "$OPERATIONS_HTML" deploy/operations/index.html
-          test -s deploy/operations/index.html
-          mkdir -p deploy/analytics
-          ANALYTICS_HTML="$(find apps/web/.next/server/app -type f -path '*/analytics.html' | head -n 1)"
-          test -n "$ANALYTICS_HTML"
-          cp "$ANALYTICS_HTML" deploy/analytics/index.html
-          test -s deploy/analytics/index.html
-          mkdir -p deploy/documents
-          DOCUMENTS_HTML="$(find apps/web/.next/server/app -type f -path '*/documents.html' | head -n 1)"
-          test -n "$DOCUMENTS_HTML"
-          cp "$DOCUMENTS_HTML" deploy/documents/index.html
-          test -s deploy/documents/index.html
-          cp apps/web/.next/server/app/maritime-rfq.html deploy/maritime-rfq/index.html
-          if [ -f apps/web/.next/server/app/demand-intelligence.html ]; then cp apps/web/.next/server/app/demand-intelligence.html deploy/demand-intelligence/index.html; fi
-          if [ -f apps/web/.next/server/app/demand-intelligence/workbench.html ]; then cp apps/web/.next/server/app/demand-intelligence/workbench.html deploy/demand-intelligence/workbench/index.html; fi
-          REQUIRE_HTML="$(find apps/web/.next/server/app -type f -path '*/require.html' | head -n 1)"
-          test -n "$REQUIRE_HTML"
-          cp "$REQUIRE_HTML" deploy/require/index.html
-          test -s deploy/require/index.html
-          test -s deploy/operations/index.html
-          test -s deploy/analytics/index.html
-          if [ -f apps/web/.next/server/app/intent/wheat-flour.html ]; then cp apps/web/.next/server/app/intent/wheat-flour.html deploy/intent/wheat-flour/index.html; fi
-          if [ -f apps/web/.next/server/app/intent/demand.html ]; then cp apps/web/.next/server/app/intent/demand.html deploy/intent/demand/index.html; fi
-          cp -R apps/web/.next/static deploy/_next/static
-          if [ -d apps/web/public ]; then cp -R apps/web/public/. deploy/; fi
-          if [ -f apps/web/.next/server/app/robots.txt.body ]; then cp apps/web/.next/server/app/robots.txt.body deploy/robots.txt; fi
-          if [ -f apps/web/.next/server/app/sitemap.xml.body ]; then cp apps/web/.next/server/app/sitemap.xml.body deploy/sitemap.xml; fi
-          if [ -f apps/web/.next/server/app/llms.txt.body ]; then cp apps/web/.next/server/app/llms.txt.body deploy/llms.txt; fi
-          echo "Deployment files verified"
-          test -s deploy/index.html
-          test -s deploy/require/index.html
+          pnpm install --frozen-lockfile
+          pnpm audit --audit-level high
+          pnpm test
+          pnpm --filter @septlion/web build
+          if test -f apps/web/.next/server/app/api/command-session/route.js; then
+            echo "Server authorization requires a Node.js runtime. Static Hostinger deployment is blocked." >&2
+            exit 1
+          fi
+          node scripts/hostinger-production.mjs
+          node scripts/generate-demand-pages.mjs
 
-      - name: Generate live demand SEO pages
-        run: node scripts/generate-demand-pages.mjs
+      - name: Keep the customer client in front of the platform
+        if: inputs.mode != 'rollback' && inputs.site == 'platform'
+        run: |
+          # The home page, routing and bridge stay the customer client's (they match live, so
+          # they are not re-uploaded); the platform's own home, 404 and SEO files are left out.
+          node --test sites/customer-client/bridge.test.cjs
+          python3 scripts/package-customer-client.py customer-package
+          rm -f deploy/404.html deploy/robots.txt
+          cp customer-package/index.html customer-package/septlion-bridge.js customer-package/.htaccess deploy/
+          # Search and AI-assistant files: readable products and structured data on the home page,
+          # the English home at /en/, and a sitemap and llms.txt that list every public demand page.
+          node scripts/customer-seo.mjs deploy
 
-      - name: Upload to Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+      - name: Package the archived live client
+        if: inputs.mode != 'rollback' && inputs.site == 'approved-client'
+        run: |
+          node --test sites/approved-client/intake.test.cjs
+          python3 scripts/package-approved-client.py deploy
+
+      - name: Package the customer client
+        if: inputs.mode != 'rollback' && inputs.site == 'customer-client'
+        run: |
+          node --test sites/customer-client/bridge.test.cjs
+          python3 scripts/package-customer-client.py deploy
+
+      - name: Run release (${{ inputs.mode }})
+        env:
+          HOSTINGER_FTP_SERVER: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          HOSTINGER_FTP_USERNAME: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          MODE: ${{ inputs.mode }}
+          PLAN_ID: ${{ inputs.plan_id }}
+          BACKUP_NAME: ${{ inputs.backup_name }}
+          FULL_SCAN: ${{ inputs.full_scan }}
+        run: |
+          extra=""
+          if [ "$FULL_SCAN" = "true" ]; then extra="--full"; fi
+          python3 scripts/hostinger-release.py "$MODE" --package deploy --plan-id "$PLAN_ID" --backup-name "$BACKUP_NAME" --out release-backup $extra
+
+      - name: Keep backups and plan as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: deploy/
-          server-dir: /domains/septlion.com/public_html/
-          # Preserve the live files while publishing the next build.
-          dangerous-clean-slate: false
-
-# deployment trigger: production-route-republish-2026-10-04
-
+          name: septlion-${{ inputs.mode }}-${{ inputs.site }}-${{ github.run_id }}
+          path: release-backup/
+          if-no-files-found: ignore
+          retention-days: 90

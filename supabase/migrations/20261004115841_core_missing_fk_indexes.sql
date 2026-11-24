@@ -1,0 +1,1 @@
+create index if not exists "CommercialDocument_uploadedById_idx" on core."CommercialDocument"("uploadedById"); create index if not exists "Message_senderUserId_idx" on core."Message"("senderUserId"); create index if not exists "Opportunity_rfqId_idx" on core."Opportunity"("rfqId");

@@ -1,9 +1,10 @@
+import {normalizeSupplyPlan} from './supply-plan.ts';
 type Row = Record<string, any>;
 export function sameJson(a: unknown, b: unknown): boolean {
   const canonical = (v: any): any => Array.isArray(v) ? v.map(canonical) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, canonical(v[k])])) : v;
   return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 }
-const INCOTERMS = new Set(['FOB', 'CIF', 'EXW', 'DAP', 'FCA']);
+const INCOTERMS = new Set(['FOB', 'CIF', 'CFR', 'EXW', 'DAP', 'FCA']);
 const PAYMENTS = new Set(['LC', 'TT', 'OPEN_ACCOUNT']);
 function text(value: unknown, label: string, max = 500): string {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) throw new Error(`بيانات ${label} غير صالحة`);
@@ -33,6 +34,9 @@ export function normalizeOffer(body: Row, requirement: Row, now = Date.now()) {
   const incoterm = text(input.terms?.incoterm, 'شرط التجارة', 3);
   const payment = text(input.terms?.payment, 'شروط الدفع', 30);
   if (!INCOTERMS.has(incoterm) || !PAYMENTS.has(payment)) throw new Error('اختر شرط التجارة والدفع من القائمة');
+  const plan=normalizeSupplyPlan(requirement.knownFacts?.supplyPlan,{amount:Number(requirement.quantity),unit:requirement.unit});
+  if(plan)normalizeSupplyPlan(plan,{amount:items.reduce((n:number,i:Row)=>n+i.quantity,0),unit:items[0].unit});
+  if(plan&&items.some((i:Row)=>i.unit!==plan.batches[0].unit))throw new Error('وحّد وحدات بنود العرض وجدول التوريد.');
   const testOnly = /^TEST(?:\s|—|-|$)/i.test(String(requirement.product || ''));
   const evidence = typeof input.supplyEvidence?.reference === 'string' ? input.supplyEvidence.reference.trim() : '';
   if (!testOnly && (!evidence || evidence.length > 200)) throw new Error('مرجع عرض المورد مطلوب قبل إصدار عرض تجاري');
@@ -44,6 +48,7 @@ export function normalizeOffer(body: Row, requirement: Row, now = Date.now()) {
       issueKey, testOnly, requirementId: requirement.id, product: String(requirement.product), items,
       terms: {
         incoterm, payment,
+        ...(requirement.knownFacts?.supplyPlan ? {supplyPlan: plan} : {}),
         destination: String(requirement.deliveryPort || requirement.deliveryCountry || requirement.market || ''),
         packing: typeof requirement.packing === 'string' ? requirement.packing : String(requirement.packing?.display || ''),
         notes,

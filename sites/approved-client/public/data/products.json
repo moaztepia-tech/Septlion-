@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "sectors": [
+    {
+      "name": "الأغذية",
+      "subs": [
+        "دقيق",
+        "زيوت"
+      ]
+    }
+  ],
+  "products": [
+    {
+      "id": "asasi50",
+      "sector": "الأغذية",
+      "sub": "دقيق",
+      "name": "زولانا أساسي",
+      "type": "دقيق قمح",
+      "brand": "ZOLLANA",
+      "pack": "شوال منسوج",
+      "size": "50 كجم",
+      "art": "sack",
+      "short": "أساسي",
+      "tag": "WHEAT FLOUR"
+    },
+    {
+      "id": "asasi25",
+      "sector": "الأغذية",
+      "sub": "دقيق",
+      "name": "زولانا أساسي",
+      "type": "دقيق قمح",
+      "brand": "ZOLLANA",
+      "pack": "شوال منسوج",
+      "size": "25 كجم",
+      "art": "sack",
+      "short": "أساسي",
+      "tag": "WHEAT FLOUR"
+    },
+    {
+      "id": "khabbazo50",
+      "sector": "الأغذية",
+      "sub": "دقيق",
+      "name": "زولانا خبازو",
+      "type": "دقيق للمخابز",
+      "brand": "ZOLLANA",
+      "pack": "شوال منسوج",
+      "size": "50 كجم",
+      "art": "sack",
+      "short": "خبازو",
+      "tag": "WHEAT FLOUR"
+    },
+    {
+      "id": "kamel10",
+      "sector": "الأغذية",
+      "sub": "دقيق",
+      "name": "زولانا كامل",
+      "type": "دقيق قمح كامل",
+      "brand": "ZOLLANA",
+      "pack": "شوال منسوج",
+      "size": "10 كجم",
+      "art": "sack",
+      "short": "كامل",
+      "tag": "WHEAT FLOUR"
+    },
+    {
+      "id": "oil1",
+      "sector": "الأغذية",
+      "sub": "زيوت",
+      "name": "زيت عباد الشمس",
+      "type": "زيت عباد الشمس",
+      "pack": "عبوة",
+      "size": "1 لتر",
+      "art": "bottle",
+      "tag": "SUNFLOWER"
+    }
+  ]
+}

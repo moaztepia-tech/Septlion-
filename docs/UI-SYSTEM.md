@@ -4,21 +4,27 @@ The approved source is `Septlion_Brand_Master_Reference_v1.zip`, version 1, lock
 
 ## One source of design decisions
 
-- `apps/web/app/design-tokens.css` owns palette, fonts, spacing, radius and motion. Pages consume these variables.
-- `globals.css` owns readable typography, native form controls, focus, bidi text and reduced motion.
-- `platform-v1.css` owns shared buyer components. `intelligence.css` owns demand/workbench components using the same tokens. Offer and maritime styles use those tokens too.
-- `components/platform-header.tsx` owns navigation, supplied brand artwork and mobile navigation. Route-specific actions go through its `actions` prop.
-- The static demand-page generator reads the same token file rather than maintaining a second brand palette.
+`apps/web/app/septlion-design-system.css` is the single customer stylesheet, based on the user's `deepseek_css_20261010_30e46c.css` (Design System v1.0, approved 2026-10-10). Its missing alert tail and shared cards/navigation/utilities are completed with the same tokens. The root layout imports this file once; customer pages do not import their own CSS.
 
-Remove superseded rules when changing a component. Do not append another theme or use `!important` outside print styles. Use logical inline/block properties so RTL and LTR share one layout.
+- Palette: #051945 / #030D26 / #0A1838 / #3D5185 / #8FA6D6 / #E9EDF5.
+- Arabic: Noto Sans Arabic. English and numeric data: Montserrat. Both served locally with licenses.
+- RTL and dark first; a 4px spacing grid, nine reference text sizes, four depth layers, and 150/250/400ms transitions.
+- One application container, at most 580px wide, including on desktop. Keep the supplied nine sizes (9/11/12/14/15/17/20/24/32px), 3px edge and 5px fill insets. Do not replace the seven-point contours with rounded rectangles or add an alternate desktop theme.
+- The root renders the shared fixed application frame and `app-full` container. The frame follows the reference `--shape-h` seven-vertex contour at the actual viewport size; it does not redraw or modify the brand mark. Discover remains visible in the header, with the four customer destinations in the bottom navigation.
+- Components use the reference edge, inner-edge, fill and sheen layers. Keep native form semantics, accessible labels, focus, and reduced motion.
+- The original navy logo remains on a light plate; do not recolor, redraw, crop or stretch it.
 
-## Interface behavior
+## Customer journey
 
-Arabic is the primary buyer language. Noto Sans Arabic and Inter are served locally with their licenses. Body and input text use 16px; labels and actions use 14–15px; secondary metadata uses at least 12–13px. Controls use 44–48px target heights. Support visible keyboard focus, mobile stacking and keyboard access to modal dialogs.
+Home → Discover → Product Details → AI Composer → Request Review → My Septlion → My Requests → Request Details → Quotation → Deal Details → Documents → Company Profile.
 
-The home requirement form places destination, Incoterm, payment (L/C first) and container count before the composer. A single S1–S7 scale sits above the counter. Selected fields travel to `/require`; explicit buyer text overrides starter defaults. Do not silently replace a typed quantity with one container.
+All new requests and reorders pass through `/require`, then the dedicated `/review` page. A review page cannot send a draft that has not visited Composer. There is no separate Cart or customer RFQ flow. `/maritime-rfq` forwards to Composer; original RFQ compatibility redirects remain.
 
-The catalog preview contains the established flour ranges: Khabbazo 50/25kg, Asasi 50/25/1kg, Whole Wheat 50/10/1kg. It presents product information without fabricated stock, prices, buyers or verification. A draft stored on the device is not an accepted order. Authentication and existing server authorization still control commercial writes.
+Existing server authorization still controls requests, offers, acceptance, execution, documents and receipts. `My Septlion` shows server requests only when authenticated; failures stay explicit. Company Profile reuses the current authenticated profile.get/profile.update service. Preserve delivery schedules, stable request retry keys, tonnage and per-batch execution/receipt from the latest branch. WhatsApp input is not confirmation; the existing available-login check controls the verification flow.
+
+The catalog keeps Khabbazo 50/25kg, Asasi 50/25/1kg, Whole Wheat 50/10/1kg. Price, stock and shipping dates are confirmed in an issued offer; never fabricate these facts. A local draft is not an accepted order.
+
+Preview publishing is limited to branch `septlion-customer-v2` and `/preview/septlion-customer-v2/` on the existing Hostinger hosting. Do not update `main` or the production root in this task.
 
 ## Artwork integrity
 
@@ -32,4 +38,4 @@ SHA-256 of supplied assets used by the interface:
 
 ## Validation before publishing
 
-Run web TypeScript checks, the production Next build, `node --test tests/auth-session.test.mjs tests/offer-document.test.mjs tests/requirement-input.test.mjs`, then check the deployed home, discovery, requirement handoff and trade pages in the browser. Confirm that the production deployment finished successfully before describing the interface as published.
+Run web TypeScript checks, the production Next build, `node --test tests/auth-session.test.mjs tests/offer-document.test.mjs tests/requirement-input.test.mjs`, then package the isolated Preview. Packaging rejects any override of the approved shapes, text sizes and layer widths, and checks that all twelve customer pages contain the application frame and shared container. Check the deployed home, discovery, requirement handoff and trade pages in the browser. Confirm that the Preview deployment finished successfully before describing the interface as published.

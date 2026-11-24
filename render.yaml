@@ -1,0 +1,26 @@
+# Isolated staging only. Production domain and database are not changed here.
+services:
+  - type: web
+    name: septlion-pr51-staging
+    runtime: node
+    plan: free
+    region: frankfurt
+    repo: https://github.com/moaztepia-tech/Septlion-
+    branch: feat/unified-command-center-20261026
+    autoDeployTrigger: 'off'
+    buildCommand: npx --yes pnpm@9.15.0 install --frozen-lockfile && node scripts/assert-staging-config.mjs && npx --yes pnpm@9.15.0 --filter @septlion/web build
+    startCommand: node apps/web/node_modules/next/dist/bin/next start apps/web --hostname 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: '1'
+      - key: SEPTLION_DEPLOYMENT
+        value: staging
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
