@@ -7,6 +7,7 @@ The production radar database and the application trade graph now share an evide
 - Existing six-hour public-platform and procurement collectors remain scheduled.
 - World Bank collector v5 searches eight commodity terms, sorts by notice date, deduplicates notice IDs, and accepts current, identifiable commodity tenders only. It rejects awards, equipment, expired/undated notices, and non-wheat flours misclassified as wheat flour. An empty match set is a valid result, not a buyer.
 - `run_demand_operations(200)` runs at minute 35 hourly. It uses an advisory transaction lock, bounded batches, per-signal error isolation, source incident deduplication, and private run telemetry.
+- Runtime grants allow the existing authenticated Edge backend to run the invoker-based bridge without database-owner privileges. Anonymous and ordinary authenticated database roles remain denied.
 - `DemandAssessment` records scope, seven-day freshness, test exclusion, buyer readiness, supplier candidates, blockers and the next action. It prioritizes operator tasks without deleting historical signals or automatically messaging anyone.
 - A buyer can advance automatically only with a verified status, legal entity, website, and direct business contact. Qualification additionally requires complete published quantity/packing/incoterm and an operator-recorded eligible supply route without unresolved risk flags.
 - Private supplier matching preserves selected/rejected statuses. Unknown incoterms, packing, markets, or commercial capability are gaps, never positive matches.
@@ -20,6 +21,7 @@ The production radar database and the application trade graph now share an evide
 ## Production verification
 
 - First manual operations run: 104 signals processed, zero signal errors.
+- Live backend-role verification: `SET LOCAL ROLE service_role; SELECT run_demand_operations(200)` also processed 104 signals with zero errors. Anonymous workbench HTTP access returns 401; an invalid public RFQ returns 400 without creating a record.
 - First live v5 World Bank call: HTTP 200; 616 unique notices examined, zero current eligible matches. No leads were manufactured to fill the result.
 - Two supplier research profiles were seeded from official public websites; neither is an approved commercial partner and neither has a current quote.
 - One fresh target-market signal was bridged to the application graph with two supplier candidates. Its buyer remains unverified.
