@@ -142,3 +142,14 @@ body:has(.ops){margin:0;background:#071a30}
 .ops .transaction-timeline{list-style:none;padding:0;margin:0;display:grid;gap:8px}
 .ops .transaction-timeline li{border:1px solid var(--line)!important;border-radius:12px;padding:12px 14px!important}
 .ops .workspace-summary{background:var(--card2)!important;border-radius:12px}
+
+/* Team account */
+.ops-account-id{display:flex;align-items:center;gap:12px}
+.ops-account-id>span{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:rgba(229,196,135,.14);border:1px solid rgba(229,196,135,.35);color:var(--gold);font-size:20px;font-weight:800}
+.ops-account-id b{display:block;font-size:16px}.ops-account-id small{display:block;color:var(--muted);font-size:13px;text-align:right}
+.ops-account-links{display:grid;padding:4px 16px}
+.ops-account-links a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);text-decoration:none}
+.ops-account-links a:last-child{border-bottom:0}
+.ops-account-links b{display:block;font-size:15px}.ops-account-links small{display:block;color:var(--muted);font-size:12.5px}
+.ops-account-links i{font-style:normal;color:var(--gold)}
+.ops-icons a[aria-current=page]{border-color:var(--gold);color:var(--gold)}
