@@ -155,11 +155,14 @@ const U = {
 // Markets served by road. Filled in from the team's answer; each entry is
 // {mode: 'land' | 'both', route: {ar, fr, en}} and switches the page's facts,
 // wording and Incoterms from sea freight to trucks and border crossings.
-export const LAND = {};
+export const LAND = {
+  sudan: {mode: 'both', route: {ar: 'من مصر عبر معبري أرقين وقسطل', en: 'from Egypt via the Argeen and Qastal crossings'}},
+  libya: {mode: 'both', route: {ar: 'من مصر عبر منفذ السلوم وامساعد', en: 'from Egypt via the Salloum–Musaid crossing'}},
+};
 const LAND_UI = {
-  ar: {route: 'طريق الشحن', terms: {land: 'DAP · FCA · CPT', both: 'بحراً: CFR · CIF — براً: DAP'}, moq: 'حاوية أو شاحنة كاملة', note: r => `الشحن براً ${r}، بالشاحنات حتى مستودعك أو نقطة التسليم المتفق عليها.`},
-  fr: {route: 'Acheminement', terms: {land: 'DAP · FCA · CPT', both: 'Mer : CFR · CIF — Route : DAP'}, moq: 'Un conteneur ou un camion complet', note: r => `Livraison par route ${r}, en camion jusqu'à votre entrepôt ou au point convenu.`},
-  en: {route: 'Route', terms: {land: 'DAP · FCA · CPT', both: 'Sea: CFR · CIF — Road: DAP'}, moq: 'One container or full truck', note: r => `Delivered by road ${r}, by truck to your warehouse or the agreed delivery point.`},
+  ar: {route: 'طريق الشحن', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'حاوية أو شاحنة كاملة', note: r => `الشحن براً ${r}، بالشاحنات حتى مستودعك أو نقطة التسليم المتفق عليها.`},
+  fr: {route: 'Acheminement', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'Un conteneur ou un camion complet', note: r => `Livraison par route ${r}, en camion jusqu'à votre entrepôt ou au point convenu.`},
+  en: {route: 'Route', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'One container or full truck', note: r => `Delivered by road ${r}, by truck to your warehouse or the agreed delivery point.`},
 };
 const nameIn = (m, lang) => m.names[lang] || m.names.en;
 // French needs the country with its preposition: "au Sénégal", "en Côte d'Ivoire".
@@ -220,7 +223,8 @@ export function marketPage(m, lang, products) {
   const factNames = [...u.facts];
   if (land) {
     factVals[1] = lu.terms[land.mode];
-    if (land.mode === 'land') { factNames[2] = lu.route; factVals[2] = route; factVals[0] = lu.moq; }
+    factVals[0] = lu.moq;
+    if (land.mode === 'land') { factNames[2] = lu.route; factVals[2] = route; }
   }
   const landNote = land ? `<p class="lead" style="margin-top:12px">${esc(lu.note(route))}</p>` : '';
   const jsonld = [
@@ -232,9 +236,9 @@ export function marketPage(m, lang, products) {
   ];
   return pageHead({lang, title, desc, url, alternates, jsonld}) + topBar(lang, {home: t.home, alt, wa}) + `
 <main>
-<section class="hero wrap"><span class="eyebrow">${esc(t.kicker(REGIONS[m.region][lang]))}</span><h1>${esc(t.h1(say))}</h1><p class="lead">${esc(t.lead(say, port))}</p>
+<section class="hero wrap"><span class="eyebrow">${esc(t.kicker(REGIONS[m.region][lang]))}</span><h1>${esc(t.h1(say))}</h1><p class="lead">${esc(t.lead(say, port))}</p>${landNote}
 <div class="cta"><a class="btn pri" href="${esc(wa)}">${ICON_WA}${esc(t.wa)}</a><a class="btn" href="mailto:${EMAIL}">${esc(t.mail)}</a></div>
-${landNote}<div class="facts">${factNames.map((f, i) => `<div><span>${esc(f)}</span><b>${esc(factVals[i])}</b></div>`).join('')}</div></section>
+<div class="facts">${factNames.map((f, i) => `<div><span>${esc(f)}</span><b>${esc(factVals[i])}</b></div>`).join('')}</div></section>
 ${(BRIEFS[m.slug]?.[lang] || []).length ? `<section class="block wrap" aria-labelledby="bH"><div class="brief"><div><span class="eyebrow">${esc(REGIONS[m.region][lang])}</span><h2 id="bH">${esc(BRIEF_TITLE[lang](lang === 'fr' ? phraseIn(m, 'fr').replace(/^(au|en|à|pour) /, (x) => ({'au ': 'au ', 'en ': 'en ', 'à ': 'à ', 'pour ': 'vers '})[x]) : name))}</h2></div><ol class="points">${BRIEFS[m.slug][lang].map(b => `<li>${esc(b)}</li>`).join('')}</ol></div></section>` : ''}
 <section class="block wrap" id="products" aria-labelledby="pH"><div class="head"><div><span class="eyebrow">ZOLLANA</span><h2 id="pH">${esc(t.prodH)}</h2><p class="sub">${esc(t.prodSub)}</p></div></div>${productGrid(products, lang)}</section>
 <section class="block wrap" id="how" aria-labelledby="hH"><div class="head"><div><span class="eyebrow">SEPTLION</span><h2 id="hH">${esc(t.howH)}</h2></div></div>${stepsList(lang)}</section>
