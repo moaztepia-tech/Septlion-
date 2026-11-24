@@ -40,23 +40,3 @@ test('no IP address or cookie is stored, and only septlion.com is accepted',()=>
  assert.match(sql,/revoke all on core\."SiteVisit" from anon, authenticated/);
  assert.match(sql,/revoke all on function core\.site_visit_stats\(\) from public, anon, authenticated/);
 });
-test('visits from AI assistants are their own group, even when only utm_source is left',()=>{
- assert.deepEqual(m.classifySource('chatgpt.com',null),{source:'ai',name:'ChatGPT'});
- assert.deepEqual(m.classifySource(null,'chatgpt.com'),{source:'ai',name:'ChatGPT'});
- assert.deepEqual(m.classifySource('gemini.google.com',null),{source:'ai',name:'Gemini'});
- assert.deepEqual(m.classifySource('perplexity.ai',null),{source:'ai',name:'Perplexity'});
- assert.deepEqual(m.classifySource('copilot.microsoft.com',null),{source:'ai',name:'Copilot'});
- assert.deepEqual(m.classifySource('claude.ai',null),{source:'ai',name:'Claude'});
- assert.deepEqual(m.classifySource('chat.deepseek.com',null),{source:'ai',name:'DeepSeek'});
-});
-test('search, WhatsApp, social, direct and other sources',()=>{
- assert.deepEqual(m.classifySource('google.com',null),{source:'search',name:'Google'});
- assert.deepEqual(m.classifySource('google.com.sa',null),{source:'search',name:'Google'});
- assert.deepEqual(m.classifySource(m.cleanReferrer('android-app://com.whatsapp/'),null),{source:'whatsapp',name:'WhatsApp'});
- assert.deepEqual(m.classifySource('web.whatsapp.com',null),{source:'whatsapp',name:'WhatsApp'});
- assert.deepEqual(m.classifySource('m.facebook.com',null),{source:'social',name:'Facebook'});
- assert.deepEqual(m.classifySource('com.google.android.gm',null),{source:'other',name:'Gmail'});
- assert.deepEqual(m.classifySource(null,null),{source:'direct',name:null});
- assert.deepEqual(m.classifySource('example.org',null),{source:'other',name:'example.org'});
- assert.equal(m.cleanTag('ChatGPT.com'),'chatgpt.com');assert.equal(m.cleanTag('<x>'),null);
-});

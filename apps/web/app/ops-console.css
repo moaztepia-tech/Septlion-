@@ -101,5 +101,3 @@ body:has(.ops){margin:0;background:#071a30}
 .ops-visit-lists li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ops-visit-lists li b{font-variant-numeric:tabular-nums}
 .ops-visit-h{font-size:13px;color:var(--muted);margin:0 0 4px;font-weight:600}
 @media(max-width:520px){.ops-visit-lists{grid-template-columns:1fr}}
-.ops-visit-ai{margin-top:14px;padding:12px;border:1px solid var(--line2);border-radius:12px;background:var(--card2)}
-.ops-visit-ai .ops-chip b{color:var(--gold);margin-inline-start:4px}

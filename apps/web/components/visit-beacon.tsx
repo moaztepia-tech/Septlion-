@@ -11,7 +11,7 @@ export function VisitBeacon(){
     try{
       if(TEAM.test(path)||navigator.doNotTrack==='1'||!/(^|\.)septlion\.com$/.test(location.hostname))return;
       const base=process.env.NEXT_PUBLIC_SUPABASE_URL;if(!base)return;
-      const url=`${base}/functions/v1/track-visit`,q=new URLSearchParams(location.search),body=JSON.stringify({p:path,r:document.referrer||'',s:q.get('utm_source')||q.get('ref')||''});
+      const url=`${base}/functions/v1/track-visit`,body=JSON.stringify({p:path,r:document.referrer||''});
       if(!(navigator.sendBeacon&&navigator.sendBeacon(url,new Blob([body],{type:'text/plain'}))))fetch(url,{method:'POST',body,keepalive:true,headers:{'Content-Type':'text/plain'}}).catch(()=>{});
     }catch{/* counting must never break the page */}
   },[path]);
