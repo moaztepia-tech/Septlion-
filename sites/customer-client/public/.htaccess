@@ -1,0 +1,36 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+RewriteEngine On
+RewriteBase /
+# 0. HTTPS and www, as the new-app site already does for its pages.
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+RewriteCond %{HTTP_HOST} ^septlion\.com$ [NC]
+RewriteRule ^ https://www.septlion.com%{REQUEST_URI} [L,R=301]
+# 1. Home: the customer interface (new-app look; requests go to the platform).
+RewriteRule ^$ index.html [L]
+# 2. Platform navigation payloads (Next.js client routing).
+RewriteCond %{HTTP:RSC} =1
+RewriteCond %{DOCUMENT_ROOT}/_rsc/$1.rsc -f
+RewriteRule ^(.+?)/?$ _rsc/$1.rsc [L]
+# 3. Real files at the root (platform assets, the bridge) are served as they are.
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+# 4. Platform pages behind the interface (command center, accounts, ...).
+#    The new-app site keeps its own short links (/discover, /requests, ...).
+RewriteCond $1 !^(new-app|discover|requests|notifications|require)(/|$)
+RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+RewriteRule ^(.+?)/?$ $1/index.html [L]
+# 5. Everything else stays with the new-app site, as before.
+RewriteCond %{REQUEST_URI} !^/new-app/
+RewriteRule ^(.*)$ new-app/$1 [L]
+AddType text/x-component .rsc
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Strict-Transport-Security "max-age=31536000"
+<FilesMatch "^(index\.html|septlion-bridge\.js)$">
+Header set Cache-Control "no-cache"
+</FilesMatch>
+</IfModule>

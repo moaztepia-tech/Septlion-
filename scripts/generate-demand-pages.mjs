@@ -1,6 +1,7 @@
 import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
+import {arabicMarket,arabicDemandPage} from './demand-page-ar.mjs';
 
 const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL||'https://jfbmxowdmfdzyoauqgwn.supabase.co';
 const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD';
@@ -29,7 +30,7 @@ const brandTokens=await readFile(new URL('../apps/web/app/septlion-design-system
 const shellCss=brandTokens+`
 *{box-sizing:border-box}body{margin:0;font:400 16px/1.75 var(--font-ui);color:var(--ink);background:var(--canvas)}
 a{color:inherit;text-decoration:none}:focus-visible{outline:3px solid var(--brand-steel);outline-offset:3px}.shell{width:min(var(--page-width),calc(100% - 64px));margin:auto}.nav{min-height:88px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line)}
-.brand img{display:block;width:144px;height:52px;object-fit:contain}.nav nav{display:flex;gap:20px;align-items:center;font-size:15px}.nav nav a{padding:12px 0}.nav small{font-size:13px;color:var(--muted)}
+.brand img{display:block;width:144px;height:52px;object-fit:contain}.nav nav{display:flex;gap:20px;align-items:center;font-size:15px}.nav nav a{padding:12px 0;white-space:nowrap}.nav small{font-size:13px;color:var(--muted)}
 .hero{padding:56px 0 40px}.kicker{font-size:13px;font-weight:600;color:var(--brand-steel)}
 h1{font-size:clamp(34px,5vw,56px);line-height:1.2;margin:16px 0 24px;letter-spacing:-.025em}h1 em{font-style:normal;color:var(--brand-steel)}
 .lead{max-width:800px;font-size:17px;color:var(--muted)}.cta{display:inline-flex;align-items:center;min-height:48px;margin-top:24px;background:var(--brand-primary);color:var(--surface);padding:12px 20px;font-weight:600;border-radius:var(--radius-control)}
@@ -52,6 +53,7 @@ for(const p of pages){
  const latest=c.latestDemandAt||p.updatedAt;
  const quantities=qtyLabel(c);
  const score=c.demandScore||null;
+ const arUrl=arabicMarket(p.market)?canonical+'ar/':null;
  const answerSummary='Septlion can evaluate '+product+' supply for buyers in '+p.market+'. Recent public B2B demand signals indicate active commercial interest; final price, packing, quantity and delivery terms are confirmed through a buyer RFQ.';
  const aiFacts={
   entity:'Septlion Supply',
@@ -118,7 +120,7 @@ for(const p of pages){
  const html=`<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(description)}">
-<link rel="canonical" href="${canonical}">
+<link rel="canonical" href="${canonical}">${arUrl?`<link rel="alternate" hreflang="en" href="${canonical}"><link rel="alternate" hreflang="ar" href="${arUrl}"><link rel="alternate" hreflang="x-default" href="${canonical}">`:''}
 <link rel="alternate" type="application/json" href="${canonical}ai.json" title="Machine-readable demand route">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}">
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -127,12 +129,12 @@ for(const p of pages){
 <script type="application/ld+json">${json(datasetSchema)}</script>
 <script type="application/ld+json">${json(faq)}</script>
 <style>${shellCss}</style></head><body>
-<header class="nav shell"><a class="brand" href="/" aria-label="Septlion Home"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="144" height="52"></a><nav aria-label="Main navigation"><a class="nav-home" href="/">Home</a><a href="/discover">Discover</a><a href="/requests">Trade</a><a href="/require">Start a requirement</a></nav></header>
+<header class="nav shell"><a class="brand" href="/" aria-label="Septlion Home"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="144" height="52"></a><nav aria-label="Main navigation"><a class="nav-home" href="/">Home</a><a href="/discover">Discover</a><a href="/requests">Trade</a><a href="/require">Start a requirement</a>${arUrl?`<a href="${arUrl}" hreflang="ar" lang="ar">العربية</a>`:''}</nav></header>
 <main>
 <section class="hero shell"><p class="kicker">Demand-led market route</p><h1>${esc(product)}<br><em>${esc(p.market)}</em></h1><p class="lead">${esc(description)}</p><a class="cta" href="${intent}">Request a supply offer ↗</a></section>
 <section class="shell"><div class="grid">
 <div class="card"><small>MARKET</small><b>${esc(p.market)}</b><p>Supply route configured for the destination market rather than a generic catalogue listing.</p></div>
-<div class="card"><small>DEMAND PATTERN</small><b>${signals||'Recent'} public signals</b><p>${sources?esc(String(sources))+' source'+(sources>1?'s':''):'Public B2B buying signals'} · latest observed ${esc(displayDate(latest))}.</p></div>
+<div class="card"><small>DEMAND PATTERN</small><b>${signals||'Recent'} public signal${signals===1?'':'s'}</b><p>${sources?esc(String(sources))+' source'+(sources>1?'s':''):'Public B2B buying signals'} · latest observed ${esc(displayDate(latest))}.</p></div>
 <div class="card"><small>VOLUME CONTEXT</small><b>${esc(quantities)}</b><p>Final volume, packing and shipment structure are confirmed from the buyer RFQ.</p></div>
 </div></section>
 <section class="section"><div class="shell"><p class="kicker">Answer-ready summary</p><h2>${esc(product)} supply for ${esc(p.market)}</h2><p class="copy">${esc(answerSummary)}</p><div class="grid"><div class="card"><small>ENTITY</small><b>Septlion Supply</b><p>Demand-led product development and managed supply.</p></div><div class="card"><small>BUYER INTENT</small><b>${esc(product)}</b><p>${esc(p.market)} · ${esc(quantities)}</p></div><div class="card"><small>NEXT ACTION</small><b>Submit RFQ</b><p>Destination, quantity, packing, specification, delivery window and Incoterm.</p></div></div></div></section>
@@ -146,7 +148,8 @@ for(const p of pages){
  await mkdir(dir,{recursive:true});
  await writeFile(path.join(dir,'index.html'),html);
  await writeFile(path.join(dir,'ai.json'),JSON.stringify(aiFacts,null,2));
- generated.push({slug:p.slug,title:p.title,market:p.market,product,description,updatedAt:p.updatedAt,answerSummary,aiUrl:canonical+'ai.json'});
+ if(arUrl){await mkdir(path.join(dir,'ar'),{recursive:true});await writeFile(path.join(dir,'ar','index.html'),arabicDemandPage({p,c,product,englishUrl:canonical,intentUrl:intent,signals,latest,quantities,shellCss,esc,json}));}
+ generated.push({slug:p.slug,title:p.title,market:p.market,product,description,updatedAt:p.updatedAt,answerSummary,aiUrl:canonical+'ai.json',arUrl});
 }
 
 const indexHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Market Demand Routes | Septlion Supply</title><meta name="description" content="Demand-led supply routes created from recent public B2B buying signals across markets."><link rel="canonical" href="https://www.septlion.com/demand/"><meta name="robots" content="index,follow"><style>${shellCss}</style></head><body>
