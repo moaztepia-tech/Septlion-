@@ -4,7 +4,7 @@ The production radar database and the application trade graph now share an evide
 
 ## Live components
 
-- Existing six-hour public-platform and procurement collectors remain scheduled.
+- Public-platform collection and ingestion run hourly. Target-country pages and World Bank commodity collection run every two hours. UK procurement collection remains every six hours. Market-pattern refresh runs every six hours; operations assessment remains hourly.
 - World Bank collector v5 searches eight commodity terms, sorts by notice date, deduplicates notice IDs, and accepts current, identifiable commodity tenders only. It rejects awards, equipment, expired/undated notices, and non-wheat flours misclassified as wheat flour. An empty match set is a valid result, not a buyer.
 - `run_demand_operations(200)` runs at minute 35 hourly. It uses an advisory transaction lock, bounded batches, per-signal error isolation, source incident deduplication, and private run telemetry.
 - Runtime grants allow the existing authenticated Edge backend to run the invoker-based bridge without database-owner privileges. Anonymous and ordinary authenticated database roles remain denied.
@@ -16,7 +16,7 @@ The production radar database and the application trade graph now share an evide
 - Market-level signal counts no longer masquerade as a single buyer's reorder cycle. `DemandBuyerPattern` requires distinct dated observations for the same verified buyer and at least four stable observations for an uncalibrated timing window. It is not a purchase probability.
 - `bridge_demand_to_core` upserts a signal, clarification-stage requirement, opportunity, assessment AgentRun and research supply candidates. It never creates a customer RFQ, contract, payment, or order. Radar-prefixed record IDs identify bridge-owned records; existing application records are preserved.
 - The authenticated workbench API returns assessments, engine runs and buyer patterns, and supports `run_operations`. Existing frontend assets still use their prior layout.
-- A separate scheduled ChatGPT research worker is enabled every six hours at 03:15, 09:15, 15:15 and 21:15 Africa/Cairo. It researches up to three eligible signals, saves direct-contact evidence conservatively, adds limited new signals/supply candidates, and reruns assessment. Creation confirms scheduling; its first future run must still be observed. No research, delivery or notification success is assumed from scheduling alone.
+- The separate scheduled ChatGPT research worker is configured hourly at minute 15, starting 01:15 on 25 November 2026 Africa/Cairo. It combines discovery and deep investigation, normally 8–16 targeted multilingual queries, up to 20 screened results and up to five investigated/new qualified-as-signals records per run. These are operating limits, not guaranteed results. It rotates product/market coverage across Africa and the Middle East and avoids repeat investigation within 12 hours without new evidence. Scheduling is confirmed; first future execution must still be observed. No research, delivery or notification success is assumed from scheduling alone.
 
 ## Production verification
 
@@ -55,3 +55,9 @@ Counts are a deployment-time snapshot, not a lasting guarantee. Query current te
 Tests rebuild the entire database migration history and exercise identity gating, supplier uncertainty, cost arithmetic, expiry, approval, idempotency, test isolation, core bridging, source incident deduplication, anonymous access denial, and buyer-specific recurrence. Collector tests cover provenance, dates, awards, machinery and wrong-flour classification.
 
 `ops/demand-operations-rollback.sql` disables the new hourly scheduler, removes its offer guard and restores prior function implementations. New private audit/data tables and bridge-created records are retained for investigation; rollback does not delete commercial records. Edge Functions can be redeployed from the pre-change Git revision. `ops/demand-supplier-seed.sql` is idempotent and contains public research only.
+
+## Intensive monitoring verification
+
+Collector schedules and registry cadence values were changed transactionally and read back. Configuration and rollback are in `ops/demand-intensive-monitoring.sql` and `ops/demand-intensive-monitoring-rollback.sql`. The exact expanded research instructions are in `ops/demand-intensive-research-prompt.md`. Five access-blocked sources remain blocked; this change does not pretend they are live.
+
+A manual deep research sweep located advertiser tender document GNE/PROC/15/2026 through its original newspaper publication dated 19 November, with a 23 November republication. It was saved as one opportunity, not duplicated by publication or commodity. The flour lot table calculates to 135.57 MT in 6,371 bags; other lots and source conditions are retained privately. Independent identity, local eligibility, grade/packing suitability and costs remain pending. No bid or message was sent. Assessment processed 105 signals with zero errors after this addition. New background collector fetches were explicitly queued; their completion must be read separately from scheduling.
