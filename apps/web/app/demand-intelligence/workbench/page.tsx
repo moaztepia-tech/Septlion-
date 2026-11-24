@@ -3,7 +3,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {accessToken} from '../../../lib/api';
 import Link from 'next/link';
-import {PlatformHeader} from '../../../components/platform-header';
+import {OpsFrame} from '../../../components/ops-console';
 import './workbench.css';
 
 type QueueItem={
@@ -167,7 +167,7 @@ export default function DemandWorkbench(){
  const stageCounts=useMemo(()=>{const m=new Map<string,number>();for(const t of sorted)m.set(t.stage,(m.get(t.stage)||0)+1);return [...m.entries()]},[sorted]);
  const filtered=useMemo(()=>stageFilter==='ALL'?sorted:sorted.filter(t=>t.stage===stageFilter),[sorted,stageFilter]);
 
- if(!data)return <main className="dw-login" dir="rtl"><PlatformHeader/><div className="dw-login-body"><div className="dw-login-card"><Link href="/demand-intelligence" className="dw-wordmark">SEPTLION</Link><p className="kicker">لوحة التشغيل الداخلية</p><h1>لوحة تشغيل الطلبات</h1><p>{error||'جارٍ التحقق من صلاحية حسابك…'}</p><Link href="/account?next=/demand-intelligence/workbench"><button>تسجيل الدخول</button></Link></div></div></main>;
+ if(!data)return <OpsFrame active="work"><div className="dw-login"><div className="dw-login-card"><p className="kicker">لوحة التشغيل الداخلية</p><h1>لوحة تشغيل الطلبات</h1><p>{error||'جارٍ التحقق من صلاحية حسابك…'}</p>{error&&<Link href="/account?next=/demand-intelligence/workbench"><button>تسجيل الدخول</button></Link>}</div></div></OpsFrame>;
 
  const st=data.stats;
  const pushOn=pushState==='enabled'||st.activePushSubscriptions>0;
@@ -178,8 +178,7 @@ export default function DemandWorkbench(){
  const shownPatterns=data.patterns.filter(p=>p.patternStatus!=='INSUFFICIENT').slice(0,6);
  const hiddenPatterns=data.patterns.length-shownPatterns.length;
 
- return <main className="dw" dir="rtl">
-  <PlatformHeader showOperations actions={<div className="dw-top-actions"><span>{data.operator}</span><Link className="platform-action" href="/account">الحساب</Link></div>}/>
+ return <OpsFrame active="work"><div className="dw">
 
   <section className="dw-hero shell">
    <p className="kicker">لوحة التشغيل الداخلية</p>
@@ -304,5 +303,5 @@ export default function DemandWorkbench(){
     </div>
    </details>
   </section>
- </main>
+ </div></OpsFrame>
 }
