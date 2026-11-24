@@ -13,7 +13,14 @@ Commands (run by .github/workflows/deploy-hostinger.yml, see docs/DEPLOY.md):
            workflow artifact (all of public_html with --full),
            uploads only new or changed files, reads every one back, checks the
            public site, and restores the backup automatically if anything fails.
+  release  plan and publish in one run: the same checks, backup, read-back,
+           public check and automatic restore as publish, without waiting for a
+           second run to approve the plan id. For everyday changes.
   rollback Restores a server-side backup made by an earlier publish.
+
+Speed: live files are downloaded and new files uploaded over several FTPS
+connections at once (SEPTLION_FTP_WORKERS, default 4), and the platform build
+uses a fixed build id, so only files that really changed are replaced.
 
 Safety rules that hold for every command:
   * Nothing is ever deleted on the server (no DELE, no RMD). Files that a
@@ -35,6 +42,7 @@ from pathlib import Path, PurePosixPath
 import ssl
 import sys
 import tarfile
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -43,6 +51,7 @@ REMOTE_ROOT = "/domains/septlion.com/public_html"
 REMOTE_BACKUPS = "/domains/septlion.com/septlion-release-backups"
 ORIGIN = "https://www.septlion.com"
 SECRET_NAMES = ("HOSTINGER_FTP_SERVER", "HOSTINGER_FTP_USERNAME", "HOSTINGER_FTP_PASSWORD")
+WORKERS = max(1, min(8, int(os.environ.get("SEPTLION_FTP_WORKERS", "4") or 4)))
 
 
 def digest(data):
@@ -138,13 +147,72 @@ def ensure_directory(ftp, root, relative_dir):
                 raise
 
 
+def in_parallel(items, job, workers=None):
+    """Run job(ftp, item) for every item over up to `workers` FTPS connections.
+
+    Each worker owns its own connection (ftplib connections are not shared
+    between threads). Returns {item: result}. The first error stops the others
+    and is raised once they have finished.
+    """
+    items = list(items)
+    if not items:
+        return {}
+    count = min(workers or WORKERS, len(items))
+    results, errors, refused, lock = {}, [], [], threading.Lock()
+    pending = iter(items)
+
+    def worker():
+        try:
+            ftp = connect()
+        except Exception as error:  # noqa: BLE001 - a host may cap connections; the others carry on
+            with lock:
+                refused.append(error)
+            return
+        try:
+            while True:
+                with lock:
+                    if errors:
+                        return
+                    item = next(pending, None)
+                if item is None:
+                    return
+                try:
+                    value = job(ftp, item)
+                except Exception as error:  # noqa: BLE001 - reported below
+                    with lock:
+                        errors.append(error)
+                    return
+                with lock:
+                    results[item] = value
+        finally:
+            try:
+                ftp.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+    threads = [threading.Thread(target=worker, daemon=True) for _ in range(count)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    if errors:
+        raise errors[0]
+    if len(refused) == count:
+        raise refused[0]
+    if refused:
+        log("Note: %d of %d FTPS connections were refused; the rest finished the work." % (len(refused), count))
+    if len(results) != len(items):
+        raise RuntimeError("Transfer incomplete: %d of %d files" % (len(results), len(items)))
+    return results
+
+
 def store(ftp, root, relative, data, tag):
     """Upload to a temporary name, then rename over the target (atomic swap)."""
     parent = str(PurePosixPath(relative).parent)
     if parent != ".":
         ensure_directory(ftp, root, parent)
     target = root + "/" + relative
-    temporary = root + "/" + (parent + "/" if parent != "." else "") + ".septlion-upload-" + tag + ".tmp"
+    temporary = root + "/" + (parent + "/" if parent != "." else "") + ".septlion-upload-" + tag + "-" + digest(relative.encode())[:10] + ".tmp"
     ftp.storbinary("STOR " + temporary, io.BytesIO(data))
     ftp.rename(temporary, target)
 
@@ -158,16 +226,10 @@ def snapshot(ftp, probe=(), full=False):
     Fetching by path also finds dot files such as .htaccess that some FTP
     servers hide from listings; a hidden live file counts as replaced, never new.
     """
-    files = {}
-    for relative in (walk(ftp, REMOTE_ROOT) if full else ()):
-        if PurePosixPath(relative).name.startswith(".septlion-upload-"):
-            continue
-        files[relative] = fetch(ftp, REMOTE_ROOT + "/" + relative)
-    for relative in probe:
-        if relative not in files:
-            data = try_fetch(ftp, REMOTE_ROOT + "/" + relative)
-            if data is not None:
-                files[relative] = data
+    listed = [r for r in (walk(ftp, REMOTE_ROOT) if full else ()) if not PurePosixPath(r).name.startswith(".septlion-upload-")]
+    files = in_parallel(listed, lambda conn, relative: fetch(conn, REMOTE_ROOT + "/" + relative))
+    probed = in_parallel([r for r in probe if r not in files], lambda conn, relative: try_fetch(conn, REMOTE_ROOT + "/" + relative))
+    files.update({relative: data for relative, data in probed.items() if data is not None})
     return files
 
 
@@ -328,8 +390,13 @@ def cmd_plan(args):
     Path(args.out, "live-before.tar.gz").write_bytes(backup_archive(live))
 
 
-def cmd_publish(args):
-    if not args.plan_id:
+def cmd_release(args):
+    """Plan and publish in one run. The plan is printed and kept, then published at once."""
+    cmd_publish(args, approve_current=True)
+
+
+def cmd_publish(args, approve_current=False):
+    if not args.plan_id and not approve_current:
         raise RuntimeError("publish needs plan_id from a plan run (see docs/DEPLOY.md)")
     package = read_package(args.package)
     tag = run_id()
@@ -338,6 +405,15 @@ def cmd_publish(args):
     try:
         live = snapshot(ftp, package, args.full)
         plan = make_plan(live, package, args.full)
+        if approve_current:
+            text = describe(plan, live, package)
+            log(text)
+            summary(text)
+            if not plan["added"] and not plan["replaced"]:
+                summary("## Nothing to publish\n\nThe live site already matches this build.")
+                log("Nothing to publish: the live site already matches this build.")
+                return
+            args.plan_id = plan["plan_id"]
         if plan["plan_id"] != args.plan_id:
             text = describe(plan, live, package)
             summary("## SAFETY STOP\n\nThe live site no longer matches the approved plan %s. Nothing was changed.\n\n%s" % (args.plan_id, text))
@@ -360,15 +436,22 @@ def cmd_publish(args):
 
         # 2. Upload new and changed files; index.html last so the old home stays up until assets exist.
         order = [p for p in plan["added"] + plan["replaced"] if p != "index.html"]
-        order += [p for p in plan["added"] + plan["replaced"] if p == "index.html"]
+        last = [p for p in plan["added"] + plan["replaced"] if p == "index.html"]
+
+        def upload(conn, path):
+            store(conn, REMOTE_ROOT, path, package[path], tag)
+            if fetch(conn, REMOTE_ROOT + "/" + path) != package[path]:
+                raise RuntimeError("Read-back mismatch: " + path)
+
         try:
-            for count, path in enumerate(order, 1):
-                store(ftp, REMOTE_ROOT, path, package[path], tag)
-                if fetch(ftp, REMOTE_ROOT + "/" + path) != package[path]:
-                    raise RuntimeError("Read-back mismatch: " + path)
-                if count % 50 == 0:
-                    log("Uploaded %d/%d" % (count, len(order)))
-            log("Uploaded and verified %d files." % len(order))
+            # Directories first, from one connection, so parallel uploads never race to create them.
+            for parent in sorted({str(PurePosixPath(p).parent) for p in order + last} - {"."}):
+                ensure_directory(ftp, REMOTE_ROOT, parent)
+            in_parallel(order, upload)
+            for path in last:
+                upload(ftp, path)
+            log("Uploaded and verified %d files." % (len(order) + len(last)))
+            order = order + last
             if not args.skip_smoke:
                 smoke(package)
         except Exception as error:
@@ -419,7 +502,7 @@ def cmd_rollback(args):
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["plan", "publish", "rollback"])
+    parser.add_argument("command", choices=["plan", "publish", "release", "rollback"])
     parser.add_argument("--package", default="deploy")
     parser.add_argument("--plan-id", default="")
     parser.add_argument("--backup-name", default="")
@@ -427,7 +510,7 @@ def main(argv=None):
     parser.add_argument("--skip-smoke", action="store_true")
     parser.add_argument("--full", action="store_true", help="scan and back up all of public_html (slow)")
     args = parser.parse_args(argv)
-    {"plan": cmd_plan, "publish": cmd_publish, "rollback": cmd_rollback}[args.command](args)
+    {"plan": cmd_plan, "publish": cmd_publish, "release": cmd_release, "rollback": cmd_rollback}[args.command](args)
 
 
 if __name__ == "__main__":

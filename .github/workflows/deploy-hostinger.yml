@@ -4,15 +4,16 @@ name: Deploy Septlion to Hostinger
 #   1. mode=plan      builds the package and shows which live files would be replaced. Changes nothing.
 #   2. mode=publish   with the plan_id from step 1: backup of touched files (all with full_scan), upload, read-back, public check, auto-restore.
 #   3. mode=rollback  restores a backup made by an earlier publish (latest if backup_name is empty).
+#   mode=release      plan and publish in one run (same backup, read-back, public check and auto-restore).
 # Nothing is ever deleted on the server.
 
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: plan, publish or rollback
+        description: "plan, publish, release (plan + publish in one run) or rollback"
         type: choice
-        options: [plan, publish, rollback]
+        options: [plan, publish, release, rollback]
         default: plan
       site:
         description: "nextjs = the platform in apps/web; approved-client = the archived live client in sites/approved-client; customer-client = the new-app interface at / that sends requests to the platform (sites/customer-client); platform = the apps/web pages behind the customer client (keeps / and the routing file)"

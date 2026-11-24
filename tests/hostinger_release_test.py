@@ -200,6 +200,38 @@ class ReleaseTest(unittest.TestCase):
         with self.assertRaises(ftplib.error_perm):
             self.plan_id()
 
+    def test_release_plans_and_publishes_in_one_run_with_backup(self):
+        self.run_cmd("release")
+        self.assertEqual(public(self.fake, "index.html"), b"<html>new home</html>")
+        self.assertEqual(public(self.fake, "discover/index.html"), b"<html>discover</html>")
+        self.assertEqual(public(self.fake, "intake.js"), b"live intake engine")
+        backups = [p for p in self.fake.files if p.startswith(release.REMOTE_BACKUPS) and p.endswith(".tar.gz")]
+        self.assertEqual(set(release.read_archive(self.fake.files[backups[0]])), {".htaccess", "index.html", "same.txt"})
+        self.assertFalse(any(".septlion-upload-" in p for p in self.fake.files))
+        self.run_cmd("rollback")
+        self.assertEqual(public(self.fake, "index.html"), b"<html>live engine</html>")
+
+    def test_release_with_nothing_changed_writes_nothing(self):
+        self.run_cmd("release")
+        before = dict(self.fake.files)
+        self.run_cmd("release")
+        self.assertEqual(self.fake.files, before)
+
+    def test_release_restores_when_public_check_fails(self):
+        self.served["/discover/"] = (500, b"")
+        with self.assertRaises(RuntimeError):
+            self.run_cmd("release")
+        self.assertEqual(public(self.fake, "index.html"), b"<html>live engine</html>")
+        self.assertIsNone(public(self.fake, "discover/index.html"))
+
+    def test_parallel_uploads_many_files_in_one_folder_without_collisions(self):
+        for i in range(40):
+            (self.pkg / "discover" / ("p%02d.html" % i)).write_bytes(b"page %d" % i)
+        with mock.patch.object(release, "WORKERS", 6):
+            self.run_cmd("release")
+        for i in range(40):
+            self.assertEqual(public(self.fake, "discover/p%02d.html" % i), b"page %d" % i)
+
     def test_never_deletes(self):
         self.assertFalse(hasattr(FakeFTP, "delete"))
         source = (Path(__file__).resolve().parents[1] / "scripts/hostinger-release.py").read_text()
