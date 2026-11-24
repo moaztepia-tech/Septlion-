@@ -87,6 +87,10 @@ $function$
 ;
 
 SELECT cron.unschedule('septlion-demand-operations-hourly');
+REVOKE EXECUTE ON FUNCTION public.run_demand_operations(integer),public.bridge_demand_to_core(uuid) FROM service_role;
+REVOKE INSERT,UPDATE ON core."DemandSignal",core."QualifiedRequirement",core."Opportunity" FROM service_role;
+REVOKE SELECT,INSERT,UPDATE ON core."AgentRun" FROM service_role;
+REVOKE UPDATE ON core."SupplyCandidate" FROM service_role;
 DROP TRIGGER IF EXISTS demand_offer_ready_guard ON public."DemandOfferBuild";
 CREATE OR REPLACE FUNCTION public.refresh_demand_patterns()
  RETURNS integer
