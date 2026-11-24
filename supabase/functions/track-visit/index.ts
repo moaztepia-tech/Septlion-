@@ -3,7 +3,7 @@
 // the visitor id is a daily hash, so a person counts once per day only.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { cleanPath, cleanReferrer, deviceOf, isBot, countryOf } from "./visit.ts";
+import { cleanPath, cleanReferrer, cleanTag, classifySource, deviceOf, isBot, countryOf } from "./visit.ts";
 
 const allowed = new Set(["https://septlion.com", "https://www.septlion.com"]);
 
@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${day}|${ip}|${ua}|${secret}`));
   const visitor = Array.from(new Uint8Array(digest).slice(0, 12), (b) => b.toString(16).padStart(2, "0")).join("");
   const db = createClient(Deno.env.get("SUPABASE_URL")!, secret, { auth: { persistSession: false } }).schema("core");
-  const { error } = await db.from("SiteVisit").insert({ day, visitor, path, country: countryOf(req.headers), device: deviceOf(ua), referrer: cleanReferrer(body.r) });
+  const referrer = cleanReferrer(body.r), from = classifySource(referrer, cleanTag(body.s));
+  const { error } = await db.from("SiteVisit").insert({ day, visitor, path, country: countryOf(req.headers), device: deviceOf(ua), referrer, source: from.source, "sourceName": from.name });
   if (error) console.error("[track-visit] insert failed", error.code);
   return new Response(null, { status: 204, headers });
 });

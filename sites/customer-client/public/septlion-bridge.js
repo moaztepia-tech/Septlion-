@@ -400,7 +400,8 @@
   (function countVisit() {
     try {
       if (navigator.doNotTrack === '1' || !/(^|\.)septlion\.com$/.test(location.hostname)) return;
-      const body = JSON.stringify({ p: location.pathname, r: document.referrer || '' });
+      const q = new URLSearchParams(location.search);
+      const body = JSON.stringify({ p: location.pathname, r: document.referrer || '', s: q.get('utm_source') || q.get('ref') || '' });
       const url = SUPABASE_URL + '/functions/v1/track-visit';
       if (!(navigator.sendBeacon && navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }))))
         fetch(url, { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(() => {});

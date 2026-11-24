@@ -9,7 +9,9 @@ create table if not exists core."SiteVisit" (
   path text not null,
   country text,
   device text,
-  referrer text
+  referrer text,
+  source text not null default 'direct',
+  "sourceName" text
 );
 create index if not exists "SiteVisit_day_idx" on core."SiteVisit"(day);
 create index if not exists "SiteVisit_at_idx" on core."SiteVisit"(at);
@@ -41,6 +43,15 @@ as $$
              where day > today.d - 7 group by 1 order by 2 desc limit 10) x), '[]'::jsonb),
     'pages', coalesce((select jsonb_agg(jsonb_build_object('path', path, 'views', n) order by n desc)
        from (select path, count(*) n from core."SiteVisit", today where day > today.d - 7 group by 1 order by 2 desc limit 8) x), '[]'::jsonb),
+    'aiToday', (select count(distinct visitor) from core."SiteVisit", today where day = today.d and source = 'ai'),
+    'sources', coalesce((select jsonb_agg(jsonb_build_object('source', src, 'visitors', n) order by n desc)
+       from (select source src, count(distinct visitor) n from core."SiteVisit", today where day > today.d - 7 group by 1) x), '[]'::jsonb),
+    'ai', coalesce((select jsonb_agg(jsonb_build_object('name', nm, 'visitors', n) order by n desc)
+       from (select coalesce("sourceName", 'مساعد آخر') nm, count(distinct visitor) n from core."SiteVisit", today
+             where day > today.d - 7 and source = 'ai' group by 1) x), '[]'::jsonb),
+    'referrers', coalesce((select jsonb_agg(jsonb_build_object('name', nm, 'source', src, 'visitors', n) order by n desc)
+       from (select "sourceName" nm, source src, count(distinct visitor) n from core."SiteVisit", today
+             where day > today.d - 7 and "sourceName" is not null group by 1, 2 order by 3 desc limit 10) x), '[]'::jsonb),
     'devices', coalesce((select jsonb_object_agg(coalesce(device, 'other'), n)
        from (select device, count(distinct visitor) n from core."SiteVisit", today where day > today.d - 7 group by 1) x), '{}'::jsonb)
   );
