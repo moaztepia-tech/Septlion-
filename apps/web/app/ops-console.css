@@ -101,3 +101,66 @@ body:has(.ops){margin:0;background:#071a30}
 .ops-visit-lists li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ops-visit-lists li b{font-variant-numeric:tabular-nums}
 .ops-visit-h{font-size:13px;color:var(--muted);margin:0 0 4px;font-weight:600}
 @media(max-width:520px){.ops-visit-lists{grid-template-columns:1fr}}
+
+/* Shared trade components (deal execution, documents, events, offers) keep their
+   customer look elsewhere; inside the team panel they take the panel's look. */
+.ops :is(.operator-execution-panel,.transaction-documents,.claim-workspace,.transaction-events,.operator-offer-panel,.empty-state,.terms-grid>div){background:var(--card)!important;border:1px solid var(--line)!important;border-image:none!important;box-shadow:none!important;border-radius:16px!important;padding:16px!important;margin:0}
+.ops :is(.operator-execution-panel,.transaction-documents,.claim-workspace,.transaction-events){display:grid;gap:14px}
+.ops .workspace-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;flex-wrap:wrap}
+.ops .workspace-heading h2{font-size:17px;margin:2px 0 0}
+.ops .workspace-heading small{color:var(--muted);font-size:12px;letter-spacing:0}
+.ops .btn{min-height:42px!important;height:auto!important;padding:9px 16px!important;border-radius:11px!important;border:1px solid var(--line2)!important;background:var(--card2)!important;color:var(--text)!important;font:inherit;font-size:14px;transform:none;filter:none;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;clip-path:none!important;width:auto!important;justify-self:start}
+.ops .btn :is(.edge,.inner-edge,.fill,.sheen){display:none!important}
+.ops .btn .label{position:static;padding:0;color:inherit;font-weight:inherit;text-shadow:none}
+.ops .btn.primary-link,.ops .btn:not(.secondary):not(.ghost){background:var(--gold)!important;border-color:var(--gold)!important;color:var(--gold-ink)!important;font-weight:700}
+.ops .btn:disabled{opacity:.5}
+
+.ops .ds-field,.ops .field{background:var(--bg)!important;border:1px solid var(--line2)!important;border-radius:11px!important;border-image:none!important;box-shadow:none!important;clip-path:none!important}
+.ops .ds-field :is(.edge,.inner-edge,.fill){display:none!important}
+.ops :is(input,select,textarea){background:var(--bg);color:var(--text);border:1px solid var(--line2);border-radius:11px;font:inherit;padding:10px 12px}
+.ops .ds-field :is(input,select,textarea){border:0;background:transparent;width:100%}
+.ops :is(.workspace-error){color:var(--warn);border:1px solid rgba(255,180,168,.4);background:rgba(255,180,168,.08);border-radius:11px;padding:10px 12px;margin:0}
+.ops :is(.workspace-success){color:var(--new);border:1px solid rgba(79,195,138,.4);background:rgba(79,195,138,.08);border-radius:11px;padding:10px 12px;margin:0}
+.ops .workspace-muted{color:var(--muted)}
+.ops .transaction-timeline li{border-color:var(--line)!important;background:transparent!important}
+
+/* Platform health (analytics) */
+.ops-metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ops-metrics .ops-stat small{display:block}
+.ops-stat.warn b{color:var(--warn)}
+
+.ops .workspace-heading,.ops .workspace-heading>div{text-align:right}
+.ops .execution-update,.ops .document-upload{display:grid;gap:10px;text-align:right}
+.ops .execution-update h3{font-size:16px;margin:0}
+.ops .execution-update p,.ops .document-upload p{color:var(--muted);font-size:13.5px;margin:0}
+.ops input[type=file]{width:100%;color:var(--muted);font-size:13px}
+.ops input[type=file]::file-selector-button{margin-inline-end:10px;padding:8px 14px;border-radius:9px;border:1px solid var(--line2);background:var(--card2);color:var(--text);font:inherit;cursor:pointer}
+.ops .transaction-events summary{cursor:pointer;font-weight:700}
+.ops :is(.operator-execution-panel,.transaction-documents,.claim-workspace,.transaction-events){text-align:right}
+.ops .workspace-heading{flex-direction:row!important;align-items:center!important}
+.ops .workspace-heading :is(h2,small){display:block;text-align:right}
+.ops .transaction-timeline{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.ops .transaction-timeline li{border:1px solid var(--line)!important;border-radius:12px;padding:12px 14px!important}
+.ops .workspace-summary{background:var(--card2)!important;border-radius:12px}
+
+/* Team account */
+.ops-account-id{display:flex;align-items:center;gap:12px}
+.ops-account-id>span{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:rgba(229,196,135,.14);border:1px solid rgba(229,196,135,.35);color:var(--gold);font-size:20px;font-weight:800}
+.ops-account-id b{display:block;font-size:16px}.ops-account-id small{display:block;color:var(--muted);font-size:13px;text-align:right}
+.ops-account-links{display:grid;padding:4px 16px}
+.ops-account-links a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);text-decoration:none}
+.ops-account-links a:last-child{border-bottom:0}
+.ops-account-links b{display:block;font-size:15px}.ops-account-links small{display:block;color:var(--muted);font-size:12.5px}
+.ops-account-links i{font-style:normal;color:var(--gold)}
+.ops-icons a[aria-current=page]{border-color:var(--gold);color:var(--gold)}
+
+/* Site content editor */
+.sc-section{display:grid;gap:14px}
+.sc-fields{display:grid;gap:12px}
+.sc-field{display:grid;gap:6px}
+.sc-label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.sc-label em{font-style:normal;font-size:11px;font-weight:700;color:var(--gold);border:1px solid rgba(229,196,135,.4);border-radius:999px;padding:1px 8px}
+.sc-field :is(input,textarea){width:100%;min-height:44px;line-height:1.7;resize:vertical}
+.sc-changed :is(input,textarea){border-color:var(--gold)}
+.sc-reset{justify-self:start;font-size:12.5px;padding:0}
+.sc-actions{border-top:1px solid var(--line);padding-top:12px}

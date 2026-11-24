@@ -1,0 +1,31 @@
+name: Daily demand pages release
+
+# Once a day, republish the platform so that demand pages published by the radar
+# (DemandIntentPage, refreshed every 6 hours) go live as static pages and enter the sitemap.
+# It starts the normal deploy workflow with mode=release and site=platform, which keeps the
+# backup, read-back, public check and auto-restore. Nothing is ever deleted on the server.
+# GitHub runs scheduled workflows only from the default branch.
+
+on:
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  start-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Start deploy-hostinger (release, platform)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.event.repository.default_branch }}
+        run: |
+          gh api -X POST "repos/$REPO/actions/workflows/deploy-hostinger.yml/dispatches" \
+            -f ref="$REF" -f "inputs[mode]=release" -f "inputs[site]=platform"
+          echo "Started a release of $REF."

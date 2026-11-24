@@ -39,20 +39,21 @@ export function ago(iso?:string){
 export const nNew=(n:number)=>n===0?'لا توجد طلبات جديدة':n===1?'طلب جديد واحد':n===2?'طلبان جديدان':n<11?`${n} طلبات جديدة`:`${n} طلبًا جديدًا`;
 export const waLink=(n?:string|null)=>{const d=(n||'').replace(/\D/g,'');return d.length>=8?'https://wa.me/'+d:''};
 
-export function OpsFrame({active,children}:{active:'home'|'requests'|'radar';children:React.ReactNode}){
+export function OpsFrame({active,children}:{active:'home'|'requests'|'work'|'radar'|'account';children:React.ReactNode}){
  return <div className="ops" dir="rtl">
   <header className="ops-top"><div className="ops-top-in">
    <Link href="/command-center" className="ops-brand"><b>SEPTLION</b><small>لوحة الفريق</small></Link>
    <nav className="ops-nav" aria-label="أقسام اللوحة">
     <Link href="/command-center" aria-current={active==='home'?'page':undefined}>الرئيسية</Link>
     <Link href="/operations" aria-current={active==='requests'?'page':undefined}>الطلبات</Link>
+    <Link href="/demand-intelligence/workbench" aria-current={active==='work'?'page':undefined}>التشغيل</Link>
     <Link href="/demand-intelligence" aria-current={active==='radar'?'page':undefined}>الرادار</Link>
    </nav>
    <nav className="ops-icons" aria-label="اختصارات">
     <Link href="/discover" aria-label="البحث في المنتجات" title="البحث"><PlatformIcon name="discover"/></Link>
     <Link href="/analytics" aria-label="الإحصاءات" title="الإحصاءات"><PlatformIcon name="operations"/></Link>
-    <Link href="/notifications" aria-label="التنبيهات" title="التنبيهات"><PlatformIcon name="bell"/></Link>
-    <Link href="/account" aria-label="الحساب" title="الحساب"><PlatformIcon name="account"/></Link>
+    <Link href="/demand-intelligence/workbench" aria-label="الطلبات الجديدة" title="الطلبات الجديدة"><PlatformIcon name="bell"/></Link>
+    <Link href="/account" aria-label="الحساب" title="الحساب" aria-current={active==='account'?'page':undefined}><PlatformIcon name="account"/></Link>
    </nav>
   </div></header>
   <main className="ops-main">{children}</main>
