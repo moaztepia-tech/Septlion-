@@ -2,8 +2,8 @@
   "version": "1.0",
   "scope": "Africa and Middle East first; selected global sources; expandable catalog, not a guarantee of all trader activity",
   "reviewedOn": "2026-11-25",
-  "sourceCount": 91,
-  "familyCount": 90,
+  "sourceCount": 92,
+  "familyCount": 91,
   "protocol": {
     "noOutreach": true,
     "noPrivateGroupAccessWithoutAuthorization": true,
@@ -2001,6 +2001,30 @@
       "lastResearchOutcome": null,
       "demandSemantics": "CLASSIFY_EACH_ITEM_BUY_REQUEST_VS_SELL_OFFER",
       "familyId": "x"
+    },
+    "espaceagro": {
+      "id": "espaceagro",
+      "name": "EspaceAgro",
+      "url": "https://www.espaceagro.com/",
+      "category": "GLOBAL_B2B",
+      "markets": [
+        "Francophone Africa",
+        "Madagascar",
+        "MENA",
+        "Global"
+      ],
+      "accessStatus": "PUBLIC_CATEGORY_AVAILABLE_SOME_PROFILES_REQUIRE_AUTH",
+      "priority": 90,
+      "evidenceUrl": "https://www.espaceagro.com/farine-egypte/exp-farine-egypte.html",
+      "evidenceRef": "turn285383381view2",
+      "reviewedOn": "2026-11-25",
+      "researchState": "PUBLIC_RESEARCH_ONLY_NO_ADAPTER",
+      "directAdapterConnected": false,
+      "publicResearchEligible": true,
+      "demandSemantics": "CLASSIFY_EACH_ITEM_BUY_REQUEST_VS_SELL_OFFER",
+      "familyId": "espaceagro",
+      "addedAt": "2026-11-24T23:12:00Z",
+      "additionRationale": "Official Francophone agricultural classifieds contain identifiable ACHAT posts and Africa country labels; distinguish sales and old member dates."
     }
   }
 }
