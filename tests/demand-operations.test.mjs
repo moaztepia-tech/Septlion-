@@ -63,6 +63,11 @@ test('operations run safely from evidence to costed draft, isolate tests, and st
   const before=(await pg.query(`SELECT count(*)::int n FROM "DemandAlert" WHERE type='SOURCE_FAILURE'`)).rows[0].n;
   await pg.query('SELECT run_demand_operations(200)');
   assert.equal((await pg.query(`SELECT count(*)::int n FROM "DemandAlert" WHERE type='SOURCE_FAILURE'`)).rows[0].n,before);
+  await pg.exec('SET ROLE service_role');
+  const backendRun=(await pg.query('SELECT run_demand_operations(200) AS r')).rows[0].r;
+  assert.deepEqual(backendRun.errors,[]);
+  assert.ok(backendRun.processed>=4);
+  await pg.exec('RESET ROLE');
   for(const role of ['anon','authenticated']) {
    await pg.exec('SET ROLE '+role);
    await assert.rejects(pg.query('SELECT run_demand_operations(200)'),/permission denied/);
