@@ -52,7 +52,7 @@ export function OpsFrame({active,children}:{active:'home'|'requests'|'work'|'rad
    <nav className="ops-icons" aria-label="اختصارات">
     <Link href="/discover" aria-label="البحث في المنتجات" title="البحث"><PlatformIcon name="discover"/></Link>
     <Link href="/analytics" aria-label="الإحصاءات" title="الإحصاءات"><PlatformIcon name="operations"/></Link>
-    <Link href="/notifications" aria-label="التنبيهات" title="التنبيهات"><PlatformIcon name="bell"/></Link>
+    <Link href="/demand-intelligence/workbench" aria-label="الطلبات الجديدة" title="الطلبات الجديدة"><PlatformIcon name="bell"/></Link>
     <Link href="/account" aria-label="الحساب" title="الحساب"><PlatformIcon name="account"/></Link>
    </nav>
   </div></header>

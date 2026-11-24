@@ -101,3 +101,29 @@ body:has(.ops){margin:0;background:#071a30}
 .ops-visit-lists li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ops-visit-lists li b{font-variant-numeric:tabular-nums}
 .ops-visit-h{font-size:13px;color:var(--muted);margin:0 0 4px;font-weight:600}
 @media(max-width:520px){.ops-visit-lists{grid-template-columns:1fr}}
+
+/* Shared trade components (deal execution, documents, events, offers) keep their
+   customer look elsewhere; inside the team panel they take the panel's look. */
+.ops :is(.operator-execution-panel,.transaction-documents,.claim-workspace,.transaction-events,.operator-offer-panel,.empty-state,.terms-grid>div){background:var(--card)!important;border:1px solid var(--line)!important;border-image:none!important;box-shadow:none!important;border-radius:16px!important;padding:16px!important;margin:0}
+.ops :is(.operator-execution-panel,.transaction-documents,.claim-workspace,.transaction-events){display:grid;gap:14px}
+.ops .workspace-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;flex-wrap:wrap}
+.ops .workspace-heading h2{font-size:17px;margin:2px 0 0}
+.ops .workspace-heading small{color:var(--muted);font-size:12px;letter-spacing:0}
+.ops .btn{min-height:42px;padding:9px 16px;border-radius:11px;border:1px solid var(--line2);background:var(--card2);color:var(--text);font:inherit;font-size:14px;transform:none;filter:none;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;clip-path:none}
+.ops .btn :is(.edge,.inner-edge,.fill,.sheen){display:none!important}
+.ops .btn .label{position:static;padding:0;color:inherit;font-weight:inherit;text-shadow:none}
+.ops .btn.primary-link,.ops .btn:not(.secondary):not(.ghost){background:var(--gold);border-color:var(--gold);color:var(--gold-ink);font-weight:700}
+.ops .btn.secondary,.ops .btn.ghost{background:var(--card2);color:var(--text)}
+.ops .ds-field,.ops .field{background:var(--bg)!important;border:1px solid var(--line2)!important;border-radius:11px!important;border-image:none!important;box-shadow:none!important;clip-path:none!important}
+.ops .ds-field :is(.edge,.inner-edge,.fill){display:none!important}
+.ops :is(input,select,textarea){background:var(--bg);color:var(--text);border:1px solid var(--line2);border-radius:11px;font:inherit;padding:10px 12px}
+.ops .ds-field :is(input,select,textarea){border:0;background:transparent;width:100%}
+.ops :is(.workspace-error){color:var(--warn);border:1px solid rgba(255,180,168,.4);background:rgba(255,180,168,.08);border-radius:11px;padding:10px 12px;margin:0}
+.ops :is(.workspace-success){color:var(--new);border:1px solid rgba(79,195,138,.4);background:rgba(79,195,138,.08);border-radius:11px;padding:10px 12px;margin:0}
+.ops .workspace-muted{color:var(--muted)}
+.ops .transaction-timeline li{border-color:var(--line)!important;background:transparent!important}
+
+/* Platform health (analytics) */
+.ops-metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ops-metrics .ops-stat small{display:block}
+.ops-stat.warn b{color:var(--warn)}
