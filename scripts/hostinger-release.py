@@ -206,6 +206,16 @@ def in_parallel(items, job, workers=None):
     return results
 
 
+def fresh(ftp):
+    """A new control connection: the old one may have been closed by the server
+    while the parallel workers were busy (idle timeout shows up as EOFError)."""
+    try:
+        ftp.close()
+    except Exception:  # noqa: BLE001
+        pass
+    return connect()
+
+
 def store(ftp, root, relative, data, tag):
     """Upload to a temporary name, then rename over the target (atomic swap)."""
     parent = str(PurePosixPath(relative).parent)
@@ -404,6 +414,7 @@ def cmd_publish(args, approve_current=False):
     ftp = connect()
     try:
         live = snapshot(ftp, package, args.full)
+        ftp = fresh(ftp)
         plan = make_plan(live, package, args.full)
         if approve_current:
             text = describe(plan, live, package)
@@ -448,6 +459,7 @@ def cmd_publish(args, approve_current=False):
             for parent in sorted({str(PurePosixPath(p).parent) for p in order + last} - {"."}):
                 ensure_directory(ftp, REMOTE_ROOT, parent)
             in_parallel(order, upload)
+            ftp = fresh(ftp)
             for path in last:
                 upload(ftp, path)
             log("Uploaded and verified %d files." % (len(order) + len(last)))
@@ -488,6 +500,7 @@ def cmd_rollback(args):
         backup_files = read_archive(archive)
         # Keep a backup of the state we are rolling back from, too.
         current = snapshot(ftp, set(backup_files) | set(record["added"]), args.full)
+        ftp = fresh(ftp)
         before = backup_archive(current)
         pre = name + "-before-rollback-run" + tag
         store(ftp, REMOTE_BACKUPS, pre + ".tar.gz", before, tag + "-b")
@@ -517,5 +530,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as error:
-        print("ERROR: " + str(error), file=sys.stderr)
+        print("ERROR: %s: %s" % (type(error).__name__, error), file=sys.stderr)
         sys.exit(1)
