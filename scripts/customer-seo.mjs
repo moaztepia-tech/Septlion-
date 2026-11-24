@@ -15,7 +15,7 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {allMarketPages, pageHead, topBar, productGrid, stepsList, faqList, footer, dock, MARKETS, marketUrl} from './market-pages.mjs';
+import {allMarketPages, pageHead, topBar, productGrid, stepsList, faqList, footer, dock, MARKETS, marketUrl, tradeBlock} from './market-pages.mjs';
 import {ICON_WA} from './seo-theme.mjs';
 
 export const SITE = 'https://www.septlion.com';
@@ -132,6 +132,7 @@ export function englishHome(products, demand = []) {
 <div class="facts"><div><span>Minimum order</span><b>One 20 ft container</b></div><div><span>Incoterms</span><b>FOB · CFR · CIF</b></div><div><span>Markets</span><b>Middle East · Africa</b></div><div><span>Packing</span><b>1 kg to 50 kg</b></div></div></section>
 <section class="block wrap" id="products" aria-labelledby="pH"><div class="head"><div><span class="eyebrow">ZOLLANA</span><h2 id="pH">ZOLLANA flour range</h2><p class="sub">Minimum order is one 20 ft container. Prices are given in the quotation for your destination, volume and terms.</p></div></div>${productGrid(products, 'en')}</section>
 <section class="block wrap" id="how" aria-labelledby="hH"><div class="head"><div><span class="eyebrow">SEPTLION</span><h2 id="hH">How it works</h2></div></div>${stepsList('en')}</section>
+<section class="block wrap" aria-labelledby="tH"><div class="head"><div><span class="eyebrow">SEPTLION</span><h2 id="tH">Documents and terms</h2><p class="sub">What an importer receives with every shipment, and what is fixed in the contract.</p></div></div>${tradeBlock('en')}</section>
 <section class="block wrap" aria-labelledby="mH"><div class="head"><div><span class="eyebrow">Markets</span><h2 id="mH">Where we supply</h2><p class="sub">A page for each market, in Arabic, French or English.</p></div><a class="btn" href="/markets/">All markets</a></div><ul class="chips">${markets}</ul></section>
 ${routes ? `<section class="block wrap" aria-labelledby="dH"><div class="head"><div><span class="eyebrow">Demand radar</span><h2 id="dH">Live demand routes</h2><p class="sub">Market pages built from recent public B2B buying signals. Each one has its own RFQ form.</p></div><a class="btn" href="/demand/">All routes</a></div><div class="panel"><ul class="routes">${routes}</ul></div></section>` : ''}
 <section class="block wrap" aria-labelledby="fH"><div class="head"><h2 id="fH">Frequently asked questions</h2></div>${faqList(faq)}</section>

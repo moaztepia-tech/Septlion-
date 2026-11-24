@@ -6,6 +6,7 @@
 
 import {SITE, esc, englishProduct} from './customer-seo.mjs';
 import {themeCss, ICON_WA, productVisual} from './seo-theme.mjs';
+import {BRIEFS, BRIEF_TITLE, TRADE} from './market-briefs.mjs';
 
 const WHATSAPP = '201070088181', EMAIL = 'info@septlion.com';
 const ld = v => JSON.stringify(v).replace(/</g, '\\u003c');
@@ -195,6 +196,7 @@ export function productGrid(products, lang) {
 }
 
 export const stepsList = lang => `<ol class="steps">${T[lang].steps.map(([a, b]) => `<li><b>${esc(a)}</b><p>${esc(b)}</p></li>`).join('')}</ol>`;
+export const tradeBlock = lang => `<div class="tgrid">${TRADE[lang].items.map(([k, v]) => `<div class="panel"><h3>${esc(k)}</h3><p>${esc(v)}</p></div>`).join('')}</div>`;
 export const faqList = items => `<div class="faq">${items.map(([q, a], i) => `<details${i === 0 ? ' open' : ''}><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>`;
 
 export function marketPage(m, lang, products) {
@@ -217,8 +219,10 @@ export function marketPage(m, lang, products) {
 <section class="hero wrap"><span class="eyebrow">${esc(t.kicker(REGIONS[m.region][lang]))}</span><h1>${esc(t.h1(say))}</h1><p class="lead">${esc(t.lead(say, port))}</p>
 <div class="cta"><a class="btn pri" href="${esc(wa)}">${ICON_WA}${esc(t.wa)}</a><a class="btn" href="mailto:${EMAIL}">${esc(t.mail)}</a></div>
 <div class="facts">${u.facts.map((f, i) => `<div><span>${esc(f)}</span><b>${esc(factVals[i])}</b></div>`).join('')}</div></section>
+${(BRIEFS[m.slug]?.[lang] || []).length ? `<section class="block wrap" aria-labelledby="bH"><div class="brief"><div><span class="eyebrow">${esc(REGIONS[m.region][lang])}</span><h2 id="bH">${esc(BRIEF_TITLE[lang](lang === 'fr' ? phraseIn(m, 'fr').replace(/^(au|en|à|pour) /, (x) => ({'au ': 'au ', 'en ': 'en ', 'à ': 'à ', 'pour ': 'vers '})[x]) : name))}</h2></div><ol class="points">${BRIEFS[m.slug][lang].map(b => `<li>${esc(b)}</li>`).join('')}</ol></div></section>` : ''}
 <section class="block wrap" id="products" aria-labelledby="pH"><div class="head"><div><span class="eyebrow">ZOLLANA</span><h2 id="pH">${esc(t.prodH)}</h2><p class="sub">${esc(t.prodSub)}</p></div></div>${productGrid(products, lang)}</section>
 <section class="block wrap" id="how" aria-labelledby="hH"><div class="head"><div><span class="eyebrow">SEPTLION</span><h2 id="hH">${esc(t.howH)}</h2></div></div>${stepsList(lang)}</section>
+<section class="block wrap" aria-labelledby="tH"><div class="head"><div><span class="eyebrow">SEPTLION</span><h2 id="tH">${esc(TRADE[lang].h)}</h2></div></div>${tradeBlock(lang)}</section>
 <section class="block wrap" aria-labelledby="sH"><div class="split"><div class="panel"><h2 id="sH" style="font-size:26px;margin:0 0 18px">${esc(t.sendH)}</h2><ul class="checks">${t.send.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>
 <div class="panel"><p class="sub" style="margin:0 0 12px">${esc(u.msgLabel)}</p><p class="msg">${esc(u.msg(say))}</p><a class="btn pri" style="width:100%" href="${esc(wa)}">${ICON_WA}${esc(t.wa)}</a></div></div></section>
 <section class="block wrap" aria-labelledby="fH"><div class="head"><h2 id="fH">${esc(t.faqH)}</h2></div>${faqList(faq)}</section>
