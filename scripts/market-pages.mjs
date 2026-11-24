@@ -53,13 +53,47 @@ export const MARKETS = [
   ['ethiopia', ['en'], 'ea', {en: 'Ethiopia'}, {en: 'Djibouti, then overland'}],
   ['somalia', ['en'], 'ea', {en: 'Somalia'}, {en: 'Mogadishu or Berbera'}],
   ['south-sudan', ['en'], 'ea', {en: 'South Sudan'}, {en: 'Mombasa, then overland'}],
+  ['eritrea', ['en'], 'ea', {en: 'Eritrea'}, {en: 'Massawa'}],
+  ['rwanda', ['en', 'fr'], 'ea', {en: 'Rwanda', fr: 'Rwanda'}, {en: 'Mombasa or Dar es Salaam, then overland', fr: 'Mombasa ou Dar es Salaam, puis transport terrestre'}],
+  ['burundi', ['fr'], 'ea', {fr: 'Burundi', en: 'Burundi'}, {fr: 'Dar es Salaam, puis transport terrestre', en: 'Dar es Salaam, then overland'}],
+  // Middle East (completed)
+  ['lebanon', ['ar'], 'me', {ar: 'لبنان', en: 'Lebanon'}, {ar: 'بيروت', en: 'Beirut'}],
+  ['syria', ['ar'], 'me', {ar: 'سوريا', en: 'Syria'}, {ar: 'اللاذقية أو طرطوس', en: 'Latakia or Tartus'}],
+  ['palestine', ['ar'], 'me', {ar: 'فلسطين', en: 'Palestine'}, {ar: 'عبر الأردن أو الموانئ المجاورة حسب الوضع', en: 'via Jordan or nearby ports, depending on conditions'}],
+  // West and Central Africa (completed)
+  ['chad', ['fr', 'ar'], 'wa', {fr: 'Tchad', ar: 'تشاد', en: 'Chad'}, {fr: 'Douala, puis transport terrestre', ar: 'دوالا ثم براً', en: 'Douala, then overland'}],
+  ['niger', ['fr'], 'wa', {fr: 'Niger', en: 'Niger'}, {fr: 'Cotonou ou Lomé, puis transport terrestre', en: 'Cotonou or Lomé, then overland'}],
+  ['central-african-republic', ['fr'], 'wa', {fr: 'Centrafrique', en: 'Central African Republic'}, {fr: 'Douala, puis transport terrestre', en: 'Douala, then overland'}],
+  ['gabon', ['fr'], 'wa', {fr: 'Gabon', en: 'Gabon'}, {fr: 'Libreville (Owendo)', en: 'Libreville (Owendo)'}],
+  ['congo', ['fr'], 'wa', {fr: 'Congo', en: 'Republic of the Congo'}, {fr: 'Pointe-Noire', en: 'Pointe-Noire'}],
+  ['equatorial-guinea', ['fr'], 'wa', {fr: 'Guinée équatoriale', en: 'Equatorial Guinea'}, {fr: 'Malabo ou Bata', en: 'Malabo or Bata'}],
+  ['gambia', ['en'], 'wa', {en: 'The Gambia'}, {en: 'Banjul'}],
+  ['guinea-bissau', ['pt'], 'wa', {pt: 'Guiné-Bissau', en: 'Guinea-Bissau'}, {pt: 'Bissau', en: 'Bissau'}],
+  ['cape-verde', ['pt'], 'wa', {pt: 'Cabo Verde', en: 'Cape Verde'}, {pt: 'Praia ou Mindelo', en: 'Praia or Mindelo'}],
+  ['sao-tome', ['pt'], 'wa', {pt: 'São Tomé e Príncipe', en: 'São Tomé and Príncipe'}, {pt: 'São Tomé', en: 'São Tomé'}],
+  // Southern Africa and the Indian Ocean
+  ['angola', ['pt'], 'sa', {pt: 'Angola', en: 'Angola'}, {pt: 'Luanda ou Lobito', en: 'Luanda or Lobito'}],
+  ['mozambique', ['pt'], 'sa', {pt: 'Moçambique', en: 'Mozambique'}, {pt: 'Maputo, Beira ou Nacala', en: 'Maputo, Beira or Nacala'}],
+  ['south-africa', ['en'], 'sa', {en: 'South Africa'}, {en: 'Durban or Cape Town'}],
+  ['namibia', ['en'], 'sa', {en: 'Namibia'}, {en: 'Walvis Bay'}],
+  ['botswana', ['en'], 'sa', {en: 'Botswana'}, {en: 'Durban or Walvis Bay, then overland'}],
+  ['zambia', ['en'], 'sa', {en: 'Zambia'}, {en: 'Dar es Salaam or Durban, then overland'}],
+  ['zimbabwe', ['en'], 'sa', {en: 'Zimbabwe'}, {en: 'Beira or Durban, then overland'}],
+  ['malawi', ['en'], 'sa', {en: 'Malawi'}, {en: 'Nacala or Beira, then overland'}],
+  ['lesotho', ['en'], 'sa', {en: 'Lesotho'}, {en: 'Durban, then overland'}],
+  ['eswatini', ['en'], 'sa', {en: 'Eswatini'}, {en: 'Durban or Maputo, then overland'}],
+  ['madagascar', ['fr'], 'sa', {fr: 'Madagascar', en: 'Madagascar'}, {fr: 'Toamasina', en: 'Toamasina'}],
+  ['mauritius', ['en'], 'sa', {en: 'Mauritius'}, {en: 'Port Louis'}],
+  ['seychelles', ['en'], 'sa', {en: 'Seychelles'}, {en: 'Port Victoria'}],
+  ['comoros', ['fr', 'ar'], 'sa', {fr: 'Comores', ar: 'جزر القمر', en: 'Comoros'}, {fr: 'Moroni', ar: 'موروني', en: 'Moroni'}],
 ].map(([slug, langs, region, names, ports]) => ({slug, langs, region, names, ports}));
 
 const REGIONS = {
   me: {ar: 'الشرق الأوسط', fr: 'Moyen-Orient', en: 'Middle East'},
   na: {ar: 'شمال أفريقيا', fr: 'Afrique du Nord', en: 'North Africa'},
-  wa: {ar: 'غرب ووسط أفريقيا', fr: "Afrique de l'Ouest et centrale", en: 'West and Central Africa'},
-  ea: {ar: 'شرق أفريقيا', fr: "Afrique de l'Est", en: 'East Africa'},
+  wa: {ar: 'غرب ووسط أفريقيا', fr: "Afrique de l'Ouest et centrale", en: 'West and Central Africa', pt: 'África Ocidental e Central'},
+  ea: {ar: 'شرق أفريقيا', fr: "Afrique de l'Est", en: 'East Africa', pt: 'África Oriental'},
+  sa: {ar: 'الجنوب الأفريقي والمحيط الهندي', fr: 'Afrique australe et océan Indien', en: 'Southern Africa and the Indian Ocean', pt: 'África Austral e Oceano Índico'},
 };
 
 export const marketUrl = (m, lang) => `${SITE}/markets/${m.slug}/${lang === m.langs[0] ? '' : lang + '/'}`;
@@ -80,7 +114,16 @@ function arabicProduct(p) {
   return {image: e.image, brand: 'زولانا', name: p.name, size: p.size, type: p.type, use: field(p, 'الاستخدام'),
     pack: p.pack, moq: field(p, 'أقل طلب') || 'حاوية واحدة 20 قدماً', perContainer: field(p, 'كمية الحاوية') || 'تُحدَّد في عرض السعر'};
 }
-const productIn = (p, lang) => lang === 'ar' ? arabicProduct(p) : lang === 'fr' ? frenchProduct(englishProduct(p)) : englishProduct(p);
+function portugueseProduct(e) {
+  const type = {'All-purpose wheat flour': 'Farinha de trigo para todos os usos', 'Bakery wheat flour': 'Farinha de trigo para panificação', 'Whole wheat flour': 'Farinha de trigo integral'}[e.type] || e.type;
+  const use = {'Cooking and baking': 'Culinária e pastelaria', 'Bread and bakery products': 'Pão e panificação', 'Whole-grain bread': 'Pão integral'}[e.use] || e.use;
+  const pack = e.pack.startsWith('Paper') ? 'Sacos de papel, fardos de 10 × 1 kg' : e.pack === 'Woven PP sack' ? 'Saco de polipropileno tecido' : e.pack;
+  const n = e.perContainer.match(/About ([\d,]+) (sacks|shrink packs|units)/);
+  const unit = n && {sacks: 'sacos', 'shrink packs': 'fardos', units: 'unidades'}[n[2]];
+  return {...e, type, use, pack, moq: 'Um contentor de 20 pés',
+    perContainer: n ? `Cerca de ${n[1].replace(/,/g, '.')} ${unit} por contentor de 20 pés` : 'Confirmado na cotação'};
+}
+const productIn = (p, lang) => lang === 'ar' ? arabicProduct(p) : lang === 'fr' ? frenchProduct(englishProduct(p)) : lang === 'pt' ? portugueseProduct(englishProduct(p)) : englishProduct(p);
 
 const T = {
   ar: {
@@ -134,6 +177,23 @@ const T = {
     others: 'Other markets', footer: 'SEPTLION LLC · Registered in the United States',
     idxTitle: 'Wholesale Wheat Flour Supply to Africa and the Middle East | SEPTLION', idxH1: 'Our markets in Africa and the Middle East', idxLead: 'Choose your country to see the ZOLLANA range, how to request a quotation and delivery to your nearest port.',
   },
+  pt: {
+    dir: 'ltr', locale: 'pt_PT', home: '/en/', homeLabel: 'Início', all: 'Todos os mercados',
+    title: m => `Farinha de trigo por grosso ${m} | ZOLLANA da SEPTLION`,
+    desc: (m, port) => `Farinha de trigo ZOLLANA por grosso para importadores, padarias e grossistas ${m}. Encomenda mínima: um contentor de 20 pés, entregue em ${port} ou no porto da sua escolha. Peça uma cotação clara à SEPTLION.`,
+    kicker: r => `${r} · Fornecimento B2B`,
+    h1: m => `Farinha de trigo por grosso ${m}`,
+    lead: (m, port) => `Farinha de trigo ZOLLANA para importadores, padarias e grossistas ${m}. Indique o produto, a quantidade, a embalagem e o porto de destino (por exemplo ${port}) e receba uma única cotação clara, com especificação, Incoterm e condições de pagamento.`,
+    wa: 'Pedir cotação no WhatsApp', waText: m => `Olá, gostaria de uma cotação de farinha de trigo ZOLLANA ${m}.`, mail: 'Enviar e-mail',
+    prodH: 'A gama ZOLLANA', prodSub: 'Encomenda mínima: um contentor de 20 pés. O preço é indicado na cotação conforme o destino, o volume e as condições.',
+    labels: ['Embalagem', 'Encomenda mínima', 'Por contentor', 'Utilização'],
+    howH: 'Como encomendar', steps: [['Envie a sua necessidade', 'Produto, número de contentores, embalagem e porto de destino.'], ['Receba uma cotação única', 'Especificação, quantidade, porto, Incoterm (FOB, CFR ou CIF) e pagamento numa só oferta.'], ['Acompanhe a execução', 'Após o acordo, a SEPTLION coordena o fornecimento, a produção, os documentos e o transporte até à entrega.']],
+    sendH: 'O que nos enviar', send: ['Produto e peso do saco (50, 25, 10 ou 1 kg)', 'Quantidade em contentores e frequência', 'Porto ou cidade de entrega', 'Incoterm pretendido: FOB, CFR ou CIF', 'Normas ou certificados exigidos no seu país'],
+    faqH: 'Perguntas frequentes',
+    faq: (m, port) => [[`Fornecem farinha de trigo ${m}?`, `Sim. Preparamos uma cotação para qualquer comprador profissional ${m}, com entrega em ${port} ou no porto que indicar.`], ['Qual é a encomenda mínima?', 'Um contentor de 20 pés de qualquer produto.'], ['Que embalagens existem?', 'Sacos de 50 e 25 kg, sacos de 10 kg e pacotes de 1 kg em fardos.'], ['O preço é fixo?', 'Não. Depende do volume, da embalagem, do destino e do Incoterm, e é indicado na cotação.'], ['Quem é a SEPTLION?', 'Uma empresa de comércio B2B registada nos Estados Unidos, que transforma o pedido do comprador numa cotação única e coordena o fornecimento e o transporte até à entrega.']],
+    others: 'Outros mercados', footer: 'SEPTLION LLC · Registada nos Estados Unidos',
+    idxTitle: 'Farinha de trigo por grosso para África e Médio Oriente | SEPTLION', idxH1: 'Os nossos mercados em África e no Médio Oriente', idxLead: 'Escolha o seu país para ver a gama ZOLLANA, como pedir uma cotação e a entrega no porto mais próximo.',
+  },
 };
 
 // Interface words that are not part of the market copy.
@@ -150,6 +210,10 @@ const U = {
     factVals: ['One 20 ft container', 'FOB · CFR · CIF', null, '1 kg to 50 kg'], msgLabel: 'A ready message you can send as it is:',
     msg: m => `Hello SEPTLION,\nI need a quotation for ZOLLANA wheat flour to ${m}.\nProduct and bag size: …\nQuantity (containers): …\nDestination port: …\nIncoterm: CFR / CIF / FOB`,
     bandH: 'Ready for a quotation?', bandP: 'Send your requirement on WhatsApp and receive one clear offer.', email: 'Email', foot: ['Home', 'All markets', 'Demand routes'], allH: 'All markets'},
+  pt: {products: 'Produtos', how: 'Encomendar', markets: 'Mercados', quote: 'Pedir cotação', facts: ['Encomenda mínima', 'Incoterms', 'Porto de destino', 'Embalagem'],
+    factVals: ['1 contentor de 20 pés', 'FOB · CFR · CIF', null, 'De 1 a 50 kg'], msgLabel: 'Mensagem pronta a enviar:',
+    msg: m => `Olá SEPTLION,\nPreciso de uma cotação de farinha de trigo ZOLLANA ${m}.\nProduto e peso: …\nQuantidade (contentores): …\nPorto de destino: …\nIncoterm: CFR / CIF / FOB`,
+    bandH: 'Pronto para pedir uma cotação?', bandP: 'Envie a sua necessidade no WhatsApp e receba uma oferta clara.', email: 'E-mail', foot: ['Início', 'Todos os mercados', 'Rotas de procura'], allH: 'Todos os mercados'},
 };
 
 // Markets served by road. Filled in from the team's answer; each entry is
@@ -160,6 +224,7 @@ export const LAND = {
   libya: {mode: 'both', route: {ar: 'من مصر عبر منفذ السلوم وامساعد', en: 'from Egypt via the Salloum–Musaid crossing'}},
 };
 const LAND_UI = {
+  pt: {route: 'Rota', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'Um contentor ou camião completo', note: r => `Entrega por estrada ${r}, de camião até ao seu armazém ou ao ponto acordado.`},
   ar: {route: 'طريق الشحن', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'حاوية أو شاحنة كاملة', note: r => `الشحن براً ${r}، بالشاحنات حتى مستودعك أو نقطة التسليم المتفق عليها.`},
   fr: {route: 'Acheminement', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'Un conteneur ou un camion complet', note: r => `Livraison par route ${r}, en camion jusqu'à votre entrepôt ou au point convenu.`},
   en: {route: 'Route', terms: {land: 'DAP · FCA · CPT', both: 'CFR · CIF · DAP'}, moq: 'One container or full truck', note: r => `Delivered by road ${r}, by truck to your warehouse or the agreed delivery point.`},
@@ -167,7 +232,9 @@ const LAND_UI = {
 const nameIn = (m, lang) => m.names[lang] || m.names.en;
 // French needs the country with its preposition: "au Sénégal", "en Côte d'Ivoire".
 const FR_IN = {algeria: 'en Algérie', morocco: 'au Maroc', tunisia: 'en Tunisie', mauritania: 'en Mauritanie', senegal: 'au Sénégal', 'cote-divoire': "en Côte d'Ivoire", cameroon: 'au Cameroun', guinea: 'en Guinée', benin: 'au Bénin', togo: 'au Togo', mali: 'au Mali', 'burkina-faso': 'au Burkina Faso', 'dr-congo': 'en RD Congo', djibouti: 'à Djibouti'};
-const phraseIn = (m, lang) => lang === 'fr' ? FR_IN[m.slug] || 'pour ' + nameIn(m, 'fr') : nameIn(m, lang);
+Object.assign(FR_IN, {rwanda: 'au Rwanda', burundi: 'au Burundi', chad: 'au Tchad', niger: 'au Niger', 'central-african-republic': 'en Centrafrique', gabon: 'au Gabon', congo: 'au Congo', 'equatorial-guinea': 'en Guinée équatoriale', madagascar: 'à Madagascar', comoros: 'aux Comores'});
+const PT_IN = {angola: 'em Angola', mozambique: 'em Moçambique', 'guinea-bissau': 'na Guiné-Bissau', 'cape-verde': 'em Cabo Verde', 'sao-tome': 'em São Tomé e Príncipe'};
+const phraseIn = (m, lang) => lang === 'fr' ? FR_IN[m.slug] || 'pour ' + nameIn(m, 'fr') : lang === 'pt' ? PT_IN[m.slug] || 'para ' + nameIn(m, 'pt') : nameIn(m, lang);
 const portIn = (m, lang) => m.ports[lang] || m.ports.en;
 const waLink = text => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
 
@@ -216,7 +283,7 @@ export function marketPage(m, lang, products) {
   const alternates = m.langs.length > 1 ? [...m.langs.map(l => ({lang: l, href: marketUrl(m, l)})), {lang: 'x-default', href: marketUrl(m, m.langs[0])}] : [];
   const title = t.title(say), desc = t.desc(say, port), faq = t.faq(say, port);
   const wa = waLink(u.msg(say));
-  const alt = m.langs.filter(l => l !== lang).map(l => ({lang: l, href: marketUrl(m, l), label: l === 'ar' ? 'العربية' : 'Français'}));
+  const alt = m.langs.filter(l => l !== lang).map(l => ({lang: l, href: marketUrl(m, l), label: {ar: 'العربية', fr: 'Français', en: 'English', pt: 'Português'}[l]}));
   const same = MARKETS.filter(x => x !== m && x.langs.includes(lang)).map(x => `<li><a href="${marketUrl(x, lang)}">${esc(nameIn(x, lang))}</a></li>`).join('');
   const land = LAND[m.slug], lu = LAND_UI[lang], route = land && (land.route[lang] || land.route.en);
   const factVals = u.factVals.map(v => v ?? port);
@@ -258,13 +325,13 @@ export function marketsIndex() {
   const lang = 'en', t = T.en, url = SITE + '/markets/';
   const wa = waLink(U.en.msg('my country'));
   const groups = Object.entries(REGIONS).map(([r, label]) => {
-    const items = MARKETS.filter(m => m.region === r).map(m => `<li><a href="${marketUrl(m, m.langs[0])}" lang="${m.langs[0]}">${esc(nameIn(m, m.langs[0]))}${m.langs[0] !== 'en' ? ` · ${esc(m.names.en)}` : ''}</a></li>`).join('');
-    return `<div class="panel"><h3>${esc(label.en)} <span class="sub" style="font-size:14px">· ${esc(label.ar)} · ${esc(label.fr)}</span></h3><ul class="chips">${items}</ul></div>`;
+    const items = MARKETS.filter(m => m.region === r).map(m => `<li><a href="${marketUrl(m, m.langs[0])}" lang="${m.langs[0]}">${esc(nameIn(m, m.langs[0]))}${nameIn(m, m.langs[0]) !== m.names.en ? ` · ${esc(m.names.en)}` : ''}</a></li>`).join('');
+    return `<div class="panel"><h3>${esc(label.en)} <span class="sub" style="font-size:14px">· ${esc(label.ar)} · ${esc(label.fr)}${label.pt ? ' · ' + esc(label.pt) : ''}</span></h3><ul class="chips">${items}</ul></div>`;
   }).join('');
   const jsonld = [{'@context': 'https://schema.org', '@type': 'CollectionPage', name: t.idxTitle, url,
     hasPart: MARKETS.map(m => ({'@type': 'WebPage', name: T[m.langs[0]].h1(phraseIn(m, m.langs[0])), url: marketUrl(m, m.langs[0]), inLanguage: m.langs[0]}))}];
   return pageHead({lang, title: t.idxTitle, desc: t.idxLead, url, jsonld}) + topBar(lang, {home: t.home, wa, anchors: false}) + `
-<main><section class="hero wrap"><span class="eyebrow">ZOLLANA · SEPTLION</span><h1>${esc(t.idxH1)}</h1><p class="lead">${esc(t.idxLead)}</p><p class="lead" lang="ar" dir="rtl" style="margin-top:10px">${esc(T.ar.idxLead)}</p><p class="lead" lang="fr" style="margin-top:10px">${esc(T.fr.idxLead)}</p></section>
+<main><section class="hero wrap"><span class="eyebrow">ZOLLANA · SEPTLION</span><h1>${esc(t.idxH1)}</h1><p class="lead">${esc(t.idxLead)}</p><p class="lead" lang="ar" dir="rtl" style="margin-top:10px">${esc(T.ar.idxLead)}</p><p class="lead" lang="fr" style="margin-top:10px">${esc(T.fr.idxLead)}</p><p class="lead" lang="pt" style="margin-top:10px">${esc(T.pt.idxLead)}</p></section>
 <section class="block wrap"><div class="regions">${groups}</div></section></main>
 ${footer(lang, t.home)}${dock(lang, wa)}</body></html>
 `;
