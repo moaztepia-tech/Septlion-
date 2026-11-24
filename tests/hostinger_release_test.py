@@ -55,6 +55,14 @@ class FakeFTP:
                 else:
                     yield name, {"type": "file", "size": str(len(self.files[full])), "modify": self.mtime[full]}
 
+    def sendcmd(self, command):
+        if command.startswith("MDTM "):
+            path = command[5:]
+            if path not in self.files:
+                raise ftplib.error_perm("550 not found")
+            return "213 " + self.mtime[path]
+        raise ftplib.error_perm("500 unknown command")
+
     def retrbinary(self, command, callback):
         path = command[5:]
         if path not in self.files:
@@ -268,9 +276,9 @@ class ReleaseTest(unittest.TestCase):
         backups = sorted(p for p in self.fake.files if p.startswith(release.REMOTE_BACKUPS) and p.endswith(".tar.gz"))
         self.assertEqual(release.read_archive(self.fake.files[backups[-1]])["same.txt"], b"hand edit")
 
-    def test_listing_without_sizes_never_treats_live_files_as_new(self):
+    def test_server_without_mdtm_never_treats_live_files_as_new(self):
         self.run_cmd("release")
-        self.fake.mlsd = lambda d, facts=(): iter(())  # a host that lists nothing
+        self.fake.sendcmd = lambda c: (_ for _ in ()).throw(ftplib.error_perm("500 unknown command"))
         (self.pkg / "index.html").write_bytes(b"<html>v3</html>")
         self.run_cmd("release")
         backups = sorted(p for p in self.fake.files if p.startswith(release.REMOTE_BACKUPS) and p.endswith(".tar.gz"))

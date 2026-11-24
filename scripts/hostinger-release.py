@@ -229,30 +229,21 @@ def store(ftp, root, relative, data, tag):
 
 
 def list_facts(paths):
-    """{relative: (size, modify)} for the listed regular files in the folders of `paths`.
+    """{relative: modification time} from MDTM, for the paths that exist on the server.
 
-    One MLSD per folder, over the parallel connections. A missing folder lists
-    as empty. Hidden files (names starting with a dot) are never trusted from a
-    listing, because some hosts leave them out.
+    MDTM is a control-channel command (no data connection per file), so it is
+    fast; it runs over the parallel connections. A path the server reports as
+    missing, or a server that does not support MDTM, gives no entry, and the
+    caller then downloads that file.
     """
-    folders = sorted({str(PurePosixPath(p).parent) for p in paths})
-
-    def listing(conn, folder):
-        directory = REMOTE_ROOT + ("" if folder == "." else "/" + folder)
-        found = {}
+    def mdtm(conn, path):
         try:
-            for name, facts in conn.mlsd(directory, facts=["type", "size", "modify"]):
-                if facts.get("type") == "file" and facts.get("size") and facts.get("modify"):
-                    found[name if folder == "." else folder + "/" + name] = (facts["size"], facts["modify"])
-        except ftplib.error_perm as error:
-            if not is_missing(error):
-                raise
-        return found
+            reply = conn.sendcmd("MDTM " + REMOTE_ROOT + "/" + path)
+        except ftplib.error_perm:
+            return None
+        return reply.split()[-1] if reply.startswith("213") else None
 
-    facts = {}
-    for found in in_parallel(folders, listing).values():
-        facts.update(found)
-    return facts
+    return {path: value for path, value in in_parallel(sorted(paths), mdtm).items() if value}
 
 
 def read_manifest(ftp):
@@ -267,8 +258,8 @@ def read_manifest(ftp):
 def write_manifest(ftp, package, tag):
     """Record size, time and checksum of every package file as it is live now."""
     facts = list_facts(package)
-    files = {path: {"size": facts[path][0], "modify": facts[path][1], "sha256": digest(data)}
-             for path, data in package.items() if path in facts}
+    files = {path: {"modify": facts[path], "sha256": digest(data)} for path, data in package.items() if path in facts}
+    ftp = fresh(ftp)  # the control connection sat idle while the workers asked for the times
     ensure_directory(ftp, "/domains/septlion.com", PurePosixPath(REMOTE_BACKUPS).name)
     store(ftp, REMOTE_BACKUPS, "live-manifest.json", json.dumps({"v": 1, "files": files}, sort_keys=True).encode(), tag + "-m")
     log("Live manifest updated for %d files." % len(files))
@@ -277,7 +268,7 @@ def write_manifest(ftp, package, tag):
 def quick_snapshot(ftp, package):
     """Like snapshot(ftp, package), but downloads only what may differ.
 
-    A live file whose size and modification time still match the manifest
+    A live file whose modification time still matches the manifest
     written by the last release, and whose recorded checksum equals the new
     file, is identical: it is taken from the package without downloading.
     Everything else (changed, unknown, hidden, or edited by hand on the server,
@@ -291,7 +282,7 @@ def quick_snapshot(ftp, package):
     same, fetch_list = {}, []
     for path, data in package.items():
         entry = manifest.get(path)
-        known = path in facts and entry and (entry.get("size"), entry.get("modify")) == facts[path]
+        known = path in facts and entry and entry.get("modify") == facts[path]
         if known and not PurePosixPath(path).name.startswith(".") and entry.get("sha256") == digest(data):
             same[path] = data
         else:
@@ -553,7 +544,7 @@ def cmd_publish(args, approve_current=False):
             ftp = fresh(ftp)
             write_manifest(ftp, package, tag)
         except Exception as error:  # noqa: BLE001 - the release itself is done
-            log("Note: live manifest not updated (%s); the next release downloads all files." % error)
+            log("Note: live manifest not updated (%s: %s); the next release downloads all files." % (type(error).__name__, error))
         summary("## Released\n\nPlan `%s`, backup `%s`. %d files uploaded. To undo: run mode = rollback, backup_name = `%s`." % (plan["plan_id"], name, len(order), name))
         log("Released. Backup name for rollback: " + name)
     finally:
