@@ -14,12 +14,12 @@ on:
         description: "plan, publish, release (plan + publish in one run) or rollback"
         type: choice
         options: [plan, publish, release, rollback]
-        default: plan
+        default: release
       site:
         description: "nextjs = the platform in apps/web; approved-client = the archived live client in sites/approved-client; customer-client = the new-app interface at / that sends requests to the platform (sites/customer-client); platform = the apps/web pages behind the customer client (keeps / and the routing file)"
         type: choice
         options: [nextjs, approved-client, customer-client, platform]
-        default: nextjs
+        default: platform
       plan_id:
         description: "publish only: the plan id printed by the plan run"
         type: string

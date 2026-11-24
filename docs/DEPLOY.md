@@ -5,6 +5,8 @@
 > 2. إذا وافقت على القائمة، شغّله بوضع **publish** وضع فيه رقم الخطة. سيأخذ نسخة احتياطية من كل ملف سيتغيّر، ثم يرفع الملفات ويتحقق منها، وإذا فشل أي فحص يرجع للنسخة السابقة تلقائياً.
 > 3. للتراجع في أي وقت: شغّله بوضع **rollback**.
 >
+> **القاعدة الدائمة:** كل نشر يتم بوضع **release** (وهو الوضع الافتراضي الآن)، ويجب أن يبقى في حدود دقيقتين تقريباً لتعديل صغير. لا نعود لطريقة الخطوتين إلا لمراجعة قائمة كبيرة قبل التغيير.
+>
 > للتعديلات اليومية: وضع **release** يعمل الخطوتين 1 و2 في تشغيل واحد، بنفس النسخة الاحتياطية والرجوع التلقائي، ويرفع فقط الملفات التي تغيّرت فعلاً.
 >
 > لا يُحذف أي ملف من الخادم أبداً.
@@ -19,8 +21,8 @@ anything.
 
 | Input | Values | Meaning |
 |---|---|---|
-| `mode` | `plan` (default), `publish`, `release`, `rollback` | What to do. `release` = plan and publish in one run, with the same backup, read-back, public check and automatic restore; use it for everyday changes |
-| `site` | `nextjs` (default), `approved-client`, `customer-client`, `platform` | What to publish: the platform in `apps/web`, the archived live client in `sites/approved-client`, the new-app interface at `/` that sends requests to the platform (`sites/customer-client`, see its README), or `platform`: the `apps/web` pages (command center, accounts, offers) behind that interface, keeping its home page, routing file and bridge |
+| `mode` | `release` (default), `plan`, `publish`, `rollback` | What to do. `release` = plan and publish in one run, with the same backup, read-back, public check and automatic restore; use it for everyday changes |
+| `site` | `platform` (default), `nextjs`, `approved-client`, `customer-client` | What to publish: the platform in `apps/web`, the archived live client in `sites/approved-client`, the new-app interface at `/` that sends requests to the platform (`sites/customer-client`, see its README), or `platform`: the `apps/web` pages (command center, accounts, offers) behind that interface, keeping its home page, routing file and bridge |
 | `plan_id` | text | Required for `publish`: the id printed by the plan run |
 | `backup_name` | text | Optional for `rollback`: which backup to restore (empty means the latest) |
 | `full_scan` | `false` (default), `true` | Off: read and back up only the live copies of the files in the package (a minute or two; same plan id). On: also scan and back up all of `public_html` (10 to 20 minutes) and list the files the package leaves untouched |
