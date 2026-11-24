@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {accessToken} from '../../../lib/api';
 import Link from 'next/link';
 import {PlatformHeader} from '../../../components/platform-header';
+import './workbench.css';
 
 type QueueItem={
  taskId:string;taskType:string;taskStatus:string;priority:number;dueAt?:string|null;
