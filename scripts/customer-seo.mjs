@@ -15,7 +15,8 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {allMarketPages} from './market-pages.mjs';
+import {allMarketPages, pageHead, topBar, productGrid, stepsList, faqList, footer, dock, MARKETS, marketUrl} from './market-pages.mjs';
+import {ICON_WA} from './seo-theme.mjs';
 
 export const SITE = 'https://www.septlion.com';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -108,44 +109,35 @@ export function homepageSeo(html, products) {
   return out;
 }
 
-const STEPS = [
-  ['Tell us what you need', 'Pick a product or describe the requirement in your own words: product, quantity, packing and destination.'],
-  ['Review one clear quotation', 'Specification, quantity, destination port, Incoterm and payment terms in a single SEPTLION offer.'],
-  ['Follow execution', 'After agreement, SEPTLION coordinates supply, manufacturing, documents and logistics to delivery.'],
-];
 export function englishHome(products, demand = []) {
-  const cards = products.map(englishProduct).map(e => `<article class="card">${e.image ? `<img src="${esc(e.image)}" alt="${esc(`${e.name} ${e.size} — ${e.brand}`)}" loading="lazy" width="320" height="320">` : ''}<small>${esc(e.brand)} · ${esc(e.type)}</small><h3>${esc(e.name)} <span>${esc(e.size)}</span></h3><dl><dt>Packing</dt><dd>${esc(e.pack)}</dd><dt>Minimum order</dt><dd>${esc(e.moq)}</dd><dt>Per container</dt><dd>${esc(e.perContainer)}</dd>${e.use ? `<dt>Use</dt><dd>${esc(e.use)}</dd>` : ''}</dl></article>`).join('');
-  const routes = demand.slice(0, 18).map(p => `<li><a href="/demand/${esc(p.slug)}/">${esc(p.title || (p.product + " — " + p.market))}</a></li>`).join('');
-  const css = `*{box-sizing:border-box}body{margin:0;font:400 16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#0b1f3a;background:#f6f8fb}a{color:inherit}.shell{width:min(1120px,calc(100% - 32px));margin:auto}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px;border-bottom:1px solid #dde4ee}header img{width:132px;height:auto;display:block}nav{display:flex;gap:18px;font-size:15px;flex-wrap:wrap}nav a{text-decoration:none}
-.hero{padding:48px 0 28px}.kicker{font-size:13px;font-weight:700;letter-spacing:.08em;color:#3d6aa8;text-transform:uppercase}h1{font-size:clamp(32px,5vw,52px);line-height:1.15;margin:12px 0 16px}.lead{max-width:760px;color:#4a5d78;font-size:18px}
-.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}.btn{display:inline-flex;align-items:center;min-height:46px;padding:10px 18px;border-radius:10px;font-weight:600;text-decoration:none;border:1px solid #0b1f3a}.btn.pri{background:#0b1f3a;color:#fff}
-h2{font-size:28px;margin:40px 0 8px}.sub{color:#4a5d78;margin:0 0 18px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0;list-style:none;counter-reset:s}.steps li{background:#fff;border:1px solid #dde4ee;border-radius:14px;padding:18px}.steps b{display:block;margin-bottom:6px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.card{background:#fff;border:1px solid #dde4ee;border-radius:14px;padding:16px}.card img{width:100%;height:auto;aspect-ratio:1;object-fit:contain;background:#eef2f7;border-radius:10px}.card small{color:#4a5d78}.card h3{margin:6px 0 10px;font-size:20px}.card h3 span{color:#3d6aa8}
-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0;font-size:14px}dt{color:#4a5d78}dd{margin:0}.routes{columns:2;padding-inline-start:18px}.routes li{margin:4px 0}
-.contact{background:#0b1f3a;color:#fff;border-radius:16px;padding:24px;margin:40px 0}.contact a{color:#fff}footer{padding:24px 0 40px;color:#4a5d78;font-size:14px}
-@media(max-width:760px){.steps{grid-template-columns:1fr}.routes{columns:1}nav .hide-s{display:none}}`;
-  return `<!doctype html>
-<html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SEPTLION — B2B Wheat Flour Supply, from Requirement to Delivery</title>
-<meta name="description" content="SEPTLION is a US-registered B2B managed-trade company. Send your requirement and receive one clear quotation for ZOLLANA wheat flour, bakery flour and whole wheat flour, with supply and logistics coordinated to the Middle East and Africa.">
-<link rel="canonical" href="${SITE}/en/">
-${HREFLANG}
-<meta property="og:type" content="website"><meta property="og:url" content="${SITE}/en/"><meta property="og:title" content="SEPTLION — from requirement to delivery"><meta property="og:description" content="B2B supply of ZOLLANA wheat flour: one quotation, coordinated supply and logistics."><meta property="og:image" content="${SITE}/new-app/icons/og-image.png"><meta property="og:locale" content="en_US"><meta property="og:locale:alternate" content="ar_AR">
-<link rel="icon" href="/new-app/favicon.ico">
-<style>${css}</style>
-<script type="application/ld+json">${ld(structuredData(products, 'en'))}</script>
-</head><body>
-<header class="shell"><a href="/en/" aria-label="SEPTLION home"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="132" height="48"></a><nav aria-label="Main"><a href="#products">Products</a><a class="hide-s" href="#how">How it works</a><a href="/demand/">Demand routes</a><a href="/" hreflang="ar" lang="ar">العربية</a></nav></header>
-<main class="shell">
-<section class="hero"><p class="kicker">Global commerce · Est. USA</p><h1>From your requirement to delivery.</h1><p class="lead">Explore our products or tell us what you need. SEPTLION coordinates supply, manufacturing and logistics — from defining the requirement to the quotation and execution as agreed.</p>
-<div class="btns"><a class="btn pri" href="https://wa.me/${WHATSAPP.slice(1)}">Request a quotation on WhatsApp</a><a class="btn" href="mailto:${EMAIL}">Email ${EMAIL}</a></div></section>
-<section id="how" aria-labelledby="howH"><h2 id="howH">How it works</h2><p class="sub">A clear trade journey in three steps.</p><ol class="steps">${STEPS.map(([a, b]) => `<li><b>${esc(a)}</b>${esc(b)}</li>`).join('')}</ol></section>
-<section id="products" aria-labelledby="prodH"><h2 id="prodH">ZOLLANA flour range</h2><p class="sub">Minimum order is one 20 ft container. Prices are given in the quotation for your destination, volume and terms.</p><div class="grid">${cards}</div></section>
-${routes ? `<section aria-labelledby="dH"><h2 id="dH">Live demand routes</h2><p class="sub">Market pages built from recent public B2B buying signals. Each one has its own RFQ form.</p><ul class="routes">${routes}</ul><p><a href="/demand/">All demand routes →</a></p></section>` : ''}
-<section class="contact" aria-labelledby="cH"><h2 id="cH" style="margin-top:0">Talk to the SEPTLION team</h2><p>For a product enquiry or a quotation: WhatsApp <a href="https://wa.me/${WHATSAPP.slice(1)}">${WHATSAPP.replace(/^\+(\d{2})(\d{3})(\d{3})(\d{4})$/, '+$1 $2 $3 $4')}</a> · Email <a href="mailto:${EMAIL}">${EMAIL}</a></p><p>SEPTLION acts as an accountable commercial party within the scope of the agreement. Master steps. Shorten distances.</p></section>
+  const url = SITE + '/en/';
+  const wa = `https://wa.me/${WHATSAPP.slice(1)}?text=${encodeURIComponent('Hello SEPTLION,\nI need a quotation for ZOLLANA wheat flour.\nProduct and bag size: …\nQuantity (containers): …\nDestination port: …')}`;
+  const alternates = [{lang: 'ar', href: SITE + '/'}, {lang: 'en', href: url}, {lang: 'x-default', href: SITE + '/'}];
+  const routes = demand.slice(0, 12).map(p => `<li><a href="/demand/${esc(p.slug)}/">${esc(p.title || (p.product + ' — ' + p.market))}</a></li>`).join('');
+  const markets = MARKETS.map(m => `<li><a href="${marketUrl(m, m.langs[0])}">${esc(m.names.en)}</a></li>`).join('');
+  const faq = [
+    ['What does SEPTLION sell?', 'ZOLLANA wheat flour: all-purpose, bakery and whole wheat flour, in 50 kg, 25 kg and 10 kg sacks and 1 kg packs.'],
+    ['What is the minimum order?', 'One 20 ft container of any product.'],
+    ['Where do you deliver?', 'To buyers across the Middle East and Africa, under FOB, CFR or CIF terms to the port you name.'],
+    ['How is the price set?', 'Each quotation is priced for the destination, volume, packing, Incoterm and payment terms. Prices are not published.'],
+    ['Who is SEPTLION?', 'SEPTLION LLC is a US-registered B2B managed-trade company. It turns a buyer requirement into one quotation and coordinates supply, manufacturing, documents and logistics to delivery.'],
+  ];
+  const jsonld = [structuredData(products, 'en'), {'@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: 'en', mainEntity: faq.map(([q, a]) => ({'@type': 'Question', name: q, acceptedAnswer: {'@type': 'Answer', text: a}}))}];
+  return pageHead({lang: 'en', title: 'SEPTLION — Wholesale Wheat Flour Supply to the Middle East and Africa',
+    desc: 'SEPTLION is a US-registered B2B managed-trade company. Send your requirement and receive one clear quotation for ZOLLANA wheat flour, with supply and logistics coordinated to the Middle East and Africa.',
+    url, alternates, jsonld}) + topBar('en', {home: '/en/', wa, alt: [{lang: 'ar', href: '/', label: 'العربية'}]}) + `
+<main>
+<section class="hero wrap"><span class="eyebrow">Global commerce · Est. USA</span><h1>From your requirement <em>to delivery.</em></h1><p class="lead">ZOLLANA wheat flour for importers, mills, bakeries and wholesalers across the Middle East and Africa. Tell us what you need and SEPTLION returns one clear quotation, then coordinates supply, manufacturing and logistics to your port.</p>
+<div class="cta"><a class="btn pri" href="${esc(wa)}">${ICON_WA}Request a quotation on WhatsApp</a><a class="btn" href="mailto:${EMAIL}">Email ${EMAIL}</a></div>
+<div class="facts"><div><span>Minimum order</span><b>One 20 ft container</b></div><div><span>Incoterms</span><b>FOB · CFR · CIF</b></div><div><span>Markets</span><b>Middle East · Africa</b></div><div><span>Packing</span><b>1 kg to 50 kg</b></div></div></section>
+<section class="block wrap" id="products" aria-labelledby="pH"><div class="head"><div><span class="eyebrow">ZOLLANA</span><h2 id="pH">ZOLLANA flour range</h2><p class="sub">Minimum order is one 20 ft container. Prices are given in the quotation for your destination, volume and terms.</p></div></div>${productGrid(products, 'en')}</section>
+<section class="block wrap" id="how" aria-labelledby="hH"><div class="head"><div><span class="eyebrow">SEPTLION</span><h2 id="hH">How it works</h2></div></div>${stepsList('en')}</section>
+<section class="block wrap" aria-labelledby="mH"><div class="head"><div><span class="eyebrow">Markets</span><h2 id="mH">Where we supply</h2><p class="sub">A page for each market, in Arabic, French or English.</p></div><a class="btn" href="/markets/">All markets</a></div><ul class="chips">${markets}</ul></section>
+${routes ? `<section class="block wrap" aria-labelledby="dH"><div class="head"><div><span class="eyebrow">Demand radar</span><h2 id="dH">Live demand routes</h2><p class="sub">Market pages built from recent public B2B buying signals. Each one has its own RFQ form.</p></div><a class="btn" href="/demand/">All routes</a></div><div class="panel"><ul class="routes">${routes}</ul></div></section>` : ''}
+<section class="block wrap" aria-labelledby="fH"><div class="head"><h2 id="fH">Frequently asked questions</h2></div>${faqList(faq)}</section>
+<section class="wrap"><div class="band"><div><h2>Ready for a quotation?</h2><p>Send your requirement on WhatsApp and receive one clear offer.</p></div><div class="cta"><a class="btn pri" href="${esc(wa)}">${ICON_WA}Request a quotation</a><a class="btn" href="mailto:${EMAIL}">Email</a></div></div></section>
 </main>
-<footer class="shell">SEPTLION LLC · Registered in the United States · <a href="/" hreflang="ar" lang="ar">النسخة العربية</a></footer>
+${footer('en', '/en/')}${dock('en', wa)}
 </body></html>
 `;
 }

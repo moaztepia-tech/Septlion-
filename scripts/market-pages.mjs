@@ -5,6 +5,7 @@
 // how quoting works and what to send. They make no claim of past shipments or live demand.
 
 import {SITE, esc, englishProduct} from './customer-seo.mjs';
+import {themeCss, ICON_WA, productVisual} from './seo-theme.mjs';
 
 const WHATSAPP = '201070088181', EMAIL = 'info@septlion.com';
 const ld = v => JSON.stringify(v).replace(/</g, '\\u003c');
@@ -41,7 +42,7 @@ export const MARKETS = [
   ['dr-congo', ['fr'], 'wa', {fr: 'RD Congo', en: 'DR Congo'}, {fr: 'Matadi', en: 'Matadi'}],
   ['djibouti', ['fr'], 'ea', {fr: 'Djibouti', en: 'Djibouti'}, {fr: 'Port de Djibouti (Doraleh)', en: 'Djibouti (Doraleh)'}],
   // West and East Africa (English)
-  ['nigeria', ['en'], 'wa', {en: 'Nigeria'}, {en: 'Lagos (Apapa or Tin Can Island)'}],
+  ['nigeria', ['en'], 'wa', {en: 'Nigeria'}, {en: 'Lagos Apapa or Tin Can Island'}],
   ['ghana', ['en'], 'wa', {en: 'Ghana'}, {en: 'Tema'}],
   ['liberia', ['en'], 'wa', {en: 'Liberia'}, {en: 'Monrovia'}],
   ['sierra-leone', ['en'], 'wa', {en: 'Sierra Leone'}, {en: 'Freetown'}],
@@ -134,53 +135,76 @@ const T = {
   },
 };
 
-const CSS = `*{box-sizing:border-box}body{margin:0;font:400 16px/1.75 system-ui,-apple-system,"Segoe UI",Roboto,Tahoma,Arial,sans-serif;color:#0b1f3a;background:#f6f8fb}a{color:inherit}.shell{width:min(1120px,calc(100% - 32px));margin:auto}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:72px;border-bottom:1px solid #dde4ee}header img{width:128px;height:auto;display:block}nav{display:flex;gap:16px;font-size:15px;flex-wrap:wrap}nav a{text-decoration:none;white-space:nowrap}
-.hero{padding:44px 0 24px}.kicker{font-size:13px;font-weight:700;color:#3d6aa8}h1{font-size:clamp(30px,5vw,50px);line-height:1.2;margin:10px 0 14px}.lead{max-width:780px;color:#4a5d78;font-size:18px}
-.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}.btn{display:inline-flex;align-items:center;min-height:46px;padding:10px 18px;border-radius:10px;font-weight:600;text-decoration:none;border:1px solid #0b1f3a}.btn.pri{background:#0b1f3a;color:#fff}
-h2{font-size:26px;margin:40px 0 8px}.sub{color:#4a5d78;margin:0 0 18px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0;list-style:none}.steps li,.box{background:#fff;border:1px solid #dde4ee;border-radius:14px;padding:18px}.steps b{display:block;margin-bottom:6px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}.card{background:#fff;border:1px solid #dde4ee;border-radius:14px;padding:16px}.card img{width:100%;height:auto;aspect-ratio:1;object-fit:contain;background:#eef2f7;border-radius:10px}.card small{color:#4a5d78}.card h3{margin:6px 0 10px;font-size:19px}.card h3 span{color:#3d6aa8}
-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0;font-size:14px}dt{color:#4a5d78}dd{margin:0}.box ul{margin:0;padding-inline-start:20px}.faq{display:grid;gap:12px}.faq h3{margin:0 0 6px;font-size:18px}.faq p{margin:0;color:#4a5d78}
-.links{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none}.links a{display:inline-block;padding:6px 12px;border:1px solid #dde4ee;border-radius:999px;background:#fff;text-decoration:none;font-size:14px}
-.contact{background:#0b1f3a;color:#fff;border-radius:16px;padding:24px;margin:40px 0}.contact a{color:#fff}footer{padding:24px 0 40px;color:#4a5d78;font-size:14px}
-@media(max-width:760px){.steps{grid-template-columns:1fr}}`;
+// Interface words that are not part of the market copy.
+const U = {
+  ar: {products: 'المنتجات', how: 'طريقة الطلب', markets: 'الأسواق', quote: 'اطلب عرض سعر', facts: ['أقل طلب', 'شروط الشحن', 'ميناء الوصول', 'التعبئة'],
+    factVals: ['حاوية 20 قدماً', 'FOB · CFR · CIF', null, 'من 1 إلى 50 كجم'], msgLabel: 'رسالة جاهزة يمكنك إرسالها كما هي:',
+    msg: m => `مرحباً SEPTLION،\nأحتاج عرض سعر لدقيق قمح زولانا إلى ${m}.\nالصنف والوزن: …\nالكمية (عدد الحاويات): …\nميناء الوصول: …\nشرط الشحن: CFR / CIF / FOB`,
+    bandH: 'جاهز لطلب عرض السعر؟', bandP: 'أرسل احتياجك على واتساب، ويصلك عرض واحد واضح.', email: 'البريد الإلكتروني', foot: ['الرئيسية', 'كل الأسواق', 'مسارات الطلب'], allH: 'كل الأسواق'},
+  fr: {products: 'Produits', how: 'Commander', markets: 'Marchés', quote: 'Demander une cotation', facts: ['Commande minimum', 'Incoterms', 'Port de destination', 'Emballage'],
+    factVals: ['1 conteneur 20 pieds', 'FOB · CFR · CIF', null, 'De 1 à 50 kg'], msgLabel: 'Message prêt à envoyer :',
+    msg: m => `Bonjour SEPTLION,\nJe souhaite une cotation pour la farine de blé ZOLLANA ${m}.\nProduit et poids : …\nQuantité (conteneurs) : …\nPort de destination : …\nIncoterm : CFR / CIF / FOB`,
+    bandH: 'Prêt à demander une cotation ?', bandP: 'Envoyez votre besoin sur WhatsApp et recevez une offre claire.', email: 'E-mail', foot: ['Accueil', 'Tous les marchés', 'Routes de demande'], allH: 'Tous les marchés'},
+  en: {products: 'Products', how: 'How to order', markets: 'Markets', quote: 'Request a quotation', facts: ['Minimum order', 'Incoterms', 'Destination port', 'Packing'],
+    factVals: ['One 20 ft container', 'FOB · CFR · CIF', null, '1 kg to 50 kg'], msgLabel: 'A ready message you can send as it is:',
+    msg: m => `Hello SEPTLION,\nI need a quotation for ZOLLANA wheat flour to ${m}.\nProduct and bag size: …\nQuantity (containers): …\nDestination port: …\nIncoterm: CFR / CIF / FOB`,
+    bandH: 'Ready for a quotation?', bandP: 'Send your requirement on WhatsApp and receive one clear offer.', email: 'Email', foot: ['Home', 'All markets', 'Demand routes'], allH: 'All markets'},
+};
 
 const nameIn = (m, lang) => m.names[lang] || m.names.en;
 // French needs the country with its preposition: "au Sénégal", "en Côte d'Ivoire".
 const FR_IN = {algeria: 'en Algérie', morocco: 'au Maroc', tunisia: 'en Tunisie', mauritania: 'en Mauritanie', senegal: 'au Sénégal', 'cote-divoire': "en Côte d'Ivoire", cameroon: 'au Cameroun', guinea: 'en Guinée', benin: 'au Bénin', togo: 'au Togo', mali: 'au Mali', 'burkina-faso': 'au Burkina Faso', 'dr-congo': 'en RD Congo', djibouti: 'à Djibouti'};
 const phraseIn = (m, lang) => lang === 'fr' ? FR_IN[m.slug] || 'pour ' + nameIn(m, 'fr') : nameIn(m, lang);
 const portIn = (m, lang) => m.ports[lang] || m.ports.en;
-const pageLangs = m => m.langs;
+const waLink = text => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
 
-function head({lang, title, desc, url, alternates, jsonld}) {
+export function pageHead({lang, title, desc, url, alternates = [], jsonld = []}) {
   const t = T[lang];
   return `<!doctype html>
-<html lang="${lang}" dir="${t.dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="${lang}" dir="${t.dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${url}">
 ${alternates.map(a => `<link rel="alternate" hreflang="${a.lang}" href="${a.href}">`).join('')}
-<meta name="robots" content="index,follow,max-image-preview:large">
-<meta property="og:type" content="website"><meta property="og:url" content="${url}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:image" content="${SITE}/new-app/icons/og-image.png"><meta property="og:locale" content="${t.locale}">
-<link rel="icon" href="/new-app/favicon.ico">
-<style>${CSS}</style>
+<meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#051945">
+<meta property="og:type" content="website"><meta property="og:site_name" content="SEPTLION"><meta property="og:url" content="${url}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:image" content="${SITE}/new-app/icons/og-image.png"><meta property="og:locale" content="${t.locale}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/new-app/favicon.ico"><link rel="preload" href="/new-app/fonts/cairo-${lang === 'ar' ? 'arabic' : 'latin'}-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>${themeCss}</style>
 ${jsonld.map(j => `<script type="application/ld+json">${ld(j)}</script>`).join('\n')}
 </head><body>`;
 }
 
-function nav(lang, m) {
-  const t = T[lang];
-  const other = m ? m.langs.filter(l => l !== lang).map(l => `<a href="${marketUrl(m, l)}" hreflang="${l}" lang="${l}">${l === 'ar' ? 'العربية' : 'Français'}</a>`).join('') : '';
-  return `<header class="shell"><a href="${t.home}" aria-label="SEPTLION"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="128" height="46"></a><nav aria-label="${esc(t.homeLabel)}"><a href="${t.home}">${esc(t.homeLabel)}</a><a href="/markets/">${esc(t.all)}</a>${other}</nav></header>`;
+export function topBar(lang, {home, alt = [], wa, anchors = true}) {
+  const u = U[lang];
+  return `<header class="top"><div class="wrap"><a class="logo" href="${home}" aria-label="SEPTLION"><img src="/brand/septlion-wordmark-white.svg" alt="SEPTLION" width="124" height="44"></a>
+<nav aria-label="SEPTLION">${anchors ? `<a class="hide-s" href="#products">${u.products}</a><a class="hide-s" href="#how">${u.how}</a>` : ''}<a href="/markets/">${u.markets}</a>${alt.map(a => `<a class="lang" href="${a.href}" hreflang="${a.lang}" lang="${a.lang}">${a.label}</a>`).join('')}</nav>
+<a class="btn pri" href="${esc(wa)}">${ICON_WA}${u.quote}</a></div></header>`;
 }
 
+export function footer(lang, home) {
+  const u = U[lang], t = T[lang];
+  return `<footer class="foot"><div class="wrap"><img src="/brand/septlion-wordmark-white.svg" alt="SEPTLION" width="110" height="40"><nav><a href="${home}">${u.foot[0]}</a><a href="/markets/">${u.foot[1]}</a><a href="/demand/">${u.foot[2]}</a><a href="mailto:${EMAIL}">${EMAIL}</a></nav><span>${esc(t.footer)}</span></div></footer>`;
+}
+
+export const dock = (lang, wa) => `<div class="dock"><a class="btn pri" href="${esc(wa)}">${ICON_WA}${U[lang].quote}</a></div>`;
+
+export function productGrid(products, lang) {
+  const t = T[lang];
+  return `<div class="products">${products.map(p => productIn(p, lang)).map(e => `<article class="pcard">${productVisual({image: e.image && esc(e.image), alt: esc(`${e.name} ${e.size} — ${e.brand}`), name: esc(e.name), size: esc(e.size)})}
+<div class="pbody"><span class="ptype">${esc(e.brand)} · ${esc(e.type)}</span><h3 class="pname">${esc(e.name)}</h3><dl class="pfacts"><div><dt>${t.labels[0]}</dt><dd>${esc(e.pack)}</dd></div><div><dt>${t.labels[1]}</dt><dd>${esc(e.moq)}</dd></div><div><dt>${t.labels[2]}</dt><dd>${esc(e.perContainer)}</dd></div>${e.use ? `<div><dt>${t.labels[3]}</dt><dd>${esc(e.use)}</dd></div>` : ''}</dl></div></article>`).join('')}</div>`;
+}
+
+export const stepsList = lang => `<ol class="steps">${T[lang].steps.map(([a, b]) => `<li><b>${esc(a)}</b><p>${esc(b)}</p></li>`).join('')}</ol>`;
+export const faqList = items => `<div class="faq">${items.map(([q, a], i) => `<details${i === 0 ? ' open' : ''}><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>`;
+
 export function marketPage(m, lang, products) {
-  const t = T[lang], name = nameIn(m, lang), port = portIn(m, lang), url = marketUrl(m, lang);
-  const say = phraseIn(m, lang);
+  const t = T[lang], u = U[lang], name = nameIn(m, lang), say = phraseIn(m, lang), port = portIn(m, lang), url = marketUrl(m, lang);
   const alternates = m.langs.length > 1 ? [...m.langs.map(l => ({lang: l, href: marketUrl(m, l)})), {lang: 'x-default', href: marketUrl(m, m.langs[0])}] : [];
   const title = t.title(say), desc = t.desc(say, port), faq = t.faq(say, port);
-  const wa = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(t.waText(say))}`;
-  const cards = products.map(p => productIn(p, lang)).map(e => `<article class="card">${e.image ? `<img src="${esc(e.image)}" alt="${esc(`${e.name} ${e.size} — ${e.brand}`)}" loading="lazy" width="320" height="320">` : ''}<small>${esc(e.brand)} · ${esc(e.type)}</small><h3>${esc(e.name)} <span>${esc(e.size)}</span></h3><dl><dt>${t.labels[0]}</dt><dd>${esc(e.pack)}</dd><dt>${t.labels[1]}</dt><dd>${esc(e.moq)}</dd><dt>${t.labels[2]}</dt><dd>${esc(e.perContainer)}</dd>${e.use ? `<dt>${t.labels[3]}</dt><dd>${esc(e.use)}</dd>` : ''}</dl></article>`).join('');
+  const wa = waLink(u.msg(say));
+  const alt = m.langs.filter(l => l !== lang).map(l => ({lang: l, href: marketUrl(m, l), label: l === 'ar' ? 'العربية' : 'Français'}));
   const same = MARKETS.filter(x => x !== m && x.langs.includes(lang)).map(x => `<li><a href="${marketUrl(x, lang)}">${esc(nameIn(x, lang))}</a></li>`).join('');
+  const factVals = u.factVals.map(v => v ?? port);
   const jsonld = [
     {'@context': 'https://schema.org', '@type': 'Service', name: t.h1(say), inLanguage: lang, serviceType: 'B2B wheat flour supply', url,
       areaServed: {'@type': 'Country', name: m.names.en}, provider: {'@type': 'Organization', '@id': SITE + '/#organization', name: 'SEPTLION', url: SITE + '/'},
@@ -188,40 +212,44 @@ export function marketPage(m, lang, products) {
     {'@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: lang, mainEntity: faq.map(([q, a]) => ({'@type': 'Question', name: q, acceptedAnswer: {'@type': 'Answer', text: a}}))},
     {'@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{'@type': 'ListItem', position: 1, name: 'SEPTLION', item: SITE + '/'}, {'@type': 'ListItem', position: 2, name: t.all, item: SITE + '/markets/'}, {'@type': 'ListItem', position: 3, name, item: url}]},
   ];
-  return head({lang, title, desc, url, alternates, jsonld}) + nav(lang, m) + `
-<main class="shell">
-<section class="hero"><p class="kicker">${esc(t.kicker(REGIONS[m.region][lang]))}</p><h1>${esc(t.h1(say))}</h1><p class="lead">${esc(t.lead(say, port))}</p>
-<div class="btns"><a class="btn pri" href="${esc(wa)}">${esc(t.wa)}</a><a class="btn" href="mailto:${EMAIL}">${esc(t.mail)}</a></div></section>
-<section aria-labelledby="pH"><h2 id="pH">${esc(t.prodH)}</h2><p class="sub">${esc(t.prodSub)}</p><div class="grid">${cards}</div></section>
-<section aria-labelledby="hH"><h2 id="hH">${esc(t.howH)}</h2><ol class="steps">${t.steps.map(([a, b]) => `<li><b>${esc(a)}</b>${esc(b)}</li>`).join('')}</ol></section>
-<section aria-labelledby="sH"><h2 id="sH">${esc(t.sendH)}</h2><div class="box"><ul>${t.send.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div></section>
-<section aria-labelledby="fH"><h2 id="fH">${esc(t.faqH)}</h2><div class="faq">${faq.map(([q, a]) => `<div class="box"><h3>${esc(q)}</h3><p>${esc(a)}</p></div>`).join('')}</div></section>
-<section class="contact"><p style="margin-top:0"><b>${esc(t.wa)}</b></p><p>WhatsApp <a href="${esc(wa)}" dir="ltr">+20 107 008 8181</a> · <a href="mailto:${EMAIL}">${EMAIL}</a></p></section>
-${same ? `<section aria-labelledby="oH"><h2 id="oH">${esc(t.others)}</h2><ul class="links">${same}</ul></section>` : ''}
+  return pageHead({lang, title, desc, url, alternates, jsonld}) + topBar(lang, {home: t.home, alt, wa}) + `
+<main>
+<section class="hero wrap"><span class="eyebrow">${esc(t.kicker(REGIONS[m.region][lang]))}</span><h1>${esc(t.h1(say))}</h1><p class="lead">${esc(t.lead(say, port))}</p>
+<div class="cta"><a class="btn pri" href="${esc(wa)}">${ICON_WA}${esc(t.wa)}</a><a class="btn" href="mailto:${EMAIL}">${esc(t.mail)}</a></div>
+<div class="facts">${u.facts.map((f, i) => `<div><span>${esc(f)}</span><b>${esc(factVals[i])}</b></div>`).join('')}</div></section>
+<section class="block wrap" id="products" aria-labelledby="pH"><div class="head"><div><span class="eyebrow">ZOLLANA</span><h2 id="pH">${esc(t.prodH)}</h2><p class="sub">${esc(t.prodSub)}</p></div></div>${productGrid(products, lang)}</section>
+<section class="block wrap" id="how" aria-labelledby="hH"><div class="head"><div><span class="eyebrow">SEPTLION</span><h2 id="hH">${esc(t.howH)}</h2></div></div>${stepsList(lang)}</section>
+<section class="block wrap" aria-labelledby="sH"><div class="split"><div class="panel"><h2 id="sH" style="font-size:26px;margin:0 0 18px">${esc(t.sendH)}</h2><ul class="checks">${t.send.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>
+<div class="panel"><p class="sub" style="margin:0 0 12px">${esc(u.msgLabel)}</p><p class="msg">${esc(u.msg(say))}</p><a class="btn pri" style="width:100%" href="${esc(wa)}">${ICON_WA}${esc(t.wa)}</a></div></div></section>
+<section class="block wrap" aria-labelledby="fH"><div class="head"><h2 id="fH">${esc(t.faqH)}</h2></div>${faqList(faq)}</section>
+<section class="wrap"><div class="band"><div><h2>${esc(u.bandH)}</h2><p>${esc(u.bandP)}</p></div><div class="cta"><a class="btn pri" href="${esc(wa)}">${ICON_WA}${esc(t.wa)}</a><a class="btn" href="mailto:${EMAIL}">${esc(u.email)}</a></div></div></section>
+${same ? `<section class="block wrap" aria-labelledby="oH"><div class="head"><h2 id="oH" style="font-size:24px">${esc(t.others)}</h2></div><ul class="chips">${same}</ul></section>` : ''}
 </main>
-<footer class="shell">${esc(t.footer)}</footer>
+${footer(lang, t.home)}${dock(lang, wa)}
 </body></html>
 `;
 }
 
 export function marketsIndex() {
   const lang = 'en', t = T.en, url = SITE + '/markets/';
+  const wa = waLink(U.en.msg('my country'));
   const groups = Object.entries(REGIONS).map(([r, label]) => {
     const items = MARKETS.filter(m => m.region === r).map(m => `<li><a href="${marketUrl(m, m.langs[0])}" lang="${m.langs[0]}">${esc(nameIn(m, m.langs[0]))}${m.langs[0] !== 'en' ? ` · ${esc(m.names.en)}` : ''}</a></li>`).join('');
-    return `<section><h2>${esc(label.ar)} · ${esc(label.fr)} · ${esc(label.en)}</h2><ul class="links">${items}</ul></section>`;
+    return `<div class="panel"><h3>${esc(label.en)} <span class="sub" style="font-size:14px">· ${esc(label.ar)} · ${esc(label.fr)}</span></h3><ul class="chips">${items}</ul></div>`;
   }).join('');
   const jsonld = [{'@context': 'https://schema.org', '@type': 'CollectionPage', name: t.idxTitle, url,
     hasPart: MARKETS.map(m => ({'@type': 'WebPage', name: T[m.langs[0]].h1(phraseIn(m, m.langs[0])), url: marketUrl(m, m.langs[0]), inLanguage: m.langs[0]}))}];
-  return head({lang, title: t.idxTitle, desc: t.idxLead, url, alternates: [], jsonld}) + nav(lang) + `
-<main class="shell"><section class="hero"><p class="kicker">SEPTLION · ZOLLANA</p><h1>${esc(t.idxH1)}</h1><p class="lead">${esc(T.ar.idxLead)}<br>${esc(T.fr.idxLead)}<br>${esc(t.idxLead)}</p></section>${groups}</main>
-<footer class="shell">${esc(t.footer)}</footer></body></html>
+  return pageHead({lang, title: t.idxTitle, desc: t.idxLead, url, jsonld}) + topBar(lang, {home: t.home, wa, anchors: false}) + `
+<main><section class="hero wrap"><span class="eyebrow">ZOLLANA · SEPTLION</span><h1>${esc(t.idxH1)}</h1><p class="lead">${esc(t.idxLead)}</p><p class="lead" lang="ar" dir="rtl" style="margin-top:10px">${esc(T.ar.idxLead)}</p><p class="lead" lang="fr" style="margin-top:10px">${esc(T.fr.idxLead)}</p></section>
+<section class="block wrap"><div class="regions">${groups}</div></section></main>
+${footer(lang, t.home)}${dock(lang, wa)}</body></html>
 `;
 }
 
 /** Every market page as {path, html, url, lang, alternates} for writing and for the sitemap. */
 export function allMarketPages(products) {
   const pages = [{path: 'markets/index.html', html: marketsIndex(), url: SITE + '/markets/', lang: 'en', alternates: []}];
-  for (const m of MARKETS) for (const lang of pageLangs(m)) {
+  for (const m of MARKETS) for (const lang of m.langs) {
     const url = marketUrl(m, lang);
     pages.push({path: 'markets/' + m.slug + '/' + (lang === m.langs[0] ? '' : lang + '/') + 'index.html', html: marketPage(m, lang, products), url, lang, market: m.names.en,
       alternates: m.langs.length > 1 ? [...m.langs.map(l => ({lang: l, href: marketUrl(m, l)})), {lang: 'x-default', href: marketUrl(m, m.langs[0])}] : []});
