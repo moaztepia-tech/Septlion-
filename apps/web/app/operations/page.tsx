@@ -127,7 +127,7 @@ export default function Operations(){
     {d.opportunities.length===0?<p className="ops-sub">لا توجد فرص بعد.</p>:<div className="ops-list" style={{marginTop:10}}>{d.opportunities.map(x=><div key={x.id} className="ops-item" style={{cursor:'default'}}><b>{x.title||x.product}</b><div className="ops-item-meta">{[x.market,x.status,x.nextAction].filter(Boolean).join(' · ')}</div></div>)}</div>}
    </section>
    <section className="ops-card"><h2 className="ops-h2">الإشعارات</h2>
-    {d.outbox.length===0?<p className="ops-sub">لا توجد إشعارات معلّقة أو فاشلة.</p>:<div className="ops-list" style={{marginTop:10}}>{d.outbox.map(x=><div key={x.id} className="ops-item ops-row" style={{cursor:'default'}}><span><b>{x.type}</b><div className="ops-item-meta">{x.status} · محاولات {x.attempts}</div></span>{x.status==='FAILED'&&<button className="ops-btn" onClick={async()=>{try{await edge('outbox.retry',{id:x.id});await load()}catch(e){setErr(e instanceof Error?e.message:'تعذر إعادة الإرسال')}}}>إعادة</button>}</div>)}</div>}
+    {d.outbox.length===0?<p className="ops-sub">لا توجد إشعارات معلّقة أو فاشلة.</p>:<div className="ops-list" style={{marginTop:10}}>{d.outbox.map(x=><div key={x.id} className="ops-item ops-row" style={{cursor:'default'}}><span><b>{x.type}</b><div className="ops-item-meta">{({FAILED:'فشل الإرسال',PENDING:'بانتظار الإرسال',SENT:'أُرسل'} as Record<string,string>)[x.status]||x.status} · محاولات {x.attempts??0}</div></span>{x.status==='FAILED'&&<button className="ops-btn" onClick={async()=>{try{await edge('outbox.retry',{id:x.id});await load()}catch(e){setErr(e instanceof Error?e.message:'تعذر إعادة الإرسال')}}}>إعادة</button>}</div>)}</div>}
    </section>
   </>}
  </OpsFrame>;
