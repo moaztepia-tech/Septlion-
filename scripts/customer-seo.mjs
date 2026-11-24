@@ -8,11 +8,14 @@
 //  - deploy/en/index.html: an English home page (same products, same contacts).
 //  - deploy/sitemap.xml and deploy/llms.txt are rebuilt from what is actually
 //    being published, including every demand page in deploy/demand/feed.json.
+//  - deploy/markets/: one page per target country in Africa and the Middle East
+//    (scripts/market-pages.mjs), in Arabic, French or English.
 // Prices are never published: there is no price in the product data.
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {allMarketPages} from './market-pages.mjs';
 
 export const SITE = 'https://www.septlion.com';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -152,7 +155,7 @@ export function sitemapXml(entries) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
     entries.map(e => `<url><loc>${esc(e.loc)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ''}${alt(e)}</url>`).join('\n') + '\n</urlset>\n';
 }
-export function siteEntries({demand = [], hasRadarEn = false, now = new Date().toISOString()}) {
+export function siteEntries({demand = [], hasRadarEn = false, markets = [], now = new Date().toISOString()}) {
   const home = [{lang: 'ar', href: SITE + '/'}, {lang: 'en', href: SITE + '/en/'}, {lang: 'x-default', href: SITE + '/'}];
   const radar = hasRadarEn ? [{lang: 'ar', href: SITE + '/demand-intelligence/'}, {lang: 'en', href: SITE + '/demand-intelligence/en/'}] : [];
   const day = now.slice(0, 10);
@@ -162,10 +165,16 @@ export function siteEntries({demand = [], hasRadarEn = false, now = new Date().t
     {loc: SITE + '/demand-intelligence/', lastmod: latest, alternates: radar},
     ...(hasRadarEn ? [{loc: SITE + '/demand-intelligence/en/', lastmod: latest, alternates: radar}] : []),
     {loc: SITE + '/intent/wheat-flour/', lastmod: day}, {loc: SITE + '/demand/', lastmod: latest},
-    ...demand.map(p => ({loc: `${SITE}/demand/${p.slug}/`, lastmod: String(p.updatedAt || '').slice(0, 10) || latest})),
+    ...demand.flatMap(p => {
+      const loc = `${SITE}/demand/${p.slug}/`, lastmod = String(p.updatedAt || '').slice(0, 10) || latest;
+      if (!p.arUrl) return [{loc, lastmod}];
+      const alternates = [{lang: 'en', href: loc}, {lang: 'ar', href: p.arUrl}, {lang: 'x-default', href: loc}];
+      return [{loc, lastmod, alternates}, {loc: p.arUrl, lastmod, alternates}];
+    }),
+    ...markets.map(m => ({loc: m.url, lastmod: day, alternates: m.alternates})),
   ];
 }
-export function llmsTxt(products, demand = []) {
+export function llmsTxt(products, demand = [], markets = []) {
   const list = products.map(englishProduct).map(e => `- ${e.name} ${e.size} (${e.brand}): ${e.type}; ${e.pack}; minimum order ${e.moq.toLowerCase()}; ${e.perContainer.toLowerCase()}.`);
   return [
     '# SEPTLION', '',
@@ -174,7 +183,8 @@ export function llmsTxt(products, demand = []) {
     `- Arabic home and product catalogue: ${SITE}/`, `- English home: ${SITE}/en/`,
     `- Demand radar (live public tenders and RFQs): ${SITE}/demand-intelligence/`,
     `- Wheat flour supply programme: ${SITE}/intent/wheat-flour/`, `- Market demand routes: ${SITE}/demand/`,
-    `- Machine-readable demand index: ${SITE}/demand/ai-index.json`, '',
+    `- Machine-readable demand index: ${SITE}/demand/ai-index.json`,
+    ...(markets.length ? [`- Market pages for Africa and the Middle East: ${SITE}/markets/`] : []), '',
     '## Products (ZOLLANA brand)', ...list,
     '- Prices are not published; each quotation is priced for the destination, volume, Incoterm and payment terms.', '',
     '## How to buy',
@@ -183,7 +193,8 @@ export function llmsTxt(products, demand = []) {
     '3. After acceptance, follow execution: production, inspection, documents, shipment, delivery.', '',
     '## Demand intelligence',
     '- SEPTLION collects public tenders, RFQs and B2B buy requests every six hours, clusters them by product and market, and publishes market pages without exposing buyer identities.', '',
-    ...(demand.length ? ['## Live demand routes', ...demand.map(p => `- ${p.title || p.product + " — " + p.market}: ${SITE}/demand/${p.slug}/`), ''] : []),
+    ...(markets.length ? ['## Target markets (Africa and the Middle East)', ...markets.filter(m => m.market).map(m => `- ${m.market} (${m.lang}): ${m.url}`), ''] : []),
+    ...(demand.length ? ['## Live demand routes', ...demand.map(p => `- ${p.title || p.product + " — " + p.market}: ${SITE}/demand/${p.slug}/` + (p.arUrl ? ` (Arabic: ${p.arUrl})` : '')), ''] : []),
     '## Contact', `- WhatsApp: ${WHATSAPP}`, `- Email: ${EMAIL}`, '',
   ].join('\n');
 }
@@ -205,9 +216,14 @@ export async function applySeo(deployDir = path.join(ROOT, 'deploy'), {fetchImpl
   await writeFile(home, homepageSeo(await readFile(home, 'utf8'), products));
   await mkdir(path.join(deployDir, 'en'), {recursive: true});
   await writeFile(path.join(deployDir, 'en/index.html'), englishHome(products, demand));
+  const markets = allMarketPages(products);
+  for (const m of markets) {
+    await mkdir(path.dirname(path.join(deployDir, m.path)), {recursive: true});
+    await writeFile(path.join(deployDir, m.path), m.html);
+  }
   const hasRadarEn = existsSync(path.join(deployDir, 'demand-intelligence/en/index.html'));
-  await writeFile(path.join(deployDir, 'sitemap.xml'), sitemapXml(siteEntries({demand, hasRadarEn})));
-  await writeFile(path.join(deployDir, 'llms.txt'), llmsTxt(products, demand));
-  console.log(`Search layer: ${products.length} products (${source}), ${demand.length} demand pages in sitemap and llms.txt, English home at /en/.`);
+  await writeFile(path.join(deployDir, 'sitemap.xml'), sitemapXml(siteEntries({demand, hasRadarEn, markets})));
+  await writeFile(path.join(deployDir, 'llms.txt'), llmsTxt(products, demand, markets));
+  console.log(`Search layer: ${products.length} products (${source}), ${demand.length} demand pages and ${markets.length} market pages in sitemap and llms.txt, English home at /en/.`);
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await applySeo(process.argv[2] ? path.resolve(process.argv[2]) : undefined);

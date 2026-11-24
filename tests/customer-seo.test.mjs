@@ -47,3 +47,40 @@ test('only public pages are indexed, each with its own canonical link',()=>{
  const ops=fixSearchTags(page,'/ops');
  assert.ok(ops.includes('content="noindex, follow"')&&!ops.includes('canonical'));
 });
+
+test('Arab markets get an Arabic demand page linked to the English one',async()=>{
+ const {arabicMarket,arabicProduct,arabicDemandPage}=await import('../scripts/demand-page-ar.mjs');
+ assert.equal(arabicMarket('Doha, Qatar, Qatar'),'الدوحة، قطر');
+ assert.equal(arabicMarket('Muscat, Muscat, Oman'),'مسقط، عُمان');
+ assert.equal(arabicMarket('United Arab Emirates — Jebel Ali'),'جبل علي، الإمارات');
+ assert.equal(arabicMarket('Sudan'),'السودان');
+ assert.equal(arabicMarket('South Sudan'),null);
+ assert.equal(arabicMarket('Canada'),null);
+ assert.equal(arabicMarket('Omania Ltd, Germany'),null);
+ assert.equal(arabicProduct('All Purpose Flour'),'دقيق القمح متعدد الاستخدامات');
+ const html=arabicDemandPage({p:{market:'Oman'},product:'Wheat Flour',englishUrl:'https://www.septlion.com/demand/wheat-flour-oman/',intentUrl:'https://www.septlion.com/intent/demand/?slug=wheat-flour-oman#live-rfq',signals:1,latest:'2026-10-26',quantities:'1 Twenty-Foot Container',shellCss:'',esc:seo.esc,json:JSON.stringify});
+ assert.ok(html.includes('<html lang="ar" dir="rtl">'));
+ assert.ok(html.includes('<link rel="canonical" href="https://www.septlion.com/demand/wheat-flour-oman/ar/">'));
+ assert.ok(html.includes('hreflang="en" href="https://www.septlion.com/demand/wheat-flour-oman/"'));
+ assert.ok(html.includes('طلب شراء عام واحد')&&html.includes('حاوية 20 قدم واحدة'));
+ const xml=seo.sitemapXml(seo.siteEntries({demand:[{slug:'wheat-flour-oman',arUrl:'https://www.septlion.com/demand/wheat-flour-oman/ar/',updatedAt:'2026-11-24'}]}));
+ assert.ok(xml.includes('<loc>https://www.septlion.com/demand/wheat-flour-oman/ar/</loc>'));
+});
+
+test('every target market gets a page in its buyers’ language, with honest wording',async()=>{
+ const {allMarketPages,MARKETS}=await import('../scripts/market-pages.mjs');
+ const pages=allMarketPages(products);
+ assert.equal(pages.length,1+MARKETS.reduce((n,m)=>n+m.langs.length,0));
+ const by=u=>pages.find(p=>p.url==='https://www.septlion.com/markets/'+u);
+ assert.ok(by('sudan/').html.includes('<html lang="ar" dir="rtl">')&&by('sudan/').html.includes('بورتسودان'));
+ assert.ok(by('senegal/').html.includes('<html lang="fr"')&&by('senegal/').html.includes('au Sénégal'));
+ assert.ok(by('nigeria/').html.includes('<html lang="en"'));
+ assert.ok(by('morocco/fr/').html.includes('hreflang="ar" href="https://www.septlion.com/markets/morocco/"'));
+ for(const p of pages){
+  assert.ok(p.html.includes(`<link rel="canonical" href="${p.url}">`),p.url);
+  assert.ok(!/price|\$\s?\d|USD\s?\d/i.test(p.html.replace(/Prices are given|prix est|price is|price depends|the price/gi,'')),'no prices: '+p.url);
+  assert.ok(!/we have (shipped|delivered)|already supply|clients in/i.test(p.html),'no invented track record: '+p.url);
+ }
+ const xml=seo.sitemapXml(seo.siteEntries({markets:pages}));
+ assert.ok(xml.includes('<loc>https://www.septlion.com/markets/sudan/</loc>'));
+});
