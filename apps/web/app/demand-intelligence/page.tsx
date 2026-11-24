@@ -4,7 +4,7 @@ import DemandRadar from './DemandRadar';
 
 const pipeline=['رصد الطلب','استخراج المتطلبات','تحديد المشتري','تأهيل الفرصة','بناء عرض دقيق','جذب طلبات مشابهة','تحويله إلى طلب عرض سعر'];
 
-export const metadata={title:'رادار الطلب — مناقصات وطلبات عروض أسعار | سبتليون',description:'رادار سبتليون يرصد المناقصات وطلبات عروض الأسعار في الأسواق، ويؤهلها ويحوّلها إلى فرص توريد قابلة للتنفيذ.'};
+export const metadata={alternates:{canonical:'/demand-intelligence/',languages:{ar:'/demand-intelligence/',en:'/demand-intelligence/en/'}},title:'رادار الطلب — مناقصات وطلبات عروض أسعار | سبتليون',description:'رادار سبتليون يرصد المناقصات وطلبات عروض الأسعار في الأسواق، ويؤهلها ويحوّلها إلى فرص توريد قابلة للتنفيذ.'};
 
 export default function DemandIntelligence(){
  return <OpsFrame active="radar">
@@ -31,6 +31,6 @@ export default function DemandIntelligence(){
     <div className="ops-tile"><b>صفحات الطلب</b><small>نجمع الطلبات المتشابهة في صفحات منتج وسوق قابلة للبحث، مع رابط مباشر لطلب عرض سعر، دون كشف هوية المشترين.</small><Link href="/demand/" className="ops-link">فتح صفحات الطلب ←</Link></div>
    </div>
   </details>
-  <div className="ops-row"><p className="ops-sub">السوق يخبرنا بما يجب أن نبنيه.</p><Link href="/require" className="ops-btn pri">ابدأ طلبًا</Link></div>
+  <div className="ops-row"><p className="ops-sub">السوق يخبرنا بما يجب أن نبنيه. <Link href="/demand-intelligence/en/" className="ops-link" lang="en">English version</Link></p><Link href="/require" className="ops-btn pri">ابدأ طلبًا</Link></div>
  </OpsFrame>;
 }
