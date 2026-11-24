@@ -79,9 +79,10 @@ export default function DemandRadar(){
    <div className="ops-grid">{shown.map(s=><article key={s.id} className="ops-item" style={{cursor:'default'}}>
     <div className="ops-item-top"><span className="ops-item-place"><span className="ops-tag">{typeLabel[s.type]||s.type}</span><bdi className="ops-market" title={s.market}>{s.market}</bdi></span><span>{day(s.publishedAt)}</span></div>
     <h3 dir="auto">{s.product}</h3>
+    <div className="ops-item-meta">المرحلة: {stageLabel[s.stage]||s.stage}</div>
     <div className="ops-item-meta">{s.quantity?<bdi>{s.quantity}</bdi>:'الكمية غير محددة بعد'}{s.deadlineAt?<> · {new Date(s.deadlineAt).getTime()<Date.now()?'انتهى الموعد في':'آخر موعد'} {day(s.deadlineAt)}</>:null}</div>
     <div className="ops-item-foot">
-     <span className={'ops-badge '+statusTone(s.status)}>{statusLabel[s.status]||stageLabel[s.stage]||s.status}</span>
+     <span className={'ops-badge '+statusTone(s.status)}>{statusLabel[s.status]||s.status}</span>
      <span className="ops-actions" style={{alignItems:'center',gap:10}}>
       <span className="ops-score" title="درجة الفرصة">{s.score}</span>
       {s.sourceUrl&&<a className="ops-link" href={s.sourceUrl} target="_blank" rel="noreferrer">المصدر ↗</a>}
