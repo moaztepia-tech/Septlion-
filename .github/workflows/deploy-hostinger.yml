@@ -89,8 +89,11 @@ jobs:
           # they are not re-uploaded); the platform's own home, 404 and SEO files are left out.
           node --test sites/customer-client/bridge.test.cjs
           python3 scripts/package-customer-client.py customer-package
-          rm -f deploy/404.html deploy/robots.txt deploy/sitemap.xml
+          rm -f deploy/404.html deploy/robots.txt
           cp customer-package/index.html customer-package/septlion-bridge.js customer-package/.htaccess deploy/
+          # Search and AI-assistant files: readable products and structured data on the home page,
+          # the English home at /en/, and a sitemap and llms.txt that list every public demand page.
+          node scripts/customer-seo.mjs deploy
 
       - name: Package the archived live client
         if: inputs.mode != 'rollback' && inputs.site == 'approved-client'

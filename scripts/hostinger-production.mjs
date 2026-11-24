@@ -3,6 +3,19 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const SITE='https://www.septlion.com';
+// Only public marketing pages are indexed; team, account and workflow screens are kept out of search.
+export const INDEXABLE_ROUTES=['/','/demand-intelligence','/demand-intelligence/en','/intent/wheat-flour'];
+export function fixSearchTags(html,route){
+ const canonical=/<link rel="canonical" href="[^"]*"\s*\/?>/g,robots=/<meta name="robots" content="[^"]*"\s*\/?>/g;
+ if(INDEXABLE_ROUTES.includes(route)){
+  const href=SITE+(route==='/'?'/':route+'/'),tag='<link rel="canonical" href="'+href+'"/>';
+  html=html.replace(robots,'<meta name="robots" content="index, follow"/>');
+  return canonical.test(html)?html.replace(canonical,tag):html.replace('</head>',tag+'</head>');
+ }
+ html=html.replace(canonical,'');
+ return robots.test(html)?html.replace(robots,'<meta name="robots" content="noindex, follow"/>'):html.replace('</head>','<meta name="robots" content="noindex, follow"/></head>');
+}
 async function filesIn(dir){const files=[];for(const e of await readdir(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())files.push(...await filesIn(p));else files.push(p);}return files;}
 export async function packageProduction(projectRoot=root){
  const web=path.join(projectRoot,'apps/web'),app=path.join(web,'.next/server/app'),dest=path.join(projectRoot,'deploy');
@@ -27,6 +40,7 @@ export async function packageProduction(projectRoot=root){
   if(missing||!sizes[0]||!sizes[1])throw new Error('Missing production HTML or navigation payload: '+route+(missing?' ('+missing.missing+')':''));
   const html=await readFile(file,'utf8');if(!html.includes('/_next/')||html.includes('/preview/septlion-customer-v2/_next/'))throw new Error('Wrong production assets: '+route);
  }
+ for(const route of routes){const file=path.join(dest,route==='/'?'index.html':route.slice(1)+'/index.html');await writeFile(file,fixSearchTags(await readFile(file,'utf8'),route));}
  await cp(path.join(dest,'index.html'),path.join(dest,'404.html'));
  await writeFile(path.join(dest,'.htaccess'),`Options -Indexes -MultiViews
 DirectoryIndex index.html
