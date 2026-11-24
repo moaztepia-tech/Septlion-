@@ -155,7 +155,7 @@ DECLARE
   r RECORD;
   x JSONB;
   http RECORD;
-  accepted INTEGER := 0;
+  v_accepted INTEGER := 0;
   pages INTEGER := 0;
   failed TEXT[] := '{}';
 BEGIN
@@ -169,7 +169,7 @@ BEGIN
     FROM net._http_response WHERE id = (x->>'requestId')::bigint ORDER BY created DESC LIMIT 1;
     IF FOUND AND http.status_code = 200 AND http.error_msg IS NULL THEN
       pages := pages + 1;
-      accepted := accepted + public.ingest_tradewheel_buyer_page(http.content);
+      v_accepted := v_accepted + public.ingest_tradewheel_buyer_page(http.content);
     ELSE
       failed := failed || (x->>'country');
     END IF;
@@ -182,9 +182,9 @@ BEGIN
   WHERE "id" = 'tradewheel-country-buyers';
 
   UPDATE "DemandCollectorRun"
-  SET "status" = 'SUCCESS', "scanned" = pages, "accepted" = accepted, "finishedAt" = now()
+  SET "status" = 'SUCCESS', "scanned" = pages, "accepted" = v_accepted, "finishedAt" = now()
   WHERE "id" = r."id";
-  RETURN accepted;
+  RETURN v_accepted;
 EXCEPTION WHEN OTHERS THEN
   UPDATE "DemandCollectorRun" SET "status" = 'FAILED', "error" = SQLERRM, "finishedAt" = now() WHERE "id" = r."id";
   RETURN 0;
