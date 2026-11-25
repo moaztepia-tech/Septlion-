@@ -5,7 +5,10 @@ RewriteBase /
 # 0. HTTPS and www, as the new-app site already does for its pages.
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# /sw.js stays on septlion.com too, so phones holding the old service worker there can
+# fetch its replacement (which removes itself); a redirect would leave the old one stuck.
 RewriteCond %{HTTP_HOST} ^septlion\.com$ [NC]
+RewriteCond %{REQUEST_URI} !^/sw\.js$
 RewriteRule ^ https://www.septlion.com%{REQUEST_URI} [L,R=301]
 # 1. Home: the customer interface (new-app look; requests go to the platform).
 RewriteRule ^$ index.html [L]
