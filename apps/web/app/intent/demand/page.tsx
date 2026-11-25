@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {PlatformHeader} from '../../../components/platform-header';
 import {useEffect,useState} from 'react';
-import RfqForm from '../RfqForm';
+import RfqForm,{Lang} from '../RfqForm';
 
 type IntentPage={
  id:string;slug:string;title:string;productKey?:string|null;market:string;searchIntent:string;
@@ -13,11 +13,48 @@ type IntentPage={
 const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL||'https://jfbmxowdmfdzyoauqgwn.supabase.co';
 const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD';
 
+// English by default (buyers come from international marketplaces and search);
+// the Arabic demand pages for Arab markets link here with ?lang=ar.
+const T={
+ en:{
+  loadingK:'SUPPLY ROUTE',loading:'Loading…',
+  goneK:'NOT AVAILABLE',gone1:'This supply route',gone2:'is not public.',goneP:'The page is no longer available. You can still send your requirement for wheat flour.',goneA:'Wheat flour RFQ →',
+  heroK:'MARKET-SPECIFIC SUPPLY',heroP:'Recent buyer demand for this product in this market. Send your exact requirement and Septlion replies with one clear supply offer.',
+  heroA:'Request an offer ↓',heroB:'All demand routes →',
+  structK:'WHAT WE NEED FROM YOU',structH:'Your requirement sets the offer.',
+  mK:'MARKET',mP:'Supply to your destination country and port.',mB:'Destination-specific route',
+  vK:'VOLUME',vD:'Defined by you',vP:'The final scale comes from your submitted requirement.',vB:'Reviewed before quotation',
+  dK:'DELIVERY TERMS',dP:'Packing is set by your requirement.',dPk:'Packing signal: ',dB:'Delivery window required',dDl:'Demand deadline: ',
+  rfqK:'REQUEST AN OFFER',rfqH:'Send your requirement to Septlion.',rfqP:'Your request goes straight to the Septlion team, linked to this supply route.',
+ },
+ ar:{
+  loadingK:'مسار توريد',loading:'جارٍ التحميل…',
+  goneK:'غير متاح',gone1:'مسار التوريد هذا',gone2:'غير منشور.',goneP:'الصفحة لم تعد متاحة، ويمكنك إرسال طلبك للدقيق مباشرة.',goneA:'طلب عرض للدقيق ←',
+  heroK:'توريد مخصص لسوقك',heroP:'هناك طلب حالي على هذا الصنف في هذا السوق. أرسل احتياجك بالتفصيل، وترد عليك سبتليون بعرض توريد واحد واضح.',
+  heroA:'اطلب عرضًا ↓',heroB:'كل مسارات الطلب ←',
+  structK:'ما نحتاجه منك',structH:'طلبك هو ما يحدد العرض.',
+  mK:'السوق',mP:'توريد إلى دولتك وميناء الوصول.',mB:'مسار مخصص للوجهة',
+  vK:'الكمية',vD:'تحددها أنت',vP:'الكمية النهائية تأتي من طلبك.',vB:'مراجعة قبل التسعير',
+  dK:'شروط التسليم',dP:'التعبئة حسب طلبك.',dPk:'التعبئة المطلوبة: ',dB:'حدد موعد التسليم',dDl:'آخر موعد للطلب: ',
+  rfqK:'اطلب عرضًا',rfqH:'أرسل طلبك إلى سبتليون.',rfqP:'يصل طلبك مباشرة إلى فريق سبتليون، مرتبطًا بمسار التوريد هذا.',
+ },
+} as const;
+
+
+// Arabic names for the Arabic version (Arab markets only link here with ?lang=ar).
+const MARKET_AR:Record<string,string>={'saudi arabia':'السعودية','united arab emirates':'الإمارات','uae':'الإمارات','oman':'عُمان','qatar':'قطر','bahrain':'البحرين','kuwait':'الكويت','jordan':'الأردن','iraq':'العراق','yemen':'اليمن','lebanon':'لبنان','syria':'سوريا','palestine':'فلسطين','egypt':'مصر','sudan':'السودان','libya':'ليبيا','tunisia':'تونس','algeria':'الجزائر','morocco':'المغرب','mauritania':'موريتانيا','somalia':'الصومال','djibouti':'جيبوتي','comoros':'جزر القمر'};
+const PRODUCT_AR:[RegExp,string][]=[[/whole wheat/i,'دقيق قمح كامل'],[/durum/i,'دقيق قمح قاسٍ'],[/bakery/i,'دقيق مخابز'],[/all[- ]purpose/i,'دقيق متعدد الاستخدامات'],[/refined/i,'دقيق قمح مكرر'],[/chakki|atta/i,'دقيق أتا'],[/wheat flour/i,'دقيق قمح']];
+const marketAr=(m:string)=>{const parts=m.split(',').map(x=>x.trim());const ar=MARKET_AR[(parts[parts.length-1]||'').toLowerCase()];return ar?(parts.length>1?parts[0]+'، '+ar:ar):m};
+const productAr=(p:string)=>{for(const [re,ar] of PRODUCT_AR)if(re.test(p))return ar;return p};
+
 export default function DemandIntentPage(){
  const [page,setPage]=useState<IntentPage|null|undefined>(undefined);
+ const [lang,setLang]=useState<Lang>('en');
 
  useEffect(()=>{
-  const slug=new URLSearchParams(window.location.search).get('slug')||'';
+  const q=new URLSearchParams(window.location.search);
+  if(q.get('lang')==='ar')setLang('ar');
+  const slug=q.get('slug')||'';
   if(!slug){setPage(null);return}
   const url=SUPABASE_URL+'/rest/v1/PublicDemandIntentPage?select=id,slug,title,productKey,market,searchIntent,content&slug=eq.'+encodeURIComponent(slug)+'&limit=1';
   fetch(url,{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}})
@@ -26,38 +63,43 @@ export default function DemandIntentPage(){
    .catch(()=>setPage(null));
  },[]);
 
- if(page===undefined)return <main className="di" dir="ltr"><PlatformHeader lang="en"/><div className="shell di-section"><p className="kicker">INTENT PAGE</p><h2>Loading demand route…</h2></div></main>;
+ const t=T[lang];
+ const dir=lang==='ar'?'rtl':'ltr';
 
- if(!page)return <main className="di" dir="ltr">
-  <PlatformHeader lang="en"/>
-  <section className="di-hero shell"><p className="kicker">NOT PUBLISHED</p><h1>This demand route<br/><em>is not public.</em></h1><p>The requested intent page is unavailable or still under internal qualification.</p><div className="di-actions"><Link href="/intent/wheat-flour">Wheat Flour RFQ →</Link></div></section>
+ if(page===undefined)return <main className="di" dir={dir} lang={lang}><PlatformHeader lang={lang}/><div className="shell di-section"><p className="kicker">{t.loadingK}</p><h2>{t.loading}</h2></div></main>;
+
+ if(!page)return <main className="di" dir={dir} lang={lang}>
+  <PlatformHeader lang={lang}/>
+  <section className="di-hero shell"><p className="kicker">{t.goneK}</p><h1>{t.gone1}<br/><em>{t.gone2}</em></h1><p>{t.goneP}</p><div className="di-actions"><Link href="/intent/wheat-flour">{t.goneA}</Link></div></section>
  </main>;
 
  const product=page.content?.product||page.title;
+ const shownProduct=lang==='ar'?productAr(product):product;
+ const shownMarket=lang==='ar'?marketAr(page.market):page.market;
 
- return <main className="di" dir="ltr">
-  <PlatformHeader lang="en"/>
+ return <main className="di" dir={dir} lang={lang}>
+  <PlatformHeader lang={lang}/>
 
   <section className="di-hero shell">
-   <p className="kicker">MARKET-SPECIFIC SUPPLY INTENT</p>
-   <h1>{product}<br/><em>{page.market}</em></h1>
-   <p>This supply route was created from recent public B2B buying signals. Submit your requirement to turn the route into a live Septlion RFQ.</p>
-   <div className="di-actions"><a href="#live-rfq">Create live RFQ ↗</a><Link href="/demand-intelligence">Demand Intelligence →</Link></div>
+   <p className="kicker">{t.heroK}</p>
+   <h1><bdi>{shownProduct}</bdi><br/><em><bdi>{shownMarket}</bdi></em></h1>
+   <p>{t.heroP}</p>
+   <div className="di-actions"><a href="#live-rfq">{t.heroA}</a><a href="/demand/">{t.heroB}</a></div>
   </section>
 
   <section className="di-section shell">
-   <div className="di-head"><div><p className="kicker">REQUIREMENT STRUCTURE</p><h2>Built from demand, not catalogue inventory.</h2></div><p>{page.searchIntent}</p></div>
+   <div className="di-head"><div><p className="kicker">{t.structK}</p><h2>{t.structH}</h2></div>{lang==='en'&&<p>{page.searchIntent}</p>}</div>
    <div className="di-cards">
-    <article><small>MARKET</small><h3>{page.market}</h3><p>Destination-specific route generated from the Demand Intelligence pipeline.</p><b>{page.productKey||'commercial supply'}</b></article>
-    <article><small>VOLUME SIGNAL</small><h3>{page.content?.quantity||'Buyer-defined'}</h3><p>Final commercial scale is confirmed from the buyer's submitted requirement.</p><b>Qualification before quotation</b></article>
-    <article><small>DELIVERY STRUCTURE</small><h3>{page.content?.incoterm||'FOB / CFR / CIF'}</h3><p>{page.content?.packing?'Packing signal: '+page.content.packing:'Packing configured by requirement.'}</p><b>{page.content?.deadline?'Demand deadline: '+page.content.deadline.slice(0,10):'Delivery window required'}</b></article>
+    <article><small>{t.mK}</small><h3><bdi>{shownMarket}</bdi></h3><p>{t.mP}</p><b>{t.mB}</b></article>
+    <article><small>{t.vK}</small><h3>{page.content?.quantity||t.vD}</h3><p>{t.vP}</p><b>{t.vB}</b></article>
+    <article><small>{t.dK}</small><h3 dir="ltr">{page.content?.incoterm||'FOB / CFR / CIF'}</h3><p>{page.content?.packing?t.dPk+page.content.packing:t.dP}</p><b>{page.content?.deadline?t.dDl+page.content.deadline.slice(0,10):t.dB}</b></article>
    </div>
   </section>
 
   <section className="di-section ir-section" id="live-rfq">
    <div className="shell">
-    <div className="di-head"><div><p className="kicker">LIVE RFQ</p><h2>Enter the Septlion execution pipeline.</h2></div><p>Your submitted requirement becomes a new RFQ signal linked back to this demand route and appears in the internal operator workbench.</p></div>
-    <RfqForm intentSlug={page.slug} product={product} market={page.market}/>
+    <div className="di-head"><div><p className="kicker">{t.rfqK}</p><h2>{t.rfqH}</h2></div><p>{t.rfqP}</p></div>
+    <RfqForm intentSlug={page.slug} product={product} market={page.market} shownProduct={shownProduct} shownMarket={shownMarket} lang={lang}/>
    </div>
   </section>
  </main>

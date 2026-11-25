@@ -1387,7 +1387,7 @@ button, a, p, h1, h2, h3, dd { overflow-wrap: anywhere; }
 .dw-buyer-contact > span, .dw-buyer-time span { font-size: var(--fs-base); }
 .dw-buyer-contact > b, .dw-buyer-contact a, .dw-buyer-time b { font-size: var(--fs-base); overflow-wrap: anywhere; }
 .dw-buyer-time { display: grid; gap: 12px; }
-.ir-form, .ir-success { border: 1px solid var(--line); padding: 32px; }
+.ir-form, .ir-success { position: relative; border: 1px solid var(--line); padding: 32px; }
 .ir-form-head { display: flex; justify-content: space-between; gap: 24px; align-items: end; border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 24px; }
 .ir-form-head small, .ir-success small { font-size: var(--fs-base); }
 .ir-form-head h3, .ir-success h3 { font-size: var(--fs-3xl); margin: 8px 0 0; }
@@ -1400,7 +1400,7 @@ button, a, p, h1, h2, h3, dd { overflow-wrap: anywhere; }
 .ir-submit { margin-top: 24px; border: 0; min-height: 48px; padding: 12px 20px; font-size: var(--fs-md); }
 .ir-submit:disabled { opacity: .5; }
 .ir-note { font-size: var(--fs-base); margin: 12px 0 0; }
-.ir-hp { position: absolute; inset-inline-start: -10000px; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.ir-hp { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; opacity: 0; pointer-events: none; }
 @media (max-width: 960px) {
   .di-stats, .dw-stats { grid-template-columns: repeat(3,minmax(0,1fr)); }
   .dw-task-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }

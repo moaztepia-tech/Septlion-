@@ -76,7 +76,7 @@ export function arabicDemandPage({beacon, p, c = {}, product, englishUrl, intent
 body{font-family:"IBM Plex Sans Arabic","Noto Kufi Arabic",Tahoma,var(--font-ui)}h1,h2{letter-spacing:0}</style></head><body>
 <header class="nav shell"><a class="brand" href="/" aria-label="SEPTLION الرئيسية"><img src="/brand/septlion-wordmark-navy.svg" alt="SEPTLION" width="144" height="52"></a><nav aria-label="القائمة الرئيسية"><a href="/">المنتجات</a><a href="/require">ابدأ طلباً</a><a href="${englishUrl}" hreflang="en" lang="en">English</a></nav></header>
 <main>
-<section class="hero shell"><p class="kicker">مسار توريد مبني على طلب السوق</p><h1>${esc(prod)}<br><em>${esc(market)}</em></h1><p class="lead">${esc(description)}</p><a class="cta" href="${intentUrl}">اطلب عرض توريد ↖</a></section>
+<section class="hero shell"><p class="kicker">مسار توريد مبني على طلب السوق</p><h1>${esc(prod)}<br><em>${esc(market)}</em></h1><p class="lead">${esc(description)}</p><a class="cta" href="${esc(intentUrl.replace('#live-rfq', '&lang=ar#live-rfq'))}">اطلب عرض توريد ↖</a></section>
 <section class="shell"><div class="grid">
 <div class="card"><small>السوق</small><b>${esc(market)}</b><p>مسار توريد مخصص لهذا السوق، وليس قائمة منتجات عامة.</p></div>
 <div class="card"><small>الطلب في السوق</small><b>${esc(signalLine)}</b><p>آخر طلب رُصد بتاريخ ${esc(String(latest || '').slice(0, 10) || 'حديث')}.</p></div>
@@ -85,7 +85,7 @@ body{font-family:"IBM Plex Sans Arabic","Noto Kufi Arabic",Tahoma,var(--font-ui)
 <section class="section"><div class="shell"><p class="kicker">ملخص</p><h2>توريد ${esc(prod)} إلى ${esc(market)}</h2><p class="copy">${esc(summary)}</p></div></section>
 <section class="section soft"><div class="shell"><p class="kicker">أسئلة شائعة</p><h2>كيف يتم الطلب؟</h2>
 <div class="faq"><article><h3>ماذا أرسل؟</h3><p>ميناء الوصول، والكمية، والتعبئة المفضلة، ومواصفات المنتج، وموعد التسليم، وشرط الشحن (FOB أو CFR أو CIF).</p></article><article><h3>ماذا يحدث بعد ذلك؟</h3><p>يراجع فريق SEPTLION طلبك، ويختار مسار التوريد المناسب، ثم يرسل لك عرضاً تجارياً واحداً واضحاً.</p></article><article><h3>هل السعر ثابت؟</h3><p>لا. السعر يُبنى على طلبك الفعلي والوجهة وطريقة التوريد.</p></article></div>
-<a class="cta" href="${intentUrl}">أرسل طلب عرض سعر لـ${esc(market)} ↖</a></div></section>
+<a class="cta" href="${esc(intentUrl.replace('#live-rfq', '&lang=ar#live-rfq'))}">أرسل طلب عرض سعر لـ${esc(market)} ↖</a></div></section>
 </main><footer class="footer shell">SEPTLION LLC · مسجلة في الولايات المتحدة · <a href="${englishUrl}" hreflang="en" lang="en">English version</a></footer>
 ${beacon||''}</body></html>`;
 }
