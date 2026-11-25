@@ -91,7 +91,7 @@ jobs:
           node --test sites/customer-client/bridge.test.cjs
           python3 scripts/package-customer-client.py customer-package
           rm -f deploy/404.html deploy/robots.txt
-          cp customer-package/index.html customer-package/septlion-bridge.js customer-package/.htaccess deploy/
+          cp customer-package/index.html customer-package/septlion-bridge.js customer-package/.htaccess customer-package/sw.js deploy/
           # Search and AI-assistant files: readable products and structured data on the home page,
           # the English home at /en/, and a sitemap and llms.txt that list every public demand page.
           node scripts/customer-seo.mjs deploy
