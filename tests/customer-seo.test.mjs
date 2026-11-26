@@ -36,6 +36,7 @@ test('sitemap and llms.txt list every public demand page and no team screens',()
  assert.ok(xml.includes('https://www.septlion.com/demand/wheat-flour-oman/'));
  assert.ok(xml.includes('https://www.septlion.com/en/'));
  assert.ok(!/\/(ops|rfq|maritime-rfq|workbench)\//.test(xml));
+ assert.ok(!xml.includes('demand-intelligence')&&!seo.llmsTxt(products,demand).includes('demand-intelligence'));
  const txt=seo.llmsTxt(products,demand);
  assert.ok(txt.includes('https://www.septlion.com/demand/wheat-flour-oman/'));
 });
@@ -43,7 +44,8 @@ test('sitemap and llms.txt list every public demand page and no team screens',()
 test('only public pages are indexed, each with its own canonical link',()=>{
  const page='<head><meta name="robots" content="index, follow"/><link rel="canonical" href="https://www.septlion.com"/></head>';
  assert.ok(fixSearchTags(page,'/intent/wheat-flour').includes('href="https://www.septlion.com/intent/wheat-flour/"'));
- assert.ok(fixSearchTags(page,'/demand-intelligence').includes('href="https://www.septlion.com/demand-intelligence/"'));
+ const radar=fixSearchTags(page,'/demand-intelligence');
+ assert.ok(radar.includes('content="noindex, follow"')&&!radar.includes('canonical'));
  const ops=fixSearchTags(page,'/ops');
  assert.ok(ops.includes('content="noindex, follow"')&&!ops.includes('canonical'));
 });

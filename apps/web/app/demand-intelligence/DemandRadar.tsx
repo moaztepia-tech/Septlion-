@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect,useMemo,useState} from 'react';
+import {accessToken} from '../../lib/api';
 
 type Signal={
  id:string;type:string;market:string;product:string;quantity?:string|null;
@@ -14,7 +15,7 @@ const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||'sb_publish
 async function loadSignals():Promise<Signal[]>{
  const endpoint=`${SUPABASE_URL}/rest/v1/PublicDemandSignal?select=id,type,market,product,quantity,publishedAt,deadlineAt,status,stage,score,sourceUrl&order=score.desc,updatedAt.desc&limit=100`;
  try{
-  const r=await fetch(endpoint,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+  const r=await fetch(endpoint,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${accessToken()||SUPABASE_KEY}`}});
   if(!r.ok)return [];
   return await r.json();
  }catch{return []}

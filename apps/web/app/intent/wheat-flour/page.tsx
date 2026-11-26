@@ -15,7 +15,7 @@ export default function WheatFlourIntent(){
    <p className="kicker">DEMAND-LED SUPPLY</p>
    <h1>Wheat flour,<br/><em>configured for your market.</em></h1>
    <p>Commercial and institutional supply programs structured around destination, volume, packing, specification and delivery terms — not a generic catalogue.</p>
-   <div className="di-actions"><a href="#live-rfq">Create live RFQ ↗</a><Link href="/demand-intelligence">Demand Intelligence →</Link></div>
+   <div className="di-actions"><a href="#live-rfq">Create live RFQ ↗</a><Link href="/demand/">All demand routes →</Link></div>
   </section>
 
   <section className="di-section shell">

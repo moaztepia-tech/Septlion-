@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const SITE='https://www.septlion.com';
 // Only public marketing pages are indexed; team, account and workflow screens are kept out of search.
-export const INDEXABLE_ROUTES=['/','/demand-intelligence','/demand-intelligence/en','/intent/wheat-flour'];
+export const INDEXABLE_ROUTES=['/','/intent/wheat-flour'];
 export function fixSearchTags(html,route){
  const canonical=/<link rel="canonical" href="[^"]*"\s*\/?>/g,robots=/<meta name="robots" content="[^"]*"\s*\/?>/g;
  if(INDEXABLE_ROUTES.includes(route)){
