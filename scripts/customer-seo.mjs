@@ -150,13 +150,10 @@ export function sitemapXml(entries) {
 }
 export function siteEntries({demand = [], hasRadarEn = false, markets = [], now = new Date().toISOString()}) {
   const home = [{lang: 'ar', href: SITE + '/'}, {lang: 'en', href: SITE + '/en/'}, {lang: 'x-default', href: SITE + '/'}];
-  const radar = hasRadarEn ? [{lang: 'ar', href: SITE + '/demand-intelligence/'}, {lang: 'en', href: SITE + '/demand-intelligence/en/'}] : [];
   const day = now.slice(0, 10);
   const latest = demand.map(p => String(p.updatedAt || '').slice(0, 10)).filter(Boolean).sort().pop() || day;
   return [
     {loc: SITE + '/', lastmod: day, alternates: home}, {loc: SITE + '/en/', lastmod: day, alternates: home},
-    {loc: SITE + '/demand-intelligence/', lastmod: latest, alternates: radar},
-    ...(hasRadarEn ? [{loc: SITE + '/demand-intelligence/en/', lastmod: latest, alternates: radar}] : []),
     {loc: SITE + '/intent/wheat-flour/', lastmod: day}, {loc: SITE + '/demand/', lastmod: latest},
     ...demand.flatMap(p => {
       const loc = `${SITE}/demand/${p.slug}/`, lastmod = String(p.updatedAt || '').slice(0, 10) || latest;
@@ -174,7 +171,6 @@ export function llmsTxt(products, demand = [], markets = []) {
     '> SEPTLION LLC is a US-registered B2B managed-trade company. A buyer describes a requirement; SEPTLION returns one quotation and, after agreement, coordinates supply, manufacturing, documents and logistics to delivery. Focus: wheat flour, the Middle East and Africa.', '',
     '## Key pages',
     `- Arabic home and product catalogue: ${SITE}/`, `- English home: ${SITE}/en/`,
-    `- Demand radar (live public tenders and RFQs): ${SITE}/demand-intelligence/`,
     `- Wheat flour supply programme: ${SITE}/intent/wheat-flour/`, `- Market demand routes: ${SITE}/demand/`,
     `- Machine-readable demand index: ${SITE}/demand/ai-index.json`,
     ...(markets.length ? [`- Market pages for Africa and the Middle East: ${SITE}/markets/`] : []), '',
