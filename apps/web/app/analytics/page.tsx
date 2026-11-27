@@ -2,6 +2,7 @@
 import {useEffect,useState} from 'react';
 import {OpsFrame} from '../../components/ops-console';
 import {edge,accessToken} from '../../lib/api';
+import {VisitorsCard} from '../command-center/visitors-card';
 
 type Snapshot=Record<string,number|string>;
 const groups:[string,[string,string,boolean?][]][]=[
@@ -19,6 +20,7 @@ export default function Analytics(){
    <h1 className="ops-h1">الإحصاءات</h1>
    <p className="ops-sub">أرقام مباشرة من قاعدة البيانات، وليست أرقامًا تسويقية.</p>
   </div>
+  <VisitorsCard/>
   {e&&<p className="ops-alert" role="alert">{e}</p>}
   {!h&&!e&&<p className="ops-sub" role="status">جارٍ التحميل…</p>}
   {h&&groups.map(([title,rows])=><section key={title} className="ops-card" aria-label={title}>
