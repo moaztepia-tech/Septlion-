@@ -96,6 +96,16 @@ export function requirementQuestion(field: RequirementField, lang: 'ar' | 'en', 
   const en: Record<RequirementField, string> = {product: 'What product do you need?', application: 'How will the flour be used: bakery or another use?', quantity: 'What quantity and unit do you need? For example, 5 containers or 40 MT.', packing: feed ? 'Which pack size do you prefer: ' + feed.product.packing + '? You can specify another pack.' : 'What pack size do you prefer? If unsure, say: agree with Septlion.', destination: 'Which country or port should we supply to?', incoterm: 'Which trade term do you prefer: CIF, CFR or FOB?', payment: 'Which payment method do you prefer: L/C, T/T, or discuss in the offer?'};
   return (lang === 'ar' ? ar : en)[field];
 }
+// Greetings, thanks and small talk get a short human answer and the current question.
+// They are never stored as a product or any other field.
+const smallTalkWords = new RegExp('(?:'+['السلام عليكم(?: ورحمة الله(?: وبركاته)?)?','الله يعطيك العافية','يعطيك العافية','وعليكم السلام','good evening','ممكن تساعدني','good morning','محتاج مساعدة','how are you','ممكن مساعدة','مساء النور','صباح النور','صباح الخير','مساء الخير','هلا والله','thank you','كيف الحال','كيف حالكم','عندي سؤال','كيف حالك','يا أستاذ','عامل ايه','يا استاذ','من فضلك','لو سمحت','شلونكم','يا أخي','thanks','مرحباً','يا اخي','مرحبًا','please','ممتاز','شكرًا','شكراً','salam','اهلًا','مشكور','مرحبا','أهلًا','شلونك','hello','اهلين','شكرا','إزيك','أوكي','سلام','ازيك','اهلا','اوكي','okay','كيفك','تمام','أهلا','hey','هاي','هلا','طيب','ok','hi'].join('|')+')','gi');
+export function smallTalk(text: string): 'salam' | 'thanks' | 'hello' | null {
+  const rest = text.toLowerCase().replace(smallTalkWords, ' ').replace(/[\s\p{P}\p{S}]+/gu, '');
+  if (rest) return null;
+  if (/السلام|سلام|salam/i.test(text)) return 'salam';
+  if (/شكر|مشكور|العافية|thank/i.test(text)) return 'thanks';
+  return 'hello';
+}
 export function answerRequirement(draft: ComposerDraft, text: string, lang: 'ar' | 'en'): ComposerDraft {
   const answer = text.trim();
   if (!answer) return draft;
@@ -104,6 +114,16 @@ export function answerRequirement(draft: ComposerDraft, text: string, lang: 'ar'
     const directQuantity = reorderQuantityDetails(draft, answer);
     const quantity = parsed.quantity || (directQuantity ? directQuantity.amount + ' ' + directQuantity.unit : draft.data.quantity);
     return {...draft, data: {...draft.data, quantity}, input: '', messages: [...draft.messages, {role: 'user' as const, text: answer}, {role: 'assistant' as const, text: lang === 'ar' ? 'إعادة الطلب تحتفظ بالتكوين المعتمد. يمكنك تعديل الكمية بوحدة ' + draft.reorder.unit + '؛ راجعها قبل إرسال الطلب. لاحتياج مختلف، ابدأ طلبًا جديدًا.' : 'Reorder preserves the approved configuration. You can change the quantity in ' + draft.reorder.unit + ' before sending. Start a new request for different requirements.'}].slice(-100)};
+  }
+  const talk = smallTalk(answer);
+  if (talk) {
+    const missingNow = missingRequirementFields(draft.data);
+    const opener = lang === 'ar'
+      ? talk === 'salam' ? 'وعليكم السلام ورحمة الله، أهلًا بك في سبتليون. ' : talk === 'thanks' ? 'العفو، بكل سرور. ' : 'أهلًا بك في سبتليون، يسعدنا خدمتك. '
+      : talk === 'thanks' ? 'You are welcome. ' : 'Hello, welcome to Septlion. ';
+    const question = missingNow.length ? requirementQuestion(missingNow[0], lang, draft.feed)
+      : lang === 'ar' ? 'طلبك جاهز للمراجعة متى شئت.' : 'Your request is ready to review.';
+    return {...draft, input: '', messages: [...draft.messages, {role: 'user' as const, text: answer}, {role: 'assistant' as const, text: opener + question}].slice(-100)};
   }
   const data: RequirementData = mergeRequirementInput(answer, draft.data);
   const next = missingRequirementFields(draft.data)[0];
@@ -114,7 +134,8 @@ export function answerRequirement(draft: ComposerDraft, text: string, lang: 'ar'
   const missing = missingRequirementFields(data);
   const reply = missing.length ? requirementQuestion(missing[0], lang, draft.feed)
     : lang === 'ar' ? 'اكتملت الأساسيات. راجع ملخص الطلب وعدّل أي معلومة قبل إرساله لإعداد العرض.' : 'The essentials are complete. Review and correct the summary before sending it for an offer.';
-  return {...draft, data, input: '', messages: [...draft.messages, {role: 'user' as const, text: answer}, {role: 'assistant' as const, text: reply}].slice(-100)};
+  const salam = lang === 'ar' && /^\s*(?:ال)?سلام عليكم/.test(answer) ? 'وعليكم السلام. ' : '';
+  return {...draft, data, input: '', messages: [...draft.messages, {role: 'user' as const, text: answer}, {role: 'assistant' as const, text: salam + reply}].slice(-100)};
 }
 export function requirementPayload(draft: ComposerDraft): Record<string, unknown> {
   if (missingRequirementFields(draft.data).length) throw new Error('أكمل المعلومات الأساسية وراجع الكمية ووحدتها.');
@@ -169,7 +190,7 @@ const coreFields: RequirementField[] = ['product', 'quantity', 'destination'];
 export function needsGuidance(draft: ComposerDraft) {
   return !draft.reorder && coreFields.some(field => !draft.data[field]);
 }
-export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' | 'en'): ComposerDraft {
+export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' | 'en', submitted = ''): ComposerDraft {
   if (!fields || typeof fields !== 'object' || Array.isArray(fields) || draft.reorder || draft.savedRequirementId) return draft;
   const given = fields as Record<string, unknown>;
   const known = (field: string) => {
@@ -180,7 +201,8 @@ export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' 
   let changed = false;
   for (const field of ['product', 'quantity', 'destination', 'packing', 'incoterm', 'payment'] as RequirementField[]) {
     const value = known(field);
-    if (!value || data[field]) continue;
+    // A field that only holds the buyer's whole sentence (the local fallback) may be corrected.
+    if (!value || (data[field] && data[field] !== submitted.trim())) continue;
     const parsed = extractRequirement(value);
     const next = field === 'product' ? parsed.product || value
       : field === 'destination' ? parsed.destination || value
