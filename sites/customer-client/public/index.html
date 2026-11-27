@@ -477,6 +477,8 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .zoombox .bottle{height:100%;width:auto;aspect-ratio:.48;max-height:640px}
 .zoombox .bottle-body span{font-size:16px}.zoombox .bottle-body strong{font-size:24px}.zoombox .bottle-body small{font-size:34px}
 .zoomcap{text-align:center;display:grid;gap:3px}.zoomcap strong{font-size:18px}.zoomcap span{font-size:12px;color:var(--muted)}
+.fields.w3{grid-template-rows:repeat(3,19px);height:63px}
+.fields li.wide{grid-column:1/-1}
 .zspec{display:grid;gap:12px;max-height:min(36vh,320px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:12px;border:1px solid #ffffff1f;border-radius:16px;background:#0b1f38b3}
 .ztiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .ztiles div{display:grid;gap:2px;justify-items:center;padding:10px 6px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff14;text-align:center}
@@ -973,7 +975,7 @@ function fieldsOf(p){
   f.push({ic:'brand',l:'العلامة',v:p.brand===NO_BRAND?'علامة غير محددة':p.brand});
   return f;
 }
-const fieldsHTML=p=>{const f=fieldsOf(p).slice(0,6),cols=Math.max(1,Math.ceil(f.length/2));return `<ul class="fields" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li title="${esc(x.l||'')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||'')}: </span><span class="v${/^[A-Za-z0-9 .\-\/]+$/.test(x.v)?' lat':''}" dir="auto">${esc(x.v)}</span></li>`).join('')}</ul>`};
+const fieldsHTML=p=>{const a=fieldsOf(p).filter(x=>x.card!==false),w=a.filter(x=>x.wide).slice(0,1),f=a.filter(x=>!x.wide).slice(0,6).concat(w),cols=Math.max(1,Math.ceil((f.length-w.length)/2));return `<ul class="fields${w.length?' w3':''}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li${x.wide?' class="wide"':''} title="${esc(x.l||'')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||'')}: </span><span class="v${/^[A-Za-z0-9 .\-\/]+$/.test(x.v)?' lat':''}" dir="auto">${esc(x.v)}</span></li>`).join('')}</ul>`};
 function views(p){
   if(p.imgs&&p.imgs.length) return p.imgs.map((u,i)=>({k:'img',h:`<img class="gimg" src="${esc(u)}" alt="${esc(p.name)} — صورة ${i+1}" loading="${i?'lazy':'eager'}" decoding="async" draggable="false">`}));
   return [{k:'front',h:art(p)},{k:'angle',h:art(p)},{k:'detail',h:art(p)}];
@@ -1394,7 +1396,7 @@ function normalize(d){
     const p={id,name:str(r.name),cat:str(r.sector||r.cat)||'عام',sub:str(r.sub)||'عام',type,brand:brand||NO_BRAND,pack,size,price:str(r.price),
       art:(r.art==='sack'||r.art==='bottle')?r.art:'none',short:str(r.short),tag:str(r.tag),kw:str(r.kw),
       imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean).map(u=>/^(https?:|\/|data:)/.test(u)?u:'/new-app/'+u),
-      fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false)})).filter(f=>f.v)};
+      fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false),card:!(f&&f.card===false),wide:!!(f&&f.wide)})).filter(f=>f.v)};
     p.desc=[type,[pack,size].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
     p.sku=str(r.sku)||id.toUpperCase();
     return p}).filter(Boolean);

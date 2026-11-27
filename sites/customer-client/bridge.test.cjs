@@ -120,7 +120,10 @@ test('home page cards come from the team panel catalog', () => {
   assert.equal(a.size, '50 كجم');
   assert.equal(a.pack, 'شوال منسوج');
   assert.deepEqual(a.imgs, ['https://www.septlion.com/new-app/uploads/a.webp', 'https://www.septlion.com/new-app/uploads/b.webp']);
-  assert.deepEqual(a.fields.map(f => f.v), ['شوال 50 كجم', 'حاوية 20 قدماً', 'نحو 450 شوالاً', 'شوال منسوج', '50 كجم']);
+  assert.deepEqual(a.fields.map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً', 'نحو 450 شوالاً', 'شوال منسوج', '50 كجم']);
+  // On the card: the unit, then the minimum load on its own line; the rest is for the enlarged view.
+  assert.deepEqual(a.fields.filter(f => f.card !== false).map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً']);
+  assert.equal(a.fields[1].wide, true);
   assert.deepEqual(B.catalogRef('asasi50'), { productId: 'prod-zollana-asasi', skuId: 'sku-asasi-50' });
   assert.equal(r.id, 'rice-5kg');
   assert.deepEqual(B.catalogRef('rice-5kg'), { productId: 'prod-new-rice', skuId: 'rice-5kg' });
@@ -131,9 +134,10 @@ test('quality facts come first on the card', () => {
   const d = B.fromPlatform([{ id: 'p', name: 'زولانا خبازو', sector: { name: 'الأغذية' }, skus: [{ id: 'sku-khabbazo-50', name: 'زولانا خبازو 50 كجم',
     specifications: { packing: 'شوال منسوج 50 كجم', protein: '12%', moisture: 'حتى 14%', origin: 'مصر', certificates: 'حلال · ISO', gluten: '26 – 28%', ash: '0.60 – 0.65%', container: '20 قدماً', delivery: 'FOB مصر أو CIF ميناؤك' } }] }]);
   const fs = d.products[0].fields;
-  assert.deepEqual(fs.slice(0, 6).map(f => f.v),
-    ['بروتين 12%', 'مصر', 'حلال', 'شوال 50 كجم', 'حاوية 20 قدماً', 'FOB أو CIF']);
-  assert.equal(fs[5].zv, 'FOB مصر أو CIF ميناؤك');
+  assert.deepEqual(fs.slice(0, 7).map(f => f.v),
+    ['بروتين 12%', 'مصر', 'حلال', 'شوال 50 كجم', 'FOB أو CIF', 'رطوبة حتى 14%', 'أقل طلب: حاوية 20 قدماً']);
+  assert.equal(fs[4].zv, 'FOB مصر أو CIF ميناؤك');
+  assert.equal(fs[6].wide, true);
   // In the enlarged view the packing and size are listed apart, and the short unit is hidden.
   assert.equal(fs[3].zoom, false);
   assert.deepEqual(fs.slice(-2).map(f => f.v), ['شوال منسوج', '50 كجم']);

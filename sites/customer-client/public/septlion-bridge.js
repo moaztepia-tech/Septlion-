@@ -254,14 +254,18 @@
         const card = [], more = [];
         // Packing and size apart, for the enlarged view only: the card already shows them as one unit.
         const zoomOnly = [];
-        if (pack) zoomOnly.push(f('pack', 'التعبئة', pack, 's', 'التعبئة'));
-        if (size) zoomOnly.push(f('size', 'الحجم', size, 's', 'الحجم'));
+        const zoomItem = x => Object.assign(x, { card: false });
+        if (pack) zoomOnly.push(zoomItem(f('pack', 'التعبئة', pack, 's', 'التعبئة')));
+        if (size) zoomOnly.push(zoomItem(f('size', 'الحجم', size, 's', 'الحجم')));
         if (val('protein')) card.push(f('type', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
         if (val('origin')) card.push(f('origin', 'المنشأ', val('origin'), 'c', 'المنشأ'));
         if (firstCert) card.push(Object.assign(f('grade', '', firstCert, 'c', 'الشهادات'), { zoom: certs === firstCert }));
         const unit = [pack.split(' ')[0], size].filter(Boolean).join(' ');
         if (unit) card.push(Object.assign(f('pack', 'التعبئة', unit, 's', 'التعبئة'), { zoom: false }));
-        if (val('container')) card.push(f('port', 'أقل طلب', 'حاوية ' + val('container'), 's', 'أقل طلب'));
+        // The minimum load with how much it holds: "حاوية 20 قدماً · 450 شوالاً".
+        const perBox = val('perContainer', 120).replace(/^نحو\s+/, '');
+        // It gets its own full line under the six facts, so it is never cut short.
+        const wide = val('container') ? [Object.assign(f('port', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
         // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
         const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
         if (val('delivery', 80)) card.push(f('moq', 'التسليم', terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
@@ -272,14 +276,16 @@
         if (val('absorption')) more.push(f('dot', '', 'امتصاص ماء ' + val('absorption'), 'q', 'امتصاص الماء', val('absorption')));
         if (val('extraction')) more.push(f('dot', '', 'استخراج ' + val('extraction'), 'q', 'نسبة الاستخراج', val('extraction')));
         if (val('shelfLife')) more.push(f('shelf', '', 'صلاحية ' + val('shelfLife'), 'q', 'الصلاحية', val('shelfLife')));
-        if (val('perContainer', 120)) more.push(f('moq', 'في الحاوية', val('perContainer', 120), 's', 'في الحاوية'));
+        // Shown in the card's minimum-load line already, so listed apart only when enlarged.
+        const perItem = val('perContainer', 120) ? f('moq', 'في الحاوية', val('perContainer', 120), 's', 'في الحاوية') : null;
+        if (perItem) (wide.length ? wide : more).push(wide.length ? zoomItem(perItem) : perItem);
         if (val('payment', 120)) more.push(f('dot', 'الدفع', val('payment', 120), 's', 'الدفع'));
         if (certs && certs !== firstCert) more.push(f('grade', 'الشهادات', certs, 'c', 'الشهادات'));
         if (val('documents', 200)) more.push(f('dot', 'المستندات', val('documents', 200), 'c', 'المستندات'));
         if (val('brand')) more.push(f('brand', 'العلامة', val('brand'), 'c', 'العلامة'));
         // The card shows at most six; pad it from the details so it never looks empty.
         while (card.length < 6 && more.length) card.push(more.shift());
-        const fields = card.concat(more, zoomOnly);
+        const fields = card.concat(wide, more, zoomOnly);
         products.push({
           id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
           type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack, size,
