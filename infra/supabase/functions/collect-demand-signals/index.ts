@@ -1,47 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import {SEARCH_TERMS,normalizeNotice} from "./normalize.ts";
+
 const SOURCE_ID = "world-bank-procurement";
 const SOURCE_NAME = "World Bank Procurement Notices";
 const SOURCE = "https://search.worldbank.org/api/v2/procnotices";
-const TERMS = ["wheat flour", "flour", "milling", "maize flour", "fortified flour"];
-
-function value(r: Record<string, unknown>, ...keys: string[]) {
-  for (const k of keys) {
-    const v = r?.[k];
-    if (v !== null && v !== undefined) return String(v);
-  }
-  return "";
-}
-
-function isRelevant(r: Record<string, unknown>) {
-  const haystack = [
-    value(r, "bid_description", "notice_text", "project_name"),
-    value(r, "sector"),
-    value(r, "procurement_category"),
-  ].join(" ").toLowerCase();
-
-  return TERMS.some((term) => haystack.includes(term));
-}
-
-function score(x: any) {
-  let n = 30;
-  if (x.product) n += 15;
-  if (x.market) n += 10;
-  if (x.quantity) n += 15;
-  if (x.buyerName) n += 10;
-  if (x.deadlineAt) n += 10;
-  if (x.sourceUrl) n += 10;
-  return Math.min(n, 100);
-}
-
-function triage(n: number) {
-  return {
-    status: n >= 75 ? "QUALIFY_NOW" : n >= 55 ? "RESOLVE_BUYER" : "WATCH",
-    stage: n >= 75 ? "QUALIFICATION" : n >= 55 ? "BUYER_RESOLUTION" : "DETECTED",
-  };
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
@@ -80,71 +44,37 @@ Deno.serve(async (req: Request) => {
   }, { onConflict: "source" });
 
   try {
-    const u = new URL(SOURCE);
-    u.searchParams.set("format", "json");
-    u.searchParams.set("rows", "100");
-    u.searchParams.set("os", "0");
-
-    const res = await fetch(u);
-    if (!res.ok) throw new Error(`source status ${res.status}`);
-
-    const raw = await res.json();
-    const rows = Array.isArray(raw?.procnotices)
-      ? raw.procnotices
-      : Object.values(raw?.procnotices || {});
-
-    const relevant = rows.filter((x: any) => isRelevant(x));
-    let accepted = 0;
-
-    for (const r of relevant) {
-      const sourceRecordId =
-        value(r, "id", "project_id") ||
-        [
-          value(r, "bid_description", "notice_text"),
-          value(r, "country_name", "project_ctry_name"),
-          value(r, "publication_date", "noticedate"),
-        ].join("|");
-
-      const item: any = {
-        source: SOURCE_NAME,
-        sourceRecordId,
-        sourceUrl: value(r, "url") || null,
-        type: "TENDER",
-        market: value(r, "country_name", "project_ctry_name") || "Unresolved market",
-        product: value(r, "bid_description", "notice_text") || "Flour procurement",
-        productKey: "wheat_flour",
-        quantity: null,
-        buyerName: null,
-        publishedAt: value(r, "publication_date", "noticedate") || null,
-        deadlineAt: value(r, "deadline_date", "submission_date") || null,
-        incoterm: null,
-        packing: null,
-        evidence: { sourceIndex: true, collector: SOURCE_ID },
-        raw: r,
-        verification: "SOURCE_SIGNAL",
-        lastSeenAt: new Date().toISOString(),
-      };
-
-      item.score = score(item);
-      Object.assign(item, triage(item.score));
-      item.intentPageCandidate = item.score >= 70 && !!item.product && !!item.market;
-
-      const { data: saved, error } = await db
-        .from("DemandSignal")
-        .upsert(item, { onConflict: "source,sourceRecordId" })
-        .select("id,stage")
-        .single();
-
-      if (!error && saved) {
-        accepted++;
-        await db.from("DemandOpportunityEvent").insert({
-          signalId: saved.id,
-          stage: saved.stage,
-          eventType: "COLLECTOR_REFRESH",
-          note: "Signal discovered or refreshed by automated collector.",
-          metadata: { sourceId: SOURCE_ID },
-        });
-      }
+    // Query each commodity instead of scanning an arbitrary first page of all procurement.
+    const pages = await Promise.all(SEARCH_TERMS.map(async term => {
+      const u = new URL(SOURCE);
+      u.searchParams.set("format", "json"); u.searchParams.set("rows", "200");
+      u.searchParams.set("os", "0"); u.searchParams.set("qterm", term);
+      u.searchParams.set("srt", "noticedate"); u.searchParams.set("order", "desc");
+      const res=await fetch(u,{signal:AbortSignal.timeout(20000)});
+      if(!res.ok)throw new Error(`source status ${res.status}`);
+      const raw=await res.json();
+      return Array.isArray(raw?.procnotices)?raw.procnotices:Object.values(raw?.procnotices||{});
+    }));
+    const rows=[...new Map(pages.flat().map((r:any)=>[String(r.id),r])).values()];
+    const relevant=rows.map((r:any)=>normalizeNotice(r)).filter(Boolean);
+    let accepted=0;
+    for(const normalized of relevant){
+      const item:any={...normalized};
+      const {data:existing,error:lookupError}=await db.from("DemandSignal")
+        .select("id,stage,status,verification,evidence,quantity,packing,incoterm")
+        .eq("source",SOURCE_NAME).eq("sourceRecordId",item.sourceRecordId).maybeSingle();
+      if(lookupError)throw new Error("Signal lookup failed");
+      // A source refresh must preserve work performed by operators and downstream stages.
+      Object.assign(item,{
+        stage:existing?.stage||"BUYER_RESOLUTION",status:existing?.status||"RESOLVE_BUYER",
+        verification:existing?.verification||item.verification,
+        evidence:{...(existing?.evidence||{}),...item.evidence},
+        quantity:existing?.quantity||item.quantity,packing:existing?.packing||item.packing,
+        incoterm:existing?.incoterm||item.incoterm,
+      });
+      const {error}=await db.from("DemandSignal").upsert(item,{onConflict:"source,sourceRecordId"});
+      if(error)throw new Error("Signal persistence failed: "+error.code);
+      accepted++;
     }
 
     const now = new Date().toISOString();
