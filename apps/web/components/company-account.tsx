@@ -28,7 +28,7 @@ export function CompanyAccount({companyOnly=false}:{companyOnly?:boolean}){
    <div className="ops-account-id"><span aria-hidden="true">{(profile.name||profile.email||'S').trim().charAt(0).toUpperCase()}</span><div><b>{profile.name||'عضو فريق سبتليون'}</b><small dir="ltr">{profile.email}</small></div></div>
   </section>
   <nav className="ops-card ops-account-links" aria-label="اختصارات الفريق">
-   {([['/command-center','لوحة التحكم','ملخص اليوم والزوار والمنتجات'],['/operations','الطلبات','طلبات العملاء وعروض الأسعار والصفقات'],['/demand-intelligence/workbench','التشغيل','الطلبات الجديدة والمشترون المحتملون'],['/demand-intelligence','الرادار','فرص الطلب في الأسواق'],['/analytics','صحة المنصة','أرقام مباشرة من قاعدة البيانات']] as const).map(([href,title,sub])=><a key={href} href={href}><span><b>{title}</b><small>{sub}</small></span><i aria-hidden="true">←</i></a>)}
+   {([['/command-center','لوحة التحكم','ملخص اليوم والزوار والمنتجات'],['/operations','الطلبات','طلبات العملاء وعروض الأسعار والصفقات'],['/demand-intelligence/workbench','التشغيل','الطلبات الجديدة والمشترون المحتملون'],['/demand-intelligence','الرادار','فرص الطلب في الأسواق'],['/site-content','محتوى الموقع','عدّل نصوص الصفحة الرئيسية'],['/analytics','صحة المنصة','أرقام مباشرة من قاعدة البيانات']] as const).map(([href,title,sub])=><a key={href} href={href}><span><b>{title}</b><small>{sub}</small></span><i aria-hidden="true">←</i></a>)}
   </nav>
   <button type="button" className="ops-btn" style={{alignSelf:'flex-start'}} onClick={logout}>تسجيل الخروج</button>
   {error&&<p className="ops-alert" role="alert">{error}</p>}
