@@ -239,15 +239,19 @@
         const imgs = (Array.isArray(sku.media) ? sku.media : [])
           .filter(x => x && x.type === 'IMAGE' && /^https:\/\//.test(String(x.url || '')))
           .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map(x => String(x.url));
+        // "شوال منسوج 50 كجم" shows as packing "شوال منسوج" and size "50 كجم", so nothing repeats.
+        const packing = clean(spec.packing, 120);
+        const pack = size && packing.endsWith(' ' + size) ? packing.slice(0, -size.length - 1) : packing;
         const fields = [];
         if (clean(spec.type)) fields.push({ ic: 'type', l: 'النوع', v: clean(spec.type, 120) });
-        if (clean(spec.packing)) fields.push({ ic: 'pack', l: 'التعبئة', v: clean(spec.packing, 120) });
-        if (clean(spec.container)) fields.push({ ic: 'size', l: 'الحاوية', v: clean(spec.container, 60) });
-        if (clean(spec.perContainer)) fields.push({ ic: 'dot', l: 'في الحاوية', v: clean(spec.perContainer, 120) });
+        if (pack) fields.push({ ic: 'pack', l: 'التعبئة', v: pack });
+        if (size) fields.push({ ic: 'size', l: 'الحجم', v: size });
+        if (clean(spec.container)) fields.push({ ic: 'port', l: 'الحاوية', v: 'حاوية ' + clean(spec.container, 60) });
+        if (clean(spec.perContainer)) fields.push({ ic: 'moq', l: 'في الحاوية', v: clean(spec.perContainer, 120) });
         if (clean(spec.brand)) fields.push({ ic: 'brand', l: 'العلامة', v: clean(spec.brand, 60) });
         products.push({
           id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
-          type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack: clean(spec.packing, 120), size,
+          type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack, size,
           art: spec.art === 'bottle' ? 'bottle' : 'sack', short: clean(spec.short, 40), tag: clean(spec.tag, 40),
           kw: [clean(prod.description, 600), clean(sku.name, 160)].filter(Boolean).join(' '), imgs, fields,
         });

@@ -118,9 +118,9 @@ test('home page cards come from the team panel catalog', () => {
   assert.equal(a.id, 'asasi50');
   assert.equal(a.name, 'زولانا أساسي');
   assert.equal(a.size, '50 كجم');
-  assert.equal(a.pack, 'شوال منسوج 50 كجم');
+  assert.equal(a.pack, 'شوال منسوج');
   assert.deepEqual(a.imgs, ['https://www.septlion.com/new-app/uploads/a.webp', 'https://www.septlion.com/new-app/uploads/b.webp']);
-  assert.deepEqual(a.fields.map(f => f.v), ['شوال منسوج 50 كجم', '20 قدماً', 'نحو 450 شوالاً']);
+  assert.deepEqual(a.fields.map(f => f.v), ['شوال منسوج', '50 كجم', 'حاوية 20 قدماً', 'نحو 450 شوالاً']);
   assert.deepEqual(B.catalogRef('asasi50'), { productId: 'prod-zollana-asasi', skuId: 'sku-asasi-50' });
   assert.equal(r.id, 'rice-5kg');
   assert.deepEqual(B.catalogRef('rice-5kg'), { productId: 'prod-new-rice', skuId: 'rice-5kg' });
