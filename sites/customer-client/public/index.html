@@ -477,6 +477,13 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .zoombox .bottle{height:100%;width:auto;aspect-ratio:.48;max-height:640px}
 .zoombox .bottle-body span{font-size:16px}.zoombox .bottle-body strong{font-size:24px}.zoombox .bottle-body small{font-size:34px}
 .zoomcap{text-align:center;display:grid;gap:3px}.zoomcap strong{font-size:18px}.zoomcap span{font-size:12px;color:var(--muted)}
+.zspec{display:grid;gap:10px;max-height:58vh;overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:10px 12px;border:1px solid #ffffff1f;border-radius:14px;background:#0b1f3899}
+.zspec h3{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#9db3d6}
+.zspec dl{margin:0;display:grid;gap:2px}
+.zspec dl div{display:grid;grid-template-columns:minmax(92px,auto) 1fr;gap:10px;padding:4px 0;border-bottom:1px solid #ffffff12}
+.zspec dl div:last-child{border-bottom:0}
+.zspec dt{font-size:12px;color:#9db3d6}
+.zspec dd{margin:0;font-size:13px;font-weight:700;color:#f2f6fd}
 /* V15 — اكتشف */
 .finder{flex:none;position:relative;z-index:30;padding:8px 10px 2px}
 .searchbar{display:flex;align-items:center;gap:6px}
@@ -938,6 +945,12 @@ const ICONS={
  dot:'<circle cx="12" cy="12" r="4"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||ICONS.dot}</svg>`;
 // حقول البطاقة: من p.fields إن وُجدت، وإلا تُشتق من بيانات الصنف. الحد 6 حقول في البطاقة (3 أعمدة × صفين)، وكل الحقول تظهر في نافذة التكبير.
+const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','المنشأ والشهادات']];
+function zoomSpec(p){
+  const fs=fieldsOf(p).filter(f=>f.zoom!==false);
+  if(!fs.some(f=>f.zl))return `<span>${esc(fs.map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span>`;
+  return `<div class="zspec">${ZG.map(([g,t])=>{const r=fs.filter(f=>f.g===g);return r.length?`<section><h3>${t}</h3><dl>${r.map(f=>`<div><dt>${esc(f.zl)}</dt><dd><bdi>${esc(f.zv)}</bdi></dd></div>`).join('')}</dl></section>`:''}).join('')}</div>`;
+}
 function fieldsOf(p){
   if(Array.isArray(p.fields)&&p.fields.length) return p.fields;
   const f=[];
@@ -1314,7 +1327,7 @@ document.addEventListener('click',e=>{
     case 'brand': S.brand=a.dataset.v;renderFeed();break;
     case 'clear-q': S.q='';$('#q').value='';if(!a.closest('#subrail'))$('#q').focus();renderFeed();break;
     case 'close-suggest': $('#q').blur();break;
-    case 'zoom':{const p=PRODUCTS.find(x=>x.id===a.dataset.id);if(!p)break;const host=a.closest('.visual'),g0=host&&host.querySelector('.gallery'),idx=g0?Math.round(Math.abs(g0.scrollLeft)/Math.max(1,g0.clientWidth)):0;zoomFrom=a;$('#zoomBox').innerHTML=galleryHTML(p);$('#zoomCap').innerHTML=`<strong>${esc(p.name)} · ${esc(p.size)}</strong><span>${esc(fieldsOf(p).map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span><span>السعر: ${esc(p.price||'حسب عرض السعر')} · MOQ والتوريد: حسب عرض السعر</span>`;$('#zoom').hidden=false;const g=$('#zoomBox .gallery');g.scrollTo({left:(getComputedStyle(g).direction==='rtl'?-1:1)*idx*g.clientWidth,behavior:'instant'});syncGallery(g);$('#zoom .x').focus({preventScroll:true});break}
+    case 'zoom':{const p=PRODUCTS.find(x=>x.id===a.dataset.id);if(!p)break;const host=a.closest('.visual'),g0=host&&host.querySelector('.gallery'),idx=g0?Math.round(Math.abs(g0.scrollLeft)/Math.max(1,g0.clientWidth)):0;zoomFrom=a;$('#zoomBox').innerHTML=galleryHTML(p);$('#zoomCap').innerHTML=`<strong>${esc(p.name)} · ${esc(p.size)}</strong>${zoomSpec(p)}<span>السعر: ${esc(p.price||'حسب عرض السعر')}${fieldsOf(p).some(f=>f.zl==='أقل طلب')?'':' · MOQ والتوريد: حسب عرض السعر'}</span>`;$('#zoom').hidden=false;const g=$('#zoomBox .gallery');g.scrollTo({left:(getComputedStyle(g).direction==='rtl'?-1:1)*idx*g.clientWidth,behavior:'instant'});syncGallery(g);$('#zoom .x').focus({preventScroll:true});break}
     case 'gnav':{const g=a.closest('.visual').querySelector('.gallery'),sg=getComputedStyle(g).direction==='rtl'?-1:1;g.scrollBy({left:sg*Number(a.dataset.d)*g.clientWidth,behavior:'smooth'});break}
     case 'close-zoom': closeZoom();break;
     case 'sort': S.sort=a.dataset.v;renderFeed();break;
@@ -1368,7 +1381,7 @@ function normalize(d){
     const p={id,name:str(r.name),cat:str(r.sector||r.cat)||'عام',sub:str(r.sub)||'عام',type,brand:brand||NO_BRAND,pack,size,price:str(r.price),
       art:(r.art==='sack'||r.art==='bottle')?r.art:'none',short:str(r.short),tag:str(r.tag),kw:str(r.kw),
       imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean).map(u=>/^(https?:|\/|data:)/.test(u)?u:'/new-app/'+u),
-      fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v)})).filter(f=>f.v)};
+      fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false)})).filter(f=>f.v)};
     p.desc=[type,[pack,size].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
     p.sku=str(r.sku)||id.toUpperCase();
     return p}).filter(Boolean);

@@ -131,5 +131,5 @@ test('quality facts come first on the card', () => {
   const d = B.fromPlatform([{ id: 'p', name: 'زولانا خبازو', sector: { name: 'الأغذية' }, skus: [{ id: 'sku-khabbazo-50', name: 'زولانا خبازو 50 كجم',
     specifications: { packing: 'شوال منسوج 50 كجم', protein: '12%', moisture: 'حتى 14%', origin: 'مصر', certificates: 'حلال · ISO', gluten: '26 – 28%', ash: '0.60 – 0.65%' } }] }]);
   assert.deepEqual(d.products[0].fields.map(f => f.v),
-    ['بروتين 12%', 'رطوبة حتى 14%', 'مصر', 'حلال · ISO', 'شوال منسوج', '50 كجم', 'جلوتين رطب 26 – 28%', 'رماد 0.60 – 0.65%']);
+    ['بروتين 12%', 'مصر', 'حلال', 'شوال منسوج', '50 كجم', 'رطوبة حتى 14%', 'جلوتين رطب 26 – 28%', 'رماد 0.60 – 0.65%', 'حلال · ISO']);
 });

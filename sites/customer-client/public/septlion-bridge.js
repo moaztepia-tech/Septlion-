@@ -242,21 +242,36 @@
         // "شوال منسوج 50 كجم" shows as packing "شوال منسوج" and size "50 كجم", so nothing repeats.
         const packing = clean(spec.packing, 120);
         const pack = size && packing.endsWith(' ' + size) ? packing.slice(0, -size.length - 1) : packing;
-        // Quality facts first: the card shows the first 6, the enlarged card shows all.
-        const fields = [];
-        if (clean(spec.protein)) fields.push({ ic: 'type', l: '', v: 'بروتين ' + clean(spec.protein, 40) });
-        if (clean(spec.moisture)) fields.push({ ic: 'color', l: '', v: 'رطوبة ' + clean(spec.moisture, 40) });
-        if (clean(spec.origin)) fields.push({ ic: 'origin', l: 'المنشأ', v: clean(spec.origin, 60) });
-        if (clean(spec.certificates)) fields.push({ ic: 'grade', l: 'الشهادات', v: clean(spec.certificates, 120) });
-        if (clean(spec.type)) fields.push({ ic: 'type', l: 'النوع', v: clean(spec.type, 120) });
-        if (pack) fields.push({ ic: 'pack', l: 'التعبئة', v: pack });
-        if (size) fields.push({ ic: 'size', l: 'الحجم', v: size });
-        if (clean(spec.container)) fields.push({ ic: 'port', l: '', v: 'حاوية ' + clean(spec.container, 60) });
-        if (clean(spec.perContainer)) fields.push({ ic: 'moq', l: 'في الحاوية', v: clean(spec.perContainer, 120) });
-        if (clean(spec.gluten)) fields.push({ ic: 'dot', l: '', v: 'جلوتين رطب ' + clean(spec.gluten, 40) });
-        if (clean(spec.ash)) fields.push({ ic: 'dot', l: '', v: 'رماد ' + clean(spec.ash, 40) });
-        if (clean(spec.shelfLife)) fields.push({ ic: 'shelf', l: '', v: 'صلاحية ' + clean(spec.shelfLife, 40) });
-        if (clean(spec.brand)) fields.push({ ic: 'brand', l: 'العلامة', v: clean(spec.brand, 60) });
+        // Before enlarging, the six facts a flour buyer filters on: quality (protein), origin,
+        // the certificate their market asks for first (halal), packing, size, and the minimum
+        // load. After enlarging, everything a buyer checks before asking for an offer.
+        const certs = clean(spec.certificates, 160);
+        const firstCert = certs.split(/\s*[·،,]\s*/)[0];
+        // f(icon, card label, card value, group, label and value in the enlarged list)
+        const f = (ic, l, v, g, zl, zv) => ({ ic, l, v, g, zl, zv: zv == null ? v : zv });
+        const val = (k, n) => clean(spec[k], n || 60);
+        const card = [], more = [];
+        if (val('protein')) card.push(f('type', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
+        if (val('origin')) card.push(f('origin', 'المنشأ', val('origin'), 'c', 'المنشأ'));
+        if (firstCert) card.push(Object.assign(f('grade', '', firstCert, 'c', 'الشهادات'), { zoom: certs === firstCert }));
+        if (pack) card.push(f('pack', 'التعبئة', pack, 's', 'التعبئة'));
+        if (size) card.push(f('size', 'الحجم', size, 's', 'الحجم'));
+        if (val('container')) card.push(f('port', 'أقل طلب', 'حاوية ' + val('container'), 's', 'أقل طلب'));
+        if (val('type', 120)) more.push(f('type', 'النوع', val('type', 120), 'q', 'النوع'));
+        if (val('moisture')) more.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
+        if (val('gluten')) more.push(f('dot', '', 'جلوتين رطب ' + val('gluten'), 'q', 'الجلوتين الرطب', val('gluten')));
+        if (val('ash')) more.push(f('dot', '', 'رماد ' + val('ash'), 'q', 'الرماد', val('ash')));
+        if (val('absorption')) more.push(f('dot', '', 'امتصاص ماء ' + val('absorption'), 'q', 'امتصاص الماء', val('absorption')));
+        if (val('extraction')) more.push(f('dot', '', 'استخراج ' + val('extraction'), 'q', 'نسبة الاستخراج', val('extraction')));
+        if (val('shelfLife')) more.push(f('shelf', '', 'صلاحية ' + val('shelfLife'), 'q', 'الصلاحية', val('shelfLife')));
+        if (val('perContainer', 120)) more.push(f('moq', 'في الحاوية', val('perContainer', 120), 's', 'في الحاوية'));
+        if (val('payment', 120)) more.push(f('dot', 'الدفع', val('payment', 120), 's', 'الدفع'));
+        if (certs && certs !== firstCert) more.push(f('grade', 'الشهادات', certs, 'c', 'الشهادات'));
+        if (val('documents', 200)) more.push(f('dot', 'المستندات', val('documents', 200), 'c', 'المستندات'));
+        if (val('brand')) more.push(f('brand', 'العلامة', val('brand'), 'c', 'العلامة'));
+        // The card shows at most six; pad it from the details so it never looks empty.
+        while (card.length < 6 && more.length) card.push(more.shift());
+        const fields = card.concat(more);
         products.push({
           id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
           type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack, size,
