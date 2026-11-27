@@ -258,6 +258,7 @@
         if (pack) zoomOnly.push(zoomItem(f('pack', 'التعبئة', pack, 's', 'التعبئة')));
         if (size) zoomOnly.push(zoomItem(f('size', 'الحجم', size, 's', 'الحجم')));
         if (val('protein')) card.push(f('wheat', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
+        if (val('moisture')) card.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
         if (val('origin')) card.push(f('origin', 'المنشأ', 'منشأ ' + val('origin'), 'c', 'المنشأ', val('origin')));
         if (firstCert) card.push(Object.assign(f('brand', '', firstCert, 'c', 'الشهادات'), { zoom: certs === firstCert }));
         const unit = [pack.split(' ')[0], size].filter(Boolean).join(' ');
@@ -268,9 +269,8 @@
         const wide = val('container') ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
         // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
         const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
-        if (val('delivery', 80)) card.push(f('ship', 'التسليم', terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
+        if (val('delivery', 80)) card.push(f('ship', 'التسليم', terms.length ? 'شحن ' + terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
         if (val('type', 120)) more.push(f('type', 'النوع', val('type', 120), 'q', 'النوع'));
-        if (val('moisture')) more.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
         if (val('gluten')) more.push(f('dot', '', 'جلوتين رطب ' + val('gluten'), 'q', 'الجلوتين الرطب', val('gluten')));
         if (val('ash')) more.push(f('dot', '', 'رماد ' + val('ash'), 'q', 'الرماد', val('ash')));
         if (val('absorption')) more.push(f('dot', '', 'امتصاص ماء ' + val('absorption'), 'q', 'امتصاص الماء', val('absorption')));

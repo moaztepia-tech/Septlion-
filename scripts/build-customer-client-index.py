@@ -47,8 +47,12 @@ function zoomSpec(p){
 }
 function fieldsOf(p){""")
 one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-size:12px;color:var(--muted)}
-.fields.w3{grid-template-rows:repeat(3,19px);height:63px}
-.fields li.wide{grid-column:1/-1}
+/* Card facts in one framed panel: two even columns with a hairline divider (quality,
+   origin and halal, packing and delivery), and the minimum load as a footer strip. */
+.fields.w3{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(3,20px) auto;height:auto;gap:5px 0;padding:8px 4px 0;margin-top:2px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}
+.fields.w3 li:not(.wide){padding-inline:10px}
+.fields.w3 li:not(.wide):nth-child(2n){border-inline-start:1px solid rgba(255,255,255,.09)}
+.fields li.wide{grid-column:1/-1;margin:3px -4px 0;padding:7px 14px;background:rgba(214,178,94,.09);border-top:1px solid rgba(255,255,255,.09);line-height:20px}
 .zspec{display:grid;gap:12px;max-height:min(36vh,320px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:12px;border:1px solid #ffffff1f;border-radius:16px;background:#0b1f38b3}
 .ztiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .ztiles div{display:grid;gap:2px;justify-items:center;padding:10px 6px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff14;text-align:center}

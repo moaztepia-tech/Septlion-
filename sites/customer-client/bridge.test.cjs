@@ -135,8 +135,8 @@ test('quality facts come first on the card', () => {
     specifications: { packing: 'شوال منسوج 50 كجم', protein: '12%', moisture: 'حتى 14%', origin: 'مصر', certificates: 'حلال · ISO', gluten: '26 – 28%', ash: '0.60 – 0.65%', container: '20 قدماً', delivery: 'FOB مصر أو CIF ميناؤك' } }] }]);
   const fs = d.products[0].fields;
   assert.deepEqual(fs.slice(0, 7).map(f => f.v),
-    ['بروتين 12%', 'منشأ مصر', 'حلال', 'شوال 50 كجم', 'FOB أو CIF', 'رطوبة حتى 14%', 'أقل طلب: حاوية 20 قدماً']);
-  assert.equal(fs[4].zv, 'FOB مصر أو CIF ميناؤك');
+    ['بروتين 12%', 'رطوبة حتى 14%', 'منشأ مصر', 'حلال', 'شوال 50 كجم', 'شحن FOB أو CIF', 'أقل طلب: حاوية 20 قدماً']);
+  assert.equal(fs[5].zv, 'FOB مصر أو CIF ميناؤك');
   assert.equal(fs[6].wide, true);
   // In the enlarged view the packing and size are listed apart, and the short unit is hidden.
   assert.equal(fs[3].zoom, false);
