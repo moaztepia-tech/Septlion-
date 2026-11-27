@@ -51,16 +51,6 @@ export default function CommandCenter({role}:{role:'ADMIN'|'SALES'}) {
       <Link href="/operations?tab=deals" className="ops-stat"><b>{health?health.activeTransactions??0:'–'}</b><small>صفقات نشطة</small></Link>
     </div>
 
-    <Link href="/demand-intelligence/workbench" className="ops-card ops-row" style={{textDecoration:'none',color:'inherit',gap:12}}>
-      <span><b className="ops-h2">لوحة تشغيل الطلبات</b><br/><small className="ops-sub">الطلبات الجديدة، والمشترون المحتملون، ومهام كل صفقة</small></span>
-      <span className="ops-link">افتح ←</span>
-    </Link>
-
-    <Link href="/site-content" className="ops-card ops-row" style={{textDecoration:'none',color:'inherit',gap:12}}>
-      <span><b className="ops-h2">محتوى الموقع</b><br/><small className="ops-sub">عدّل عناوين ونصوص الصفحة الرئيسية بنفسك</small></span>
-      <span className="ops-link">عدّل ←</span>
-    </Link>
-
     <section className="ops-card" aria-labelledby="latest">
       <div className="ops-row" style={{marginBottom:10}}><h2 id="latest" className="ops-h2">أحدث الطلبات</h2><Link href="/operations" className="ops-link">كل الطلبات ←</Link></div>
       {err&&<p className="ops-alert" role="alert">{err}</p>}
@@ -75,12 +65,10 @@ export default function CommandCenter({role}:{role:'ADMIN'|'SALES'}) {
 
     <VisitorsCard/>
 
-    <section aria-label="أقسام العمل" className="ops-tiles">
-      <Link href="/operations" className="ops-tile"><b>الطلبات وعروض الأسعار</b><small>راجع الطلب وأصدر عرض السعر للعميل</small></Link>
-      <Link href="/operations?tab=deals" className="ops-tile"><b>تنفيذ الصفقات</b><small>مراحل الشحن والمستندات بعد قبول العرض</small></Link>
-      <Link href="/demand-intelligence/workbench" className="ops-tile"><b>لوحة تشغيل الطلبات</b><small>الطلبات الجديدة والمشترون المحتملون والمهام</small></Link>
-      <Link href="/demand-intelligence" className="ops-tile"><b>الفرص والتقييم</b><small>فرص الطلب في الأسواق قبل الالتزام</small></Link>
-      <Link href="/discover" className="ops-tile"><b>ما يراه العميل</b><small>معاينة الكتالوج كما يظهر في الموقع</small></Link>
+    <section aria-label="اختصارات" className="ops-tiles">
+      <Link href="/operations?tab=deals" className="ops-tile"><b>الصفقات</b><small>مراحل الشحن والمستندات بعد قبول العرض</small></Link>
+      <Link href="/site-content" className="ops-tile"><b>محتوى الموقع</b><small>عدّل عناوين ونصوص الصفحة الرئيسية</small></Link>
+      <Link href="/discover" className="ops-tile"><b>ما يراه العميل</b><small>الموقع كما يظهر للعملاء</small></Link>
     </section>
 
     <details className="ops-card ops-fold" open={catalogOpen} onToggle={e=>setCatalogOpen((e.target as HTMLDetailsElement).open)}>

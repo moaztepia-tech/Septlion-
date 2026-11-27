@@ -18,7 +18,7 @@ export default function CommandGate(){
  const check=useCallback(async(explicit:boolean)=>{
   if(!hasSession()){setState({status:'denied',...(explicit?{error:'سجّل الدخول بحساب تشغيلي أولًا.'}:{})});return;}
   setState({status:'checking'});
-  try{const role=await operatorRole();setState(role?{status:'allowed',role}:{status:'denied',error:'يتطلب مركز القيادة عضوية تشغيلية فعالة في SEPTLION.'});}
+  try{const role=await operatorRole();setState(role?{status:'allowed',role}:{status:'denied',error:'هذا الحساب ليس من فريق سبتليون. سجّل الدخول بحساب الفريق.'});}
   catch(e){setState({status:'denied',...(explicit?{error:e instanceof Error?e.message:'تعذر التحقق من الدخول'}:{})});}
  },[]);
  useEffect(()=>{void check(false);},[check]);

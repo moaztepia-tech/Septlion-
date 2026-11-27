@@ -2,6 +2,7 @@
 
 import {useEffect,useMemo,useState} from 'react';
 import {accessToken} from '../../lib/api';
+import {dateAr} from '../../components/ops-console';
 
 type Signal={
  id:string;type:string;market:string;product:string;quantity?:string|null;
@@ -30,10 +31,10 @@ const stageLabel:Record<string,string>={
  RFQ:'طلب عرض سعر',
  ARCHIVED:'مؤرشف'
 };
-const typeLabel:Record<string,string>={RFQ:'طلب عرض سعر',TENDER:'مناقصة',AUCTION:'مزاد'};
+const typeLabel:Record<string,string>={RFQ:'طلب شراء',TENDER:'مناقصة',AUCTION:'مزاد'};
 const statusTone=(s:string)=>s==='QUALIFY_NOW'?'new':s==='RESOLVE_BUYER'?'sent':'muted';
 const statusLabel:Record<string,string>={QUALIFY_NOW:'جاهزة للتأهيل',RESOLVE_BUYER:'تحتاج تحديد المشتري'};
-const day=(x?:string|null)=>x?new Date(x).toLocaleDateString('ar-EG-u-nu-latn',{day:'numeric',month:'short',year:'numeric'}):'—';
+const day=dateAr;
 
 export default function DemandRadar(){
  const [signals,setSignals]=useState<Signal[]|null>(null);
