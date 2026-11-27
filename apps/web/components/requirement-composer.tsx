@@ -6,7 +6,7 @@ import {SupplyPlanEditor} from './supply-plan';
 import {supplyPlanProblem} from '../lib/supply-plan';
 import {quantityDetails} from '../lib/composer-draft';
 import {FormEvent, useEffect, useRef, useState} from 'react';
-import {PlatformHeader} from './platform-header';
+import {SeptlionSymbol} from './septlion-symbol';
 import {edge, hasSession, publicFunction, sessionUserId} from '../lib/api';
 import {createTradeRequirement} from '../lib/trade-data';
 import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, applyGuidance, displayRequirementValue, needsGuidance, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
@@ -118,7 +118,10 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
   }
   const lastReply=draft.messages.filter(m=>m.role==='assistant').at(-1)?.text;
   return <main className="chat-ai customer-composer" dir={ar?'rtl':'ltr'} lang={lang}>
-    <PlatformHeader lang={lang} actions={<><DesignButton className="secondary-link" disabled={saving} onClick={reset}>{ar?'طلب جديد':'New request'}</DesignButton><DesignButton className="platform-action" onClick={()=>setLang(ar?'en':'ar')} aria-label={ar?'Switch to English':'التبديل إلى العربية'}>{ar?'EN':'ع'}</DesignButton></>}/>
+    <header className="composer-top">
+      <a href="/" className="composer-brand" aria-label={ar?'سبتليون — الرئيسية':'Septlion — Home'}><SeptlionSymbol/></a>
+      <div className="composer-top-actions"><button type="button" className="composer-icon" disabled={saving} onClick={reset}>{ar?'طلب جديد':'New request'}</button><button type="button" className="composer-icon" onClick={()=>setLang(ar?'en':'ar')} aria-label={ar?'Switch to English':'التبديل إلى العربية'}>{ar?'EN':'ع'}</button><a href="/" className="composer-icon composer-home" aria-label={ar?'الرئيسية':'Home'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg></a></div>
+    </header>
     <section className={'chat-stage '+(draft.messages.length?'has-chat':'')} aria-labelledby="composer-title">
       <div className="composer-status"><span>{storageError?(ar?'تعذر حفظ المسودة على هذا الجهاز':'Draft storage unavailable'):(ar?'مسودتك محفوظة في هذا التبويب':'Draft saved in this tab')}</span><span>{reviewOnly?(ar?'مراجعة الطلب':'Request review'):(ar?'طلب التوريد':'Supply request')}</span></div>
       {undo&&<p className="composer-undo" role="status">{ar?'بدأت طلبًا جديدًا.':'New request started.'} <DesignButton onClick={()=>{setDraft(undo);setUndo(null);}}>{ar?'استعادة الطلب السابق':'Restore previous request'}</DesignButton></p>}
