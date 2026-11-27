@@ -9,6 +9,6 @@ test('Hostinger static composer calls Supabase Edge guidance with local fallback
   assert.ok(!source.includes("fetch('/api/interpret-requirement'"));
   assert.ok(source.includes("clearTimeout(guidanceTimeout)"));
   assert.ok(source.includes("const answered=answerRequirement(draft,submitted,lang)"));
-  assert.ok(source.includes("applyGuidance(current,fields,lang,submitted)"));
+  assert.ok(source.includes("applyGuidance(current,body.fields??null,lang,submitted,reply,intent)"));
   assert.ok(source.includes("await createTradeRequirement(input)"));
 });

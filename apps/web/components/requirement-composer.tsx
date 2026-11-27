@@ -9,7 +9,7 @@ import {FormEvent, useEffect, useRef, useState} from 'react';
 import {SeptlionSymbol} from './septlion-symbol';
 import {edge, hasSession, publicFunction, sessionUserId} from '../lib/api';
 import {createTradeRequirement} from '../lib/trade-data';
-import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, applyGuidance, displayRequirementValue, needsGuidance, smallTalk, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
+import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, applyGuidance, displayRequirementValue, needsAI, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
 
 const labels = {
   ar: {product:'المنتج', application:'الاستخدام', quantity:'الكمية والوحدة', packing:'التعبئة', destination:'الدولة أو الميناء', incoterm:'شرط التجارة', payment:'طريقة الدفع'},
@@ -75,17 +75,19 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     setDraft(answered); setSaveError('');
     // Only when the buyer's own words leave the product, quantity or destination unknown, ask the
     // interpret-requirement function. It fills empty fields only; local parsing stays authoritative.
-    if (needsGuidance(answered) && submitted.length >= 12 && !smallTalk(submitted)) {
+    if (needsAI(draft,answered,submitted)) {
       const guidance = new AbortController();
       const guidanceTimeout = setTimeout(()=>guidance.abort(),12000);
       void publicFunction('interpret-requirement', {text:submitted}, guidance.signal)
         .then(async response=>{
         if(!response.ok)return;
         const payload:unknown=await response.json();
-        const fields=payload && typeof payload==='object' && 'fields' in payload ? (payload as {fields?:unknown}).fields : null;
+        const body=(payload && typeof payload==='object' ? payload : {}) as {fields?:unknown;reply?:unknown;intent?:unknown};
+        const reply=typeof body.reply==='string'?body.reply:'';
+        const intent=typeof body.intent==='string'?body.intent:'request';
         setDraft(current=>{
           if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
-          return applyGuidance(current,fields,lang,submitted);
+          return applyGuidance(current,body.fields??null,lang,submitted,reply,intent);
         });
       }).catch(()=>{ /* The composer works without optional guidance. */ })
         .finally(()=>clearTimeout(guidanceTimeout));

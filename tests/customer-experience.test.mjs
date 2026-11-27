@@ -180,3 +180,20 @@ test('AI guidance may replace a field that only holds the buyer whole sentence',
  const g=draft.applyGuidance(d,{product:'طحين',quantity:'',destination:''},'ar',text);
  assert.notEqual(g.data.product,text);
 });
+test('questions are answered, never stored, and the AI reply leads the next question',()=>{
+ const start=draft.emptyComposerDraft('home');
+ const q=draft.answerRequirement(start,'كم سعر الطن عندكم؟','ar');
+ assert.deepEqual(q.data,{});assert.match(q.messages.at(-1).text,/عرض سبتليون المكتوب/);assert.match(q.messages.at(-1).text,/المنتج/);
+ assert.equal(draft.needsAI(start,q,'كم سعر الطن عندكم؟'),true);
+ const g=draft.applyGuidance(q,{product:'',quantity:'',destination:'',packing:'',incoterm:'',payment:''},'ar','كم سعر الطن عندكم؟','السعر يصلك في العرض المكتوب.','question');
+ assert.match(g.messages.at(-1).text,/^السعر يصلك في العرض المكتوب\.\n\nما المنتج/);
+ assert.equal(draft.needsAI(start,draft.answerRequirement(start,'السلام عليكم','ar'),'السلام عليكم'),false);
+});
+test('a complaint kept as a field by the local fallback is removed when the AI says it is not a request',()=>{
+ const base={...draft.emptyComposerDraft('home'),data:{product:'Wheat Flour',quantity:'5 FCL',destination:'كوتونو'}};
+ const text='انتم بطيئين جدا في الرد';
+ const d=draft.answerRequirement(base,text,'ar');
+ const field=Object.keys(d.data).find(k=>d.data[k]===text);assert.ok(field);
+ const g=draft.applyGuidance(d,{product:'',quantity:'',destination:'',packing:'',incoterm:'',payment:''},'ar',text,'نعتذر عن التأخير، سنهتم بطلبك.','other');
+ assert.equal(Object.values(g.data).includes(text),false);assert.match(g.messages.at(-1).text,/^نعتذر/);
+});
