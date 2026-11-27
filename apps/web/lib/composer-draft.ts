@@ -145,3 +145,20 @@ export function restoreComposerDraft(raw: string | null, ownerId?: string): Comp
       ...(typeof draft.savedRequirementId === 'string' ? {savedRequirementId: draft.savedRequirementId} : {})};
   } catch { return null; }
 }
+
+// Values stay in their canonical (English) form for the platform; Arabic readers see them in Arabic.
+const productAr: Record<string,string> = {'Wheat Flour':'دقيق قمح','Whole Wheat Flour':'دقيق قمح كامل','Essential Flour':'دقيق أساسي','Pasta':'مكرونة','Tomato Paste':'صلصة طماطم','Sesame':'سمسم','Hibiscus':'كركديه','Gum Arabic':'صمغ عربي','Custom Packaging':'تغليف خاص','Biscuits':'بسكويت','Edible Oil':'زيت طعام'};
+export function displayRequirementValue(field: RequirementField, value: string, lang: 'ar'|'en') {
+  if (lang !== 'ar' || !value) return value;
+  if (field === 'product') return productAr[value] || value;
+  if (field === 'application') return value === 'Bakery' ? 'للمخابز' : value;
+  if (field === 'quantity') {
+    const q = quantityDetails(value);
+    if (!q) return value;
+    const n = q.amount.toLocaleString('en-US');
+    return q.unit === 'FCL' ? (q.amount === 1 ? 'حاوية واحدة' : q.amount === 2 ? 'حاويتان' : n + (q.amount <= 10 ? ' حاويات' : ' حاوية')) : q.unit === 'KG' ? n + ' كجم' : n + ' طن';
+  }
+  if (field === 'packing') return value.replace(/^(\d+(?:[.,]\d+)?)\s*kg$/i, '$1 كجم');
+  if (field === 'payment') return value === 'L/C' ? 'L/C — اعتماد مستندي' : value === 'T/T' ? 'T/T — تحويل بنكي' : value === 'OTHER' ? 'تُناقش في العرض' : value;
+  return value;
+}

@@ -1,4 +1,8 @@
-const destinations = ['تنزانيا','tanzania','غانا','ghana','كينيا','kenya','السعودية','saudi','مصر','egypt','الصومال','somalia','تشاد','chad','موريتانيا','mauritania','ليبيا','libya','قطر','qatar','السودان','sudan'];
+// Priority markets first (Africa and the Middle East), then ports. Longer names come first so
+// "جنوب السودان" wins over "السودان". Matching is on whole words, so "إجمالي" is not Mali.
+const destinations = ['جنوب السودان','south sudan','بورتسودان','port sudan','دار السلام','dar es salaam','ساحل العاج','كوت ديفوار',"cote d'ivoire",'ivory coast','بوركينا فاسو','burkina faso','غينيا بيساو','guinea-bissau','سيراليون','sierra leone','الكونغو','congo','كوتونو','cotonou','لومي','lome','لاغوس','lagos','داكار','dakar','أبيدجان','ابيدجان','abidjan','مومباسا','mombasa','جيبوتي','djibouti','عدن','aden','جدة','jeddah','بنين','benin','مالي','mali','نيجيريا','nigeria','النيجر','niger','السنغال','senegal','الكاميرون','cameroon','توغو','togo','غينيا','guinea','غامبيا','gambia','ليبيريا','liberia','إثيوبيا','اثيوبيا','ethiopia','إريتريا','اريتريا','eritrea','أوغندا','اوغندا','uganda','رواندا','rwanda','بوروندي','burundi','موزمبيق','mozambique','أنغولا','انغولا','angola','زامبيا','zambia','زيمبابوي','zimbabwe','مالاوي','malawi','مدغشقر','madagascar','المغرب','morocco','الجزائر','algeria','تونس','tunisia','اليمن','yemen','العراق','iraq','الأردن','الاردن','jordan','لبنان','lebanon','سوريا','syria','الكويت','kuwait','البحرين','bahrain','عمان','oman','الإمارات','الامارات','uae','تنزانيا','tanzania','غانا','ghana','كينيا','kenya','السعودية','saudi','مصر','egypt','الصومال','somalia','تشاد','chad','موريتانيا','mauritania','ليبيا','libya','قطر','qatar','السودان','sudan'];
+const escapeRe = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const mentions = (text: string, name: string) => new RegExp('(?:^|[^\\p{L}])(?:[لبو])?' + escapeRe(name) + '(?:$|[^\\p{L}])', 'iu').test(text);
 const products: [RegExp,string][] = [[/دقيق كامل|whole wheat flour/i,'Whole Wheat Flour'],[/دقيق أساسي|دقيق اساسي|essential flour/i,'Essential Flour'],[/دقيق|flour/i,'Wheat Flour'],[/مكرونة|معكرونة|pasta|spaghetti/i,'Pasta'],[/صلصة|طماطم|tomato paste/i,'Tomato Paste'],[/سمسم|sesame/i,'Sesame'],[/كركدي|hibiscus/i,'Hibiscus'],[/صمغ عربي|gum arabic/i,'Gum Arabic'],[/كيس|اكياس|أكياس|عبو|packaging|pouch|bag/i,'Custom Packaging'],[/بسكويت|biscuit/i,'Biscuits'],[/زيت|oil/i,'Edible Oil']];
 
 export function extractRequirement(raw: string): Record<string,string> {
@@ -6,7 +10,7 @@ export function extractRequirement(raw: string): Record<string,string> {
   const out: Record<string,string> = {};
   const product = products.find(([pattern]) => pattern.test(text));
   if (product) out.product = product[1];
-  const destination = destinations.find(d => text.toLowerCase().includes(d));
+  const destination = destinations.find(d => mentions(text, d));
   if (destination) out.destination = destination;
   const containers = text.match(/([+-]?\d+(?:[.,]\d+)?)\s*(حاوي(?:ة|ات)|fcl|containers?)/i);
   if (containers) out.quantity = containers[1].replace(',', '.') + ' FCL';

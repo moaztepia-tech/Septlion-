@@ -23,3 +23,12 @@ test('a product-only request preserves the selected port and terms',()=>{
  assert.deepEqual(mergeRequirementInput('Pasta',{quantity:'8 FCL',destination:'Jeddah Islamic Port',incoterm:'CFR',payment:'L/C'}),{quantity:'8 FCL',destination:'Jeddah Islamic Port',incoterm:'CFR',payment:'L/C',product:'Pasta'});
  assert.deepEqual(extractRequirement(''),{});
 });
+test('priority African and Middle East markets are recognised in Arabic and English, on whole words only',()=>{
+ assert.equal(extractRequirement('أحتاج 5 حاويات دقيق مخابز بتعبئة 50 كجم إلى بنين').destination,'بنين');
+ assert.equal(extractRequirement('12500 طن دقيق إلى مالي').destination,'مالي');
+ assert.equal(extractRequirement('flour to Cotonou, Benin').destination,'cotonou');
+ assert.equal(extractRequirement('دقيق إلى جنوب السودان').destination,'جنوب السودان');
+ assert.equal(extractRequirement('wheat flour for Nigeria').destination,'nigeria');
+ assert.equal(extractRequirement('السعر الإجمالي للدقيق').destination,undefined);
+ assert.equal(extractRequirement('flour for Somalia').destination,'somalia');
+});

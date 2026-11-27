@@ -20,8 +20,8 @@ RewriteRule ^(.+?)/?$ _rsc/$1.rsc [L]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 # 4. Platform pages behind the interface (command center, accounts, ...).
-#    The new-app site keeps its own short links (/discover, /requests, ...).
-RewriteCond $1 !^(new-app|discover|requests|notifications|require)(/|$)
+#    The new-app site keeps its own short links (/discover, /requests, ...); /require is the platform composer.
+RewriteCond $1 !^(new-app|discover|requests|notifications)(/|$)
 RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
 RewriteRule ^(.+?)/?$ $1/index.html [L]
 # 5. Everything else stays with the new-app site, as before.
