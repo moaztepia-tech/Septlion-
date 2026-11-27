@@ -163,3 +163,20 @@ test('selected live SKU survives restored preparation, quantity review and persi
  assert.equal(payload.catalogProductId,'published-product');assert.deepEqual(payload.variants,[{skuId:'selected-sku',containers:8}]);
  assert.deepEqual(payload.knownFacts.variants,payload.variants);assert.equal(payload.knownFacts.catalogProductId,payload.catalogProductId);
 });
+test('greetings and small talk get a friendly answer and are never stored as a field',()=>{
+ for(const text of ['السلام عليكم','مرحبا كيف حالك؟','هلا والله','صباح الخير يا أستاذ','Hi, how are you?','شكرا','تمام']){
+  const d=draft.answerRequirement(draft.emptyComposerDraft('home'),text,'ar');
+  assert.deepEqual(d.data,{},text);
+  assert.match(d.messages.at(-1).text,/المنتج/,text);
+ }
+ assert.match(draft.answerRequirement(draft.emptyComposerDraft('home'),'السلام عليكم ورحمة الله','ar').messages.at(-1).text,/^وعليكم السلام/);
+ const mixed=draft.answerRequirement(draft.emptyComposerDraft('home'),'السلام عليكم، أحتاج 5 حاويات دقيق مخابز إلى كوتونو','ar');
+ assert.equal(mixed.data.destination,'كوتونو');assert.match(mixed.messages.at(-1).text,/^وعليكم السلام\. /);
+ assert.equal(draft.smallTalk('دار السلام'),null);
+});
+test('AI guidance may replace a field that only holds the buyer whole sentence',()=>{
+ const text='محتاجين حاجة للخرطوم بسرعة يا جماعة';
+ const d=draft.answerRequirement(draft.emptyComposerDraft('home'),text,'ar');
+ const g=draft.applyGuidance(d,{product:'طحين',quantity:'',destination:''},'ar',text);
+ assert.notEqual(g.data.product,text);
+});
