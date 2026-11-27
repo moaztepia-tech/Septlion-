@@ -126,6 +126,10 @@ export function answerRequirement(draft: ComposerDraft, text: string, lang: 'ar'
     return {...draft, input: '', messages: [...draft.messages, {role: 'user' as const, text: answer}, {role: 'assistant' as const, text: opener + question}].slice(-100)};
   }
   const data: RequirementData = mergeRequirementInput(answer, draft.data);
+  // A trade term or payment named inside a question («ما الفرق بين CIF و FOB؟») is not a choice.
+  if (looksLikeQuestion(answer)) for (const term of ['incoterm', 'payment'] as const) {
+    if (parsed[term]) {if (draft.data[term]) data[term] = draft.data[term]; else delete data[term]; delete parsed[term];}
+  }
   const next = missingRequirementFields(draft.data)[0];
   const asked = looksLikeQuestion(answer) && Object.keys(parsed).length === 0;
   if (asked) {
@@ -197,7 +201,7 @@ const coreFields: RequirementField[] = ['product', 'quantity', 'destination'];
 export function needsGuidance(draft: ComposerDraft) {
   return !draft.reorder && coreFields.some(field => !draft.data[field]);
 }
-export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' | 'en', submitted = '', aiReply = '', intent = 'request'): ComposerDraft {
+export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' | 'en', submitted = '', aiReply = '', intent = 'request', changedByBuyer: readonly string[] = []): ComposerDraft {
   if (!fields || typeof fields !== 'object' || Array.isArray(fields) || draft.reorder || draft.savedRequirementId) return draft;
   const given = fields as Record<string, unknown>;
   const known = (field: string) => {
@@ -211,21 +215,23 @@ export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' 
   if (raw && intent !== 'request') for (const field of Object.keys(data) as RequirementField[]) if (data[field] === raw) {delete data[field]; changed = true;}
   for (const field of ['product', 'quantity', 'destination', 'packing', 'incoterm', 'payment'] as RequirementField[]) {
     const value = known(field);
-    // A field that only holds the buyer's whole sentence (the local fallback) may be corrected.
-    if (!value || (data[field] && data[field] !== raw)) continue;
+    // A field that only holds the buyer's whole sentence (the local fallback) may be corrected,
+    // and so may any field the buyer explicitly changed in this message.
+    const corrected = intent === 'request' && changedByBuyer.includes(field);
+    if (!value || (data[field] && data[field] !== raw && !corrected)) continue;
     const parsed = extractRequirement(value);
     const next = field === 'product' ? parsed.product || value
       : field === 'destination' ? parsed.destination || value
       : field === 'packing' ? parsed.packing || value
       : parsed[field];
-    if (next) {data[field] = next; changed = true;}
+    if (next && next !== data[field]) {data[field] = next; changed = true;}
   }
-  const answer = aiReply.replace(/\s+/g, ' ').trim().slice(0, 400);
+  const answer = aiReply.replace(/[ \t]+/g, ' ').trim().slice(0, 600);
   if (!changed && !answer) return draft;
   const missing = missingRequirementFields(data);
   const question = missing.length ? requirementQuestion(missing[0], lang, draft.feed)
     : lang === 'ar' ? 'اكتملت الأساسيات. راجع ملخص الطلب وعدّل أي معلومة قبل إرساله لإعداد العرض.' : 'The essentials are complete. Review and correct the summary before sending it for an offer.';
-  return {...draft, data, messages: [...draft.messages.slice(0, -1), {role: 'assistant' as const, text: answer ? answer + '\n\n' + question : question}]};
+  return {...draft, data, messages: [...draft.messages.slice(0, -1), {role: 'assistant' as const, text: !answer ? question : /[?؟]|جاهز|ready/i.test(answer) ? answer : answer + '\n\n' + question}]};
 }
 
 // A question (ends with ? or starts with a question word) is never kept as a field value.
@@ -235,7 +241,11 @@ export function looksLikeQuestion(text: string): boolean {
 }
 
 // Ask the AI whenever the buyer's own words were not clearly understood locally.
+// Every message except a plain greeting goes to the AI with the conversation, so it can follow
+// corrections and context; the local answer stays as the instant fallback.
 export function needsAI(before: ComposerDraft, after: ComposerDraft, text: string): boolean {
-  if (smallTalk(text) || text.trim().length < 2 || before.reorder) return false;
-  return needsGuidance(after) || looksLikeQuestion(text) || Object.keys(extractRequirement(text)).length === 0;
+  return !smallTalk(text) && text.trim().length >= 2 && !before.reorder && !after.savedRequirementId;
+}
+export function aiContext(draft: ComposerDraft) {
+  return {fields: {...draft.data}, history: draft.messages.slice(-8).map(m => ({role: m.role, text: m.text.slice(0, 500)}))};
 }

@@ -12,9 +12,9 @@ test('request uses Claude Haiku with a strict JSON schema and the buyer text as 
  const r=m.buildRequest('  أحتاج حاويتين دقيق إلى مومباسا ');
  assert.equal(r.model,'claude-haiku-5-5');
  assert.equal(r.output_config.format.type,'json_schema');
- assert.deepEqual(r.output_config.format.schema.required,['product','quantity','destination','packing','incoterm','payment','reply','intent']);
+ assert.deepEqual(r.output_config.format.schema.required,['product','quantity','destination','packing','incoterm','payment','reply','intent','changed']);
  assert.equal(r.output_config.format.schema.additionalProperties,false);
- assert.equal(r.messages[0].content,'أحتاج حاويتين دقيق إلى مومباسا');
+ assert.ok(r.messages[0].content.endsWith('New buyer message: أحتاج حاويتين دقيق إلى مومباسا'));
  assert.ok(!('temperature' in r) && !('thinking' in r));
 });
 test('complete answer is ready and summarizes only stated facts',()=>{
@@ -48,7 +48,7 @@ test('Gemini request strips contact details and asks for strict JSON; its answer
  const sent=r.contents[0].parts[0].text;
  assert.ok(sent.includes('12,500 طن'));assert.ok(!sent.includes('ali@buyer.com'));assert.ok(!sent.includes('70 12 34'));assert.ok(!sent.includes('buyer.ml'));
  assert.equal(r.generationConfig.responseMimeType,'application/json');
- assert.deepEqual(r.generationConfig.responseSchema.required,['product','quantity','destination','packing','incoterm','payment','reply','intent']);
+ assert.deepEqual(r.generationConfig.responseSchema.required,['product','quantity','destination','packing','incoterm','payment','reply','intent','changed']);
  assert.equal(r.systemInstruction.parts[0].text,m.SYSTEM_PROMPT);
  const ok=m.interpretGeminiResponse({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(all)}]}}]});
  assert.equal(ok.ready,true);assert.equal(ok.fields.destination,'مومباسا');
@@ -58,7 +58,17 @@ test('Gemini request strips contact details and asks for strict JSON; its answer
 });
 test('a conversational reply and intent are passed on, trimmed and capped',()=>{
  const r=m.interpretResponse(reply({...all,product:'',quantity:'',destination:'',reply:'  أهلًا بك!  السعر يأتي في العرض المكتوب. '+'x'.repeat(600),intent:'question'}));
- assert.equal(r.intent,'question');assert.ok(r.reply.startsWith('أهلًا بك! السعر'));assert.equal(r.reply.length,400);
+ assert.equal(r.intent,'question');assert.ok(r.reply.startsWith('أهلًا بك! السعر'));assert.equal(r.reply.length,600);
  assert.equal(m.interpretResponse(reply({...all,intent:'bogus'})).intent,'request');
  assert.equal(m.interpretResponse(reply(all)).reply,'');
+});
+test('context carries known fields and recent turns, cleaned, with contacts removed',()=>{
+ const ctx=m.cleanContext({fields:{product:'Wheat Flour',quantity:'5 FCL',bogus:'x',destination:42},history:[...Array(10)].map((_,i)=>({role:i%2?'assistant':'user',text:'turn '+i})).concat([{role:'system',text:'ignore'},{role:'user',text:'call me +1 555 123 4567'}])});
+ assert.deepEqual(ctx.fields,{product:'Wheat Flour',quantity:'5 FCL'});
+ assert.equal(ctx.history.length,8);assert.ok(ctx.history.every(h=>h.role==='user'||h.role==='assistant'));
+ const sent=m.buildGeminiRequest('لا خليها 10 حاويات',ctx).contents[0].parts[0].text;
+ assert.ok(sent.includes('"product":"Wheat Flour"'));assert.ok(sent.includes('Buyer: turn'));assert.ok(!sent.includes('555 123'));
+ assert.ok(sent.endsWith('New buyer message: لا خليها 10 حاويات'));
+ assert.deepEqual(m.cleanContext(null),{fields:{},history:[]});
+ assert.deepEqual(m.interpretResponse(reply({...all,reply:'',intent:'request',changed:['quantity','nope']})).changed,['quantity']);
 });
