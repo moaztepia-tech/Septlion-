@@ -11,3 +11,8 @@ export function parseWhatsappTargets(raw: string): { phone: string; apikey: stri
     return /^[1-9]\d{7,14}$/.test(digits) && /^[A-Za-z0-9]{3,64}$/.test(k || "") ? { phone: "+" + digits, apikey: k } : null;
   }).filter((x): x is { phone: string; apikey: string } => x !== null);
 }
+
+// "123456789, -100987654321" -> ["123456789", "-100987654321"] (Telegram chat ids)
+export function parseTelegramChats(raw: string): string[] {
+  return [...new Set(raw.split(/[,;\s]+/).map((s) => s.trim()).filter((s) => /^-?\d{5,20}$/.test(s)))];
+}

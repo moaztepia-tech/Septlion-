@@ -22,6 +22,10 @@ test('WhatsApp targets need a real number and an API key',()=>{
  assert.deepEqual(m.parseWhatsappTargets('+249123456789'),[]);
  assert.deepEqual(m.parseWhatsappTargets('12:999,+249123456789:bad key!'),[]);
 });
+test('Telegram chat ids are numbers only',()=>{
+ assert.deepEqual(m.parseTelegramChats('123456789, -100987654321 123456789'),['123456789','-100987654321']);
+ assert.deepEqual(m.parseTelegramChats('@me, abc, 12'),[]);
+});
 test('the alert queue stays private and the cron retry is scheduled',()=>{
  assert.match(sql,/revoke all on public\."TeamAlert" from anon, authenticated/);
  assert.match(sql,/cron\.schedule\('septlion-team-alerts-retry'/);
