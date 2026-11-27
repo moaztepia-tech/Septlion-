@@ -256,9 +256,16 @@ def read_manifest(ftp):
 
 
 def write_manifest(ftp, package, tag):
-    """Record size, time and checksum of every package file as it is live now."""
+    """Record time and checksum of every package file as it is live now.
+
+    Entries for files outside this package (the other site's release) are kept,
+    so releasing the customer client never makes the next platform release
+    download every file again. A kept entry is only trusted while the live
+    file's time still matches it, so a stale one simply means a download.
+    """
     facts = list_facts(package)
-    files = {path: {"modify": facts[path], "sha256": digest(data)} for path, data in package.items() if path in facts}
+    files = read_manifest(fresh(ftp))
+    files.update({path: {"modify": facts[path], "sha256": digest(data)} for path, data in package.items() if path in facts})
     ftp = fresh(ftp)  # the control connection sat idle while the workers asked for the times
     ensure_directory(ftp, "/domains/septlion.com", PurePosixPath(REMOTE_BACKUPS).name)
     store(ftp, REMOTE_BACKUPS, "live-manifest.json", json.dumps({"v": 1, "files": files}, sort_keys=True).encode(), tag + "-m")
