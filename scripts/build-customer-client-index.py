@@ -42,7 +42,7 @@ function zoomSpec(p){
 }
 function fieldsOf(p){""")
 one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-size:12px;color:var(--muted)}
-.zspec{display:grid;gap:10px;max-height:58vh;overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:10px 12px;border:1px solid #ffffff1f;border-radius:14px;background:#0b1f3899}
+.zspec{display:grid;gap:10px;max-height:min(34vh,300px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:10px 12px;border:1px solid #ffffff1f;border-radius:14px;background:#0b1f3899}
 .zspec h3{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#9db3d6}
 .zspec dl{margin:0;display:grid;gap:2px}
 .zspec dl div{display:grid;grid-template-columns:minmax(92px,auto) 1fr;gap:10px;padding:4px 0;border-bottom:1px solid #ffffff12}
