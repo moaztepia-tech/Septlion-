@@ -147,7 +147,7 @@ export function restoreComposerDraft(raw: string | null, ownerId?: string): Comp
 }
 
 // Values stay in their canonical (English) form for the platform; Arabic readers see them in Arabic.
-const productAr: Record<string,string> = {'Wheat Flour':'دقيق قمح','Whole Wheat Flour':'دقيق قمح كامل','Essential Flour':'دقيق أساسي','Pasta':'مكرونة','Tomato Paste':'صلصة طماطم','Sesame':'سمسم','Hibiscus':'كركديه','Gum Arabic':'صمغ عربي','Custom Packaging':'تغليف خاص','Biscuits':'بسكويت','Edible Oil':'زيت طعام'};
+const productAr: Record<string,string> = {'Semolina':'سميد','Sunflower Oil':'زيت عباد الشمس','Palm Oil':'زيت نخيل','Soybean Oil':'زيت صويا','Milk Powder':'حليب بودرة','Sugar':'سكر','Rice':'أرز','Tea':'شاي','Lentils':'عدس','Fava Beans':'فول','Yeast':'خميرة','Wheat':'قمح','Corn':'ذرة','Wheat Flour':'دقيق قمح','Whole Wheat Flour':'دقيق قمح كامل','Essential Flour':'دقيق أساسي','Pasta':'مكرونة','Tomato Paste':'صلصة طماطم','Sesame':'سمسم','Hibiscus':'كركديه','Gum Arabic':'صمغ عربي','Custom Packaging':'تغليف خاص','Biscuits':'بسكويت','Edible Oil':'زيت طعام'};
 export function displayRequirementValue(field: RequirementField, value: string, lang: 'ar'|'en') {
   if (lang !== 'ar' || !value) return value;
   if (field === 'product') return productAr[value] || value;
@@ -158,7 +158,39 @@ export function displayRequirementValue(field: RequirementField, value: string, 
     const n = q.amount.toLocaleString('en-US');
     return q.unit === 'FCL' ? (q.amount === 1 ? 'حاوية واحدة' : q.amount === 2 ? 'حاويتان' : n + (q.amount <= 10 ? ' حاويات' : ' حاوية')) : q.unit === 'KG' ? n + ' كجم' : n + ' طن';
   }
-  if (field === 'packing') return value.replace(/^(\d+(?:[.,]\d+)?)\s*kg$/i, '$1 كجم');
+  if (field === 'packing') return value.replace(/^(\d+(?:[.,]\d+)?)\s*kg$/i, '$1 كجم').replace(/^(\d+(?:[.,]\d+)?)\s*L$/, '$1 لتر');
   if (field === 'payment') return value === 'L/C' ? 'L/C — اعتماد مستندي' : value === 'T/T' ? 'T/T — تحويل بنكي' : value === 'OTHER' ? 'تُناقش في العرض' : value;
   return value;
+}
+
+// Free-wording help from the interpret-requirement function only fills fields the buyer's own
+// words left empty, and every value passes the same local checks as typed text.
+const coreFields: RequirementField[] = ['product', 'quantity', 'destination'];
+export function needsGuidance(draft: ComposerDraft) {
+  return !draft.reorder && coreFields.some(field => !draft.data[field]);
+}
+export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' | 'en'): ComposerDraft {
+  if (!fields || typeof fields !== 'object' || Array.isArray(fields) || draft.reorder || draft.savedRequirementId) return draft;
+  const given = fields as Record<string, unknown>;
+  const known = (field: string) => {
+    const value = typeof given[field] === 'string' ? (given[field] as string).trim() : '';
+    return value && !/^(غير محدد|لا أعرف|غير معروف|unknown|null|n\/a|not specified)$/i.test(value) ? value.slice(0, 120) : '';
+  };
+  const data: RequirementData = {...draft.data};
+  let changed = false;
+  for (const field of ['product', 'quantity', 'destination', 'packing', 'incoterm', 'payment'] as RequirementField[]) {
+    const value = known(field);
+    if (!value || data[field]) continue;
+    const parsed = extractRequirement(value);
+    const next = field === 'product' ? parsed.product || value
+      : field === 'destination' ? parsed.destination || value
+      : field === 'packing' ? parsed.packing || value
+      : parsed[field];
+    if (next) {data[field] = next; changed = true;}
+  }
+  if (!changed) return draft;
+  const missing = missingRequirementFields(data);
+  const reply = missing.length ? requirementQuestion(missing[0], lang, draft.feed)
+    : lang === 'ar' ? 'اكتملت الأساسيات. راجع ملخص الطلب وعدّل أي معلومة قبل إرساله لإعداد العرض.' : 'The essentials are complete. Review and correct the summary before sending it for an offer.';
+  return {...draft, data, messages: [...draft.messages.slice(0, -1), {role: 'assistant' as const, text: reply}]};
 }

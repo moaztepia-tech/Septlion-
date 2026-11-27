@@ -76,3 +76,33 @@ export function createRateLimiter(maxPerMinute = 6) {
     return true;
   };
 }
+
+// Contact details never leave SEPTLION: they are removed before any text reaches a model provider.
+export function stripContacts(text: string) {
+  return text
+    .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, '[email]')
+    .replace(/https?:\/\/\S+|www\.\S+/gi, '[link]')
+    .replace(/\+?\d[\d\s().-]{7,}\d/g, match => /^\d{1,3}(?:[,.]\d{3})+$/.test(match.trim()) ? match : '[phone]');
+}
+
+// Google Gemini (free tier of Google AI Studio). The model can be changed with GEMINI_MODEL.
+export const GEMINI_MODEL = 'gemini-3.5-flash-lite';
+export function buildGeminiRequest(text: string) {
+  return {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [{ role: 'user', parts: [{ text: stripContacts(text.trim()) }] }],
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 512,
+      responseMimeType: 'application/json',
+      responseSchema: { type: 'OBJECT', properties: Object.fromEntries(fields.map(field => [field, { type: 'STRING' }])), required: [...fields] },
+    },
+  };
+}
+type GeminiResponse = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> };
+export function interpretGeminiResponse(response: GeminiResponse) {
+  const candidate = response?.candidates?.[0];
+  if (!candidate || candidate.finishReason !== 'STOP') return null;
+  const text = (candidate.content?.parts || []).map(part => part.text || '').join('');
+  return interpretResponse({ stop_reason: 'end_turn', content: [{ type: 'text', text }] });
+}

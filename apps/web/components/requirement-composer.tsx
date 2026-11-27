@@ -9,7 +9,7 @@ import {FormEvent, useEffect, useRef, useState} from 'react';
 import {PlatformHeader} from './platform-header';
 import {edge, hasSession, publicFunction, sessionUserId} from '../lib/api';
 import {createTradeRequirement} from '../lib/trade-data';
-import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, displayRequirementValue, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
+import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, applyGuidance, displayRequirementValue, needsGuidance, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
 
 const labels = {
   ar: {product:'المنتج', application:'الاستخدام', quantity:'الكمية والوحدة', packing:'التعبئة', destination:'الدولة أو الميناء', incoterm:'شرط التجارة', payment:'طريقة الدفع'},
@@ -71,25 +71,23 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     event?.preventDefault();
     if (!draft.input.trim() || saving || draft.savedRequirementId) return;
     const submitted = draft.input.trim();
-    setDraft(d=>answerRequirement(d,submitted,lang)); setSaveError('');
-    // Optional server-side guidance: deterministic field extraction remains authoritative.
-    if (!draft.reorder && submitted.length >= 12) {
-      // Hostinger publishes static pages only. Guidance runs in the Supabase Edge Function
-      // interpret-requirement; the local deterministic interpreter above stays authoritative.
+    const answered=answerRequirement(draft,submitted,lang);
+    setDraft(answered); setSaveError('');
+    // Only when the buyer's own words leave the product, quantity or destination unknown, ask the
+    // interpret-requirement function. It fills empty fields only; local parsing stays authoritative.
+    if (needsGuidance(answered) && submitted.length >= 12) {
       const guidance = new AbortController();
       const guidanceTimeout = setTimeout(()=>guidance.abort(),12000);
       void publicFunction('interpret-requirement', {text:submitted}, guidance.signal)
         .then(async response=>{
         if(!response.ok)return;
         const payload:unknown=await response.json();
-        const result=payload && typeof payload==='object' && 'result' in payload
-          ? (payload as {result?:unknown}).result : null;
-        if(typeof result!=='string'||!result.trim())return;
+        const fields=payload && typeof payload==='object' && 'fields' in payload ? (payload as {fields?:unknown}).fields : null;
         setDraft(current=>{
           if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
-          return {...current,messages:[...current.messages.slice(0,-1),{role:'assistant' as const,text:result.slice(0,1500)}]};
+          return applyGuidance(current,fields,lang);
         });
-      }).catch(()=>{ /* Existing composer works without optional AI guidance. */ })
+      }).catch(()=>{ /* The composer works without optional guidance. */ })
         .finally(()=>clearTimeout(guidanceTimeout));
     }
     requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});
