@@ -242,12 +242,20 @@
         // "شوال منسوج 50 كجم" shows as packing "شوال منسوج" and size "50 كجم", so nothing repeats.
         const packing = clean(spec.packing, 120);
         const pack = size && packing.endsWith(' ' + size) ? packing.slice(0, -size.length - 1) : packing;
+        // Quality facts first: the card shows the first 6, the enlarged card shows all.
         const fields = [];
+        if (clean(spec.protein)) fields.push({ ic: 'type', l: '', v: 'بروتين ' + clean(spec.protein, 40) });
+        if (clean(spec.moisture)) fields.push({ ic: 'color', l: '', v: 'رطوبة ' + clean(spec.moisture, 40) });
+        if (clean(spec.origin)) fields.push({ ic: 'origin', l: 'المنشأ', v: clean(spec.origin, 60) });
+        if (clean(spec.certificates)) fields.push({ ic: 'grade', l: 'الشهادات', v: clean(spec.certificates, 120) });
         if (clean(spec.type)) fields.push({ ic: 'type', l: 'النوع', v: clean(spec.type, 120) });
         if (pack) fields.push({ ic: 'pack', l: 'التعبئة', v: pack });
         if (size) fields.push({ ic: 'size', l: 'الحجم', v: size });
-        if (clean(spec.container)) fields.push({ ic: 'port', l: 'الحاوية', v: 'حاوية ' + clean(spec.container, 60) });
+        if (clean(spec.container)) fields.push({ ic: 'port', l: '', v: 'حاوية ' + clean(spec.container, 60) });
         if (clean(spec.perContainer)) fields.push({ ic: 'moq', l: 'في الحاوية', v: clean(spec.perContainer, 120) });
+        if (clean(spec.gluten)) fields.push({ ic: 'dot', l: '', v: 'جلوتين رطب ' + clean(spec.gluten, 40) });
+        if (clean(spec.ash)) fields.push({ ic: 'dot', l: '', v: 'رماد ' + clean(spec.ash, 40) });
+        if (clean(spec.shelfLife)) fields.push({ ic: 'shelf', l: '', v: 'صلاحية ' + clean(spec.shelfLife, 40) });
         if (clean(spec.brand)) fields.push({ ic: 'brand', l: 'العلامة', v: clean(spec.brand, 60) });
         products.push({
           id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,

@@ -126,3 +126,10 @@ test('home page cards come from the team panel catalog', () => {
   assert.deepEqual(B.catalogRef('rice-5kg'), { productId: 'prod-new-rice', skuId: 'rice-5kg' });
   assert.deepEqual(B.fromPlatform(null), { version: 'platform', sectors: [], products: [] });
 });
+
+test('quality facts come first on the card', () => {
+  const d = B.fromPlatform([{ id: 'p', name: 'زولانا خبازو', sector: { name: 'الأغذية' }, skus: [{ id: 'sku-khabbazo-50', name: 'زولانا خبازو 50 كجم',
+    specifications: { packing: 'شوال منسوج 50 كجم', protein: '12%', moisture: 'حتى 14%', origin: 'مصر', certificates: 'حلال · ISO', gluten: '26 – 28%', ash: '0.60 – 0.65%' } }] }]);
+  assert.deepEqual(d.products[0].fields.map(f => f.v),
+    ['بروتين 12%', 'رطوبة حتى 14%', 'مصر', 'حلال · ISO', 'شوال منسوج', '50 كجم', 'جلوتين رطب 26 – 28%', 'رماد 0.60 – 0.65%']);
+});
