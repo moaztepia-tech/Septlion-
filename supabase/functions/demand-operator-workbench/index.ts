@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
   const operator = { id: user.id, label: user.email || "SEPTLION Operator", active: true };
 
   if (req.method === "GET") {
-    const [queue, signals, sources, patterns, runs, alerts, pushSubscriptions, supplierProfiles, buyers, assessments, engineRuns, buyerPatterns] = await Promise.all([
+    const [queue, signals, sources, patterns, runs, alerts, pushSubscriptions, supplierProfiles, buyers, assessments, engineRuns, buyerPatterns, brainDecisions, brainTasks, brainRuns, brainPolicy, brainEvents] = await Promise.all([
       db.from("DemandWorkbenchQueue")
         .select("*")
         .in("taskStatus", ["OPEN","IN_PROGRESS","BLOCKED"])
@@ -81,6 +81,11 @@ Deno.serve(async (req: Request) => {
       db.from("DemandAssessment").select("*").order("fresh", { ascending: false }).order("inScope", { ascending: false }).limit(200),
       db.from("DemandEngineRun").select("id,startedAt,finishedAt,status,processed,summary,errors").order("startedAt", { ascending: false }).limit(10),
       db.from("DemandBuyerPattern").select("buyerId,productKey,market,observationCount,confidence,predictedWindowStart,predictedWindowEnd,basis").limit(100),
+      db.from("BrainDecision").select("id,kind,subjectType,subjectId,titleAr,detail,status,createdAt").eq("status", "PENDING").order("createdAt", { ascending: true }).limit(50),
+      db.from("BrainTask").select("id,agentType,subjectType,subjectId,status,reason,input,createdAt,updatedAt").in("status", ["QUEUED","RUNNING","NEEDS_HUMAN","FAILED"]).order("createdAt", { ascending: true }).limit(200),
+      db.from("BrainRun").select("id,startedAt,finishedAt,status,summary,errors").order("startedAt", { ascending: false }).limit(5),
+      db.from("BrainPolicy").select("agentType,titleAr,enabled,dailyBudgetUsd,guardrails").order("agentType"),
+      db.from("BrainEvent").select("id,eventType,subjectType,subjectId,actor,payload,occurredAt").order("id", { ascending: false }).limit(30),
     ]);
 
     const rows = signals.data || [];
@@ -116,6 +121,14 @@ Deno.serve(async (req: Request) => {
       engineRuns: engineRuns.data || [],
       buyerPatterns: buyerPatterns.data || [],
       engineErrors: [assessments.error, engineRuns.error, buyerPatterns.error].filter(Boolean).map((e: any) => e.message),
+      brain: {
+        decisions: brainDecisions.data || [],
+        tasks: brainTasks.data || [],
+        runs: brainRuns.data || [],
+        agents: brainPolicy.data || [],
+        events: brainEvents.data || [],
+        errors: [brainDecisions.error, brainTasks.error, brainRuns.error, brainPolicy.error, brainEvents.error].filter(Boolean).map((e: any) => e.message),
+      },
     });
   }
 
@@ -129,6 +142,45 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await db.rpc("run_demand_operations", { batch_size: 200 });
       if (error) return json(req, { error: "Unable to run operations" }, 500);
       return json(req, { ok: data?.errors?.length === 0, result: data });
+    }
+
+    if (action === "run_brain") {
+      const { data, error } = await db.rpc("run_brain", { batch_size: 200 });
+      if (error) return json(req, { error: "Unable to run the brain" }, 500);
+      return json(req, { ok: data?.errors?.length === 0, result: data });
+    }
+
+    // Founder decisions and facts are recorded only by an ADMIN. Recording an offer
+    // approval here does not approve the offer; the guarded "advance" action still does.
+    if (action === "decide") {
+      if (!memberships.some((m: any) => m.role === "ADMIN")) return json(req, { error: "Admin decision required" }, 403);
+      const decisionId = String(body?.decisionId || "");
+      const choice = String(body?.choice || "").slice(0, 40);
+      if (!decisionId || !choice) return json(req, { error: "Decision and choice required" }, 400);
+      const { data, error } = await db.rpc("brain_decide", {
+        decision_id: decisionId, decision_choice: choice, decided_by: operator.label, decision_note: note,
+      });
+      if (error) return json(req, { error: "Decision is not pending" }, 409);
+      return json(req, data);
+    }
+
+    if (action === "assert_fact") {
+      if (!memberships.some((m: any) => m.role === "ADMIN")) return json(req, { error: "Admin decision required" }, 403);
+      const f = body?.fact || {};
+      const subjectType = String(f.subjectType || "");
+      const predicate = String(f.predicate || "");
+      if (!["BUYER","SIGNAL","DEAL","SUPPLIER","MARKET","PRODUCT"].includes(subjectType) || !/^[a-z][a-z0-9_]*$/.test(predicate) || !f.subjectId || f.value === undefined) {
+        return json(req, { error: "Invalid fact" }, 400);
+      }
+      const sourceUrl = typeof f.sourceUrl === "string" && /^https?:\/\//.test(f.sourceUrl) ? f.sourceUrl : null;
+      const { data, error } = await db.rpc("brain_assert_fact", {
+        subject_type: subjectType, subject_id: String(f.subjectId).slice(0, 200), fact_predicate: predicate,
+        fact_value: f.value, fact_status: f.status === "INFERRED" ? "INFERRED" : "CONFIRMED", fact_confidence: 100,
+        source_url: sourceUrl, fact_actor: "FOUNDER", valid_until: f.validUntil || null,
+        fact_evidence: { recordedBy: operator.label, note },
+      });
+      if (error) return json(req, { error: "Fact could not be recorded" }, 409);
+      return json(req, { ok: true, factId: data });
     }
 
     if (action === "register_push") {
