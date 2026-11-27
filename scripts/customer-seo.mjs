@@ -21,7 +21,7 @@ import {ICON_WA} from './seo-theme.mjs';
 export const SITE = 'https://www.septlion.com';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PRODUCTS_URL = SITE + '/new-app/data/products.json';
-const WHATSAPP = '+201070088181', EMAIL = 'info@septlion.com';
+const WHATSAPP = '+249123667759', EMAIL = 'info@septlion.com';
 
 export const esc = (v = '') => String(v).replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 const ld = v => JSON.stringify(v).replace(/</g, '\\u003c');

@@ -8,7 +8,7 @@ import {SITE, esc, englishProduct} from './customer-seo.mjs';
 import {themeCss, ICON_WA, productVisual} from './seo-theme.mjs';
 import {BRIEFS, BRIEF_TITLE, TRADE} from './market-briefs.mjs';
 
-const WHATSAPP = '201070088181', EMAIL = 'info@septlion.com';
+const WHATSAPP = '249123667759', EMAIL = 'info@septlion.com';
 const ld = v => JSON.stringify(v).replace(/</g, '\\u003c');
 
 // slug, languages (first is the main page), region, names {ar,fr,en}, ports {ar,fr,en}
