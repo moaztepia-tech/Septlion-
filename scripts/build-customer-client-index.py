@@ -34,21 +34,34 @@ one("imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean)",
 # (quality, packing and shipping, origin and certificates) instead of one run-on line.
 one("<span>${esc(fieldsOf(p).map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span><span>السعر: ${esc(p.price||'حسب عرض السعر')} · MOQ والتوريد: حسب عرض السعر</span>",
     "${zoomSpec(p)}<span>السعر: ${esc(p.price||'حسب عرض السعر')}${fieldsOf(p).some(f=>f.zl==='أقل طلب')?'':' · MOQ والتوريد: حسب عرض السعر'}</span>")
-one("function fieldsOf(p){", """const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','المنشأ والشهادات']];
+one("function fieldsOf(p){", """const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','المنشأ والشهادات']],ZKEY=['البروتين','الرطوبة','الجلوتين الرطب'];
 function zoomSpec(p){
   const fs=fieldsOf(p).filter(f=>f.zoom!==false);
   if(!fs.some(f=>f.zl))return `<span>${esc(fs.map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span>`;
-  return `<div class="zspec">${ZG.map(([g,t])=>{const r=fs.filter(f=>f.g===g);return r.length?`<section><h3>${t}</h3><dl>${r.map(f=>`<div><dt>${esc(f.zl)}</dt><dd><bdi>${esc(f.zv)}</bdi></dd></div>`).join('')}</dl></section>`:''}).join('')}</div>`;
+  const key=ZKEY.map(k=>fs.find(f=>f.zl===k)).filter(Boolean),rest=fs.filter(f=>!key.includes(f));
+  const tiles=key.length?`<div class="ztiles">${key.map(f=>`<div><b${f.zv.length>6?' class="zlong"':''}><bdi>${esc(f.zv)}</bdi></b><small>${esc(f.zl)}</small></div>`).join('')}</div>`:'';
+  const wide=f=>f.zl==='الشهادات'||f.zv.length>22;
+  const fill=r=>{let run=0;return r.map((f,i)=>{if(wide(f)){run=0;return Object.assign({},f,{w:1})}run++;const nx=r[i+1];return Object.assign({},f,{w:run%2===1&&(!nx||wide(nx))?1:0})})};
+  const row=f=>f.zl==='الشهادات'?`<div class="zwide"><dt>${esc(f.zl)}</dt><dd class="zchips">${f.zv.split(/\\s*[·،,]\\s*/).filter(Boolean).map(c=>`<i><bdi>${esc(c)}</bdi></i>`).join('')}</dd></div>`:`<div${f.w?' class="zwide"':''}><dt>${esc(f.zl)}</dt><dd><bdi>${esc(f.zv)}</bdi></dd></div>`;
+  return `<div class="zspec">${ZG.map(([g,t])=>{const r=rest.filter(f=>f.g===g),top=g==='q'?tiles:'';return r.length||top?`<section><h3>${t}</h3>${top}${r.length?`<dl>${fill(r).map(row).join('')}</dl>`:''}</section>`:''}).join('')}</div>`;
 }
 function fieldsOf(p){""")
 one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-size:12px;color:var(--muted)}
-.zspec{display:grid;gap:10px;max-height:min(34vh,300px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:10px 12px;border:1px solid #ffffff1f;border-radius:14px;background:#0b1f3899}
-.zspec h3{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#9db3d6}
-.zspec dl{margin:0;display:grid;gap:2px}
-.zspec dl div{display:grid;grid-template-columns:minmax(92px,auto) 1fr;gap:10px;padding:4px 0;border-bottom:1px solid #ffffff12}
-.zspec dl div:last-child{border-bottom:0}
-.zspec dt{font-size:12px;color:#9db3d6}
-.zspec dd{margin:0;font-size:13px;font-weight:700;color:#f2f6fd}""")
+.zspec{display:grid;gap:12px;max-height:min(36vh,320px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:12px;border:1px solid #ffffff1f;border-radius:16px;background:#0b1f38b3}
+.ztiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ztiles div{display:grid;gap:2px;justify-items:center;padding:10px 6px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff14;text-align:center}
+.ztiles b{font-size:17px;font-weight:800;color:#f2f6fd;line-height:1.3}
+.ztiles b.zlong{font-size:13px;line-height:1.5}
+.ztiles small{font-size:11px;color:#9db3d6}
+.ztiles+dl{margin-top:6px!important}
+.zspec h3{margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#9db3d6}
+.zspec dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.zspec dl div{display:grid;gap:1px;padding:7px 10px;border-radius:10px;background:#ffffff08;min-width:0}
+.zspec dl .zwide{grid-column:1/-1}
+.zspec dt{font-size:11px;color:#9db3d6}
+.zspec dd{margin:0;font-size:13px;font-weight:700;color:#f2f6fd;overflow-wrap:anywhere}
+.zchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px!important}
+.zchips i{font-style:normal;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#ffffff14;border:1px solid #ffffff24}""")
 one("fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v)})).filter(f=>f.v)};",
     "fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false)})).filter(f=>f.v)};")
 # Requests go to the SEPTLION platform after an email code (septlion-bridge.js); WhatsApp stays as a fallback.

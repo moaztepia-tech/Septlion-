@@ -477,13 +477,21 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .zoombox .bottle{height:100%;width:auto;aspect-ratio:.48;max-height:640px}
 .zoombox .bottle-body span{font-size:16px}.zoombox .bottle-body strong{font-size:24px}.zoombox .bottle-body small{font-size:34px}
 .zoomcap{text-align:center;display:grid;gap:3px}.zoomcap strong{font-size:18px}.zoomcap span{font-size:12px;color:var(--muted)}
-.zspec{display:grid;gap:10px;max-height:min(34vh,300px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:10px 12px;border:1px solid #ffffff1f;border-radius:14px;background:#0b1f3899}
-.zspec h3{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#9db3d6}
-.zspec dl{margin:0;display:grid;gap:2px}
-.zspec dl div{display:grid;grid-template-columns:minmax(92px,auto) 1fr;gap:10px;padding:4px 0;border-bottom:1px solid #ffffff12}
-.zspec dl div:last-child{border-bottom:0}
-.zspec dt{font-size:12px;color:#9db3d6}
-.zspec dd{margin:0;font-size:13px;font-weight:700;color:#f2f6fd}
+.zspec{display:grid;gap:12px;max-height:min(36vh,320px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:12px;border:1px solid #ffffff1f;border-radius:16px;background:#0b1f38b3}
+.ztiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ztiles div{display:grid;gap:2px;justify-items:center;padding:10px 6px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff14;text-align:center}
+.ztiles b{font-size:17px;font-weight:800;color:#f2f6fd;line-height:1.3}
+.ztiles b.zlong{font-size:13px;line-height:1.5}
+.ztiles small{font-size:11px;color:#9db3d6}
+.ztiles+dl{margin-top:6px!important}
+.zspec h3{margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#9db3d6}
+.zspec dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.zspec dl div{display:grid;gap:1px;padding:7px 10px;border-radius:10px;background:#ffffff08;min-width:0}
+.zspec dl .zwide{grid-column:1/-1}
+.zspec dt{font-size:11px;color:#9db3d6}
+.zspec dd{margin:0;font-size:13px;font-weight:700;color:#f2f6fd;overflow-wrap:anywhere}
+.zchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px!important}
+.zchips i{font-style:normal;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#ffffff14;border:1px solid #ffffff24}
 /* V15 — اكتشف */
 .finder{flex:none;position:relative;z-index:30;padding:8px 10px 2px}
 .searchbar{display:flex;align-items:center;gap:6px}
@@ -945,11 +953,16 @@ const ICONS={
  dot:'<circle cx="12" cy="12" r="4"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||ICONS.dot}</svg>`;
 // حقول البطاقة: من p.fields إن وُجدت، وإلا تُشتق من بيانات الصنف. الحد 6 حقول في البطاقة (3 أعمدة × صفين)، وكل الحقول تظهر في نافذة التكبير.
-const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','المنشأ والشهادات']];
+const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','المنشأ والشهادات']],ZKEY=['البروتين','الرطوبة','الجلوتين الرطب'];
 function zoomSpec(p){
   const fs=fieldsOf(p).filter(f=>f.zoom!==false);
   if(!fs.some(f=>f.zl))return `<span>${esc(fs.map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span>`;
-  return `<div class="zspec">${ZG.map(([g,t])=>{const r=fs.filter(f=>f.g===g);return r.length?`<section><h3>${t}</h3><dl>${r.map(f=>`<div><dt>${esc(f.zl)}</dt><dd><bdi>${esc(f.zv)}</bdi></dd></div>`).join('')}</dl></section>`:''}).join('')}</div>`;
+  const key=ZKEY.map(k=>fs.find(f=>f.zl===k)).filter(Boolean),rest=fs.filter(f=>!key.includes(f));
+  const tiles=key.length?`<div class="ztiles">${key.map(f=>`<div><b${f.zv.length>6?' class="zlong"':''}><bdi>${esc(f.zv)}</bdi></b><small>${esc(f.zl)}</small></div>`).join('')}</div>`:'';
+  const wide=f=>f.zl==='الشهادات'||f.zv.length>22;
+  const fill=r=>{let run=0;return r.map((f,i)=>{if(wide(f)){run=0;return Object.assign({},f,{w:1})}run++;const nx=r[i+1];return Object.assign({},f,{w:run%2===1&&(!nx||wide(nx))?1:0})})};
+  const row=f=>f.zl==='الشهادات'?`<div class="zwide"><dt>${esc(f.zl)}</dt><dd class="zchips">${f.zv.split(/\s*[·،,]\s*/).filter(Boolean).map(c=>`<i><bdi>${esc(c)}</bdi></i>`).join('')}</dd></div>`:`<div${f.w?' class="zwide"':''}><dt>${esc(f.zl)}</dt><dd><bdi>${esc(f.zv)}</bdi></dd></div>`;
+  return `<div class="zspec">${ZG.map(([g,t])=>{const r=rest.filter(f=>f.g===g),top=g==='q'?tiles:'';return r.length||top?`<section><h3>${t}</h3>${top}${r.length?`<dl>${fill(r).map(row).join('')}</dl>`:''}</section>`:''}).join('')}</div>`;
 }
 function fieldsOf(p){
   if(Array.isArray(p.fields)&&p.fields.length) return p.fields;
