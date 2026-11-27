@@ -37,7 +37,9 @@ the platform pages were unreachable. Now:
 2. Real files at the root (platform `_next/` assets, the bridge) are served.
 3. Platform pages such as `/command-center/` and `/account/` are served from
    the root, except the new-app short links (`/discover`, `/requests`,
-   `/notifications`, `/require`), which stay with new-app.
+   `/notifications`), which stay with new-app. `/require/` is the platform's
+   smart request composer: the home page box saves the buyer's words in
+   `sessionStorage` (`septlion_requirement_seed`) and opens it there.
 4. Everything else goes to `/new-app/` as before (photos, admin, 404).
 
 The rules were checked on a local Apache 2.4 with the same layout.

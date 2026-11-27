@@ -65,6 +65,31 @@ one("<span>${dHl(o.p,q)}</span><small>${dHl(o.c,q)}</small>", "<span>${dHl(o.p,q
 one("const destLabel=()=>dest.value?dest.value+(port.value?' — '+port.value:''):'';", "const destLabel=()=>dest.value?flagC(dest.value)+' '+dest.value+(port.value?' — '+port.value:''):'';")
 one("${o.last?'آخر وجهة':esc(o.c)}", "${o.last?'آخر وجهة':flagC(o.c)+' '+esc(o.c)}")
 one(".dh{padding:8px 10px 4px;font-size:10.5px;font-weight:700;color:#8da4c9}", ".dh{padding:10px 10px 4px;font-size:13px;font-weight:800;color:#c9d8f0;display:flex;align-items:center;gap:6px}.dh .dflag{font-size:18px;line-height:1}")
+# Smart request (founder, 2026-11-27): the buyer writes the need in their own words on the
+# home page, and the platform composer at /require/ understands it, asks one question at a
+# time and sends it for a single Septlion offer.
+one(".cta{display:grid;gap:10px}", """.ask{display:grid;gap:8px;margin:0 0 14px}
+.ask label{font-size:13px;font-weight:800;color:#f2f6fd}
+.ask-box{position:relative;display:flex;align-items:flex-end;gap:8px;padding:8px;background:#0b1f38;border:1px solid #8fb0d6;border-radius:14px;box-shadow:inset 0 1px 0 #ffffff12,0 8px 22px #0004}
+.ask-box:focus-within{border-color:#eaf1fb;box-shadow:0 0 0 3px #b5c7e633,0 8px 22px #0004}
+.ask textarea{flex:1;min-height:58px;max-height:150px;resize:none;background:transparent;border:0;outline:0;color:#f2f6fd;font-family:inherit;font-size:14px;font-weight:600;line-height:1.8;padding:4px 6px}
+.ask textarea::placeholder{color:#8ea6c4;font-weight:500}
+.ask-send{flex:none;width:46px;height:46px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#f1f6fc,#b9cde3);color:var(--ink);border:1px solid #fff;font-size:20px;font-weight:800}
+.ask-send:disabled{opacity:.45}
+.ask small{font-size:11px;line-height:1.9;color:#b8cbe1}
+.cta{display:grid;gap:10px}""")
+one('<p class="desc">ننسّق التوريد والتصنيع والخدمات اللوجستية، من تحديد الاحتياج إلى عرض السعر ثم التنفيذ وفق الاتفاق.</p>',
+    '<p class="desc">ننسّق التوريد والتصنيع والخدمات اللوجستية، من تحديد الاحتياج إلى عرض السعر ثم التنفيذ وفق الاتفاق.</p>\n      <form class="ask" id="askForm" novalidate><label for="askInput">اكتب ما تحتاجه بكلامك</label><div class="ask-box"><textarea id="askInput" rows="2" maxlength="4000" enterkeyhint="send" placeholder="مثال: أحتاج 5 حاويات دقيق مخابز بتعبئة 50 كجم إلى كوتونو، بنين"></textarea><button class="ask-send" type="submit" aria-label="ابدأ الطلب">←</button></div><small>نفهم طلبك ونسألك سؤالًا واحدًا في كل مرة، ثم يصلك عرض واحد من سبتليون.</small></form>')
+one('<strong>أخبرنا بما تحتاجه</strong><small>صف احتياجك، وسنبدأ منه</small>', '<strong>أخبرنا بما تحتاجه</strong><small>محرّر الطلب الذكي</small>')
+one("  if(!NEED_ON&&/^need/.test(id)){id='discover';history.replaceState(null,'','#discover')}",
+    "  if(/^need/.test(id)){history.replaceState(null,'','#home');return openComposer(S.prefill?'أحتاج '+S.prefill:'')}")
+one("function go(id){", """function openComposer(text){try{if(text&&text.trim())sessionStorage.setItem('septlion_requirement_seed',text.trim().slice(0,4000))}catch(e){}location.href='/require/'}
+function go(id){""")
+one("$('#chatSend').addEventListener('click',()=>send());", """$('#chatSend').addEventListener('click',()=>send());
+const askIn=$('#askInput');
+$('#askForm').addEventListener('submit',e=>{e.preventDefault();const t=askIn.value.trim();if(!t){askIn.focus();return}openComposer(t)});
+askIn.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#askForm').requestSubmit()}});
+askIn.addEventListener('input',()=>{askIn.style.height='auto';askIn.style.height=Math.min(askIn.scrollHeight,150)+'px'});""")
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n

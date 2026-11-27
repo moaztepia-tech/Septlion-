@@ -43,3 +43,16 @@ test('rate limiter allows six requests per minute per caller',()=>{
  for(let i=0;i<6;i++)assert.equal(allow('ip',1000),true);
  assert.equal(allow('ip',1000),false);assert.equal(allow('other',1000),true);assert.equal(allow('ip',62000),true);
 });
+test('Gemini request strips contact details and asks for strict JSON; its answer goes through the same checks',()=>{
+ const r=m.buildGeminiRequest('أحتاج 12,500 طن دقيق إلى مالي، تواصل: ali@buyer.com أو +223 70 12 34 56 https://buyer.ml');
+ const sent=r.contents[0].parts[0].text;
+ assert.ok(sent.includes('12,500 طن'));assert.ok(!sent.includes('ali@buyer.com'));assert.ok(!sent.includes('70 12 34'));assert.ok(!sent.includes('buyer.ml'));
+ assert.equal(r.generationConfig.responseMimeType,'application/json');
+ assert.deepEqual(r.generationConfig.responseSchema.required,['product','quantity','destination','packing','incoterm','payment']);
+ assert.equal(r.systemInstruction.parts[0].text,m.SYSTEM_PROMPT);
+ const ok=m.interpretGeminiResponse({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(all)}]}}]});
+ assert.equal(ok.ready,true);assert.equal(ok.fields.destination,'مومباسا');
+ assert.equal(m.interpretGeminiResponse({candidates:[{finishReason:'SAFETY',content:{parts:[{text:'{}'}]}}]}),null);
+ assert.equal(m.interpretGeminiResponse({candidates:[{finishReason:'STOP',content:{parts:[{text:'not json'}]}}]}),null);
+ assert.equal(m.interpretGeminiResponse({}),null);
+});

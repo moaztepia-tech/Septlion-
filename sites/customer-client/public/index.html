@@ -148,6 +148,15 @@ select.input option{background:#0b2037}
 .hero h1 em{display:block;font-style:normal;color:var(--gold)}
 .hero .lead{font-size:14px;font-weight:800;margin:16px 0 6px;color:#f2f6fd}
 .hero .desc{font-size:12px;line-height:2;color:#b8cbe1;margin-bottom:20px;max-width:370px}
+.ask{display:grid;gap:8px;margin:0 0 14px}
+.ask label{font-size:13px;font-weight:800;color:#f2f6fd}
+.ask-box{position:relative;display:flex;align-items:flex-end;gap:8px;padding:8px;background:#0b1f38;border:1px solid #8fb0d6;border-radius:14px;box-shadow:inset 0 1px 0 #ffffff12,0 8px 22px #0004}
+.ask-box:focus-within{border-color:#eaf1fb;box-shadow:0 0 0 3px #b5c7e633,0 8px 22px #0004}
+.ask textarea{flex:1;min-height:58px;max-height:150px;resize:none;background:transparent;border:0;outline:0;color:#f2f6fd;font-family:inherit;font-size:14px;font-weight:600;line-height:1.8;padding:4px 6px}
+.ask textarea::placeholder{color:#8ea6c4;font-weight:500}
+.ask-send{flex:none;width:46px;height:46px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#f1f6fc,#b9cde3);color:var(--ink);border:1px solid #fff;font-size:20px;font-weight:800}
+.ask-send:disabled{opacity:.45}
+.ask small{font-size:11px;line-height:1.9;color:#b8cbe1}
 .cta{display:grid;gap:10px}
 .cta-btn{display:flex;align-items:center;gap:12px;min-height:66px;padding:11px 14px;border-radius:12px;text-align:right;transition:transform .14s,filter .2s}
 .cta-btn:active{transform:scale(.985)}
@@ -649,9 +658,10 @@ details.opt.lv>:not(summary){margin-inline:0}
       <h1>من احتياجك<em>إلى تنفيذه.</em></h1>
       <p class="lead">استكشف المنتجات أو أخبرنا بما تحتاجه.</p>
       <p class="desc">ننسّق التوريد والتصنيع والخدمات اللوجستية، من تحديد الاحتياج إلى عرض السعر ثم التنفيذ وفق الاتفاق.</p>
+      <form class="ask" id="askForm" novalidate><label for="askInput">اكتب ما تحتاجه بكلامك</label><div class="ask-box"><textarea id="askInput" rows="2" maxlength="4000" enterkeyhint="send" placeholder="مثال: أحتاج 5 حاويات دقيق مخابز بتعبئة 50 كجم إلى كوتونو، بنين"></textarea><button class="ask-send" type="submit" aria-label="ابدأ الطلب">←</button></div><small>نفهم طلبك ونسألك سؤالًا واحدًا في كل مرة، ثم يصلك عرض واحد من سبتليون.</small></form>
       <div class="cta">
         <button class="cta-btn main" data-go="discover"><span class="cta-ico"><svg class="ico" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg></span><span class="cta-txt"><strong>استكشف المنتجات</strong><small>ابدأ من المنتجات المعروضة</small></span><span class="arrow">←</span></button>
-        <button class="cta-btn alt" data-go="need"><span class="cta-ico"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/></svg></span><span class="cta-txt"><strong>أخبرنا بما تحتاجه</strong><small>صف احتياجك، وسنبدأ منه</small></span><span class="arrow">←</span></button>
+        <button class="cta-btn alt" data-go="need"><span class="cta-ico"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/></svg></span><span class="cta-txt"><strong>أخبرنا بما تحتاجه</strong><small>محرّر الطلب الذكي</small></span><span class="arrow">←</span></button>
       </div>
       <div class="identity"><i></i><div><strong>SEPTLION LLC</strong><span>شركة مسجلة في الولايات المتحدة الأمريكية</span></div></div>
     </div>
@@ -850,12 +860,13 @@ const ROUTES=['home','discover','orders','tracking','notifications','need','need
 const NAVMAP={home:'home',notifications:'home',discover:'discover',orders:'orders',tracking:'orders'};
 
 /* ============ التنقل ============ */
+function openComposer(text){try{if(text&&text.trim())sessionStorage.setItem('septlion_requirement_seed',text.trim().slice(0,4000))}catch(e){}location.href='/require/'}
 function go(id){ if(location.hash==='#'+id) show(id); else location.hash=id; }
 /* مؤقتًا: «أخبرنا بما تحتاجه» يفتح الكتالوج مباشرة — غيّر القيمة إلى true لتفعيل صفحة الاحتياج */
 const NEED_ON=false;
 function show(id){
   if(!ROUTES.includes(id)) id='home';
-  if(!NEED_ON&&/^need/.test(id)){id='discover';history.replaceState(null,'','#discover')}
+  if(/^need/.test(id)){history.replaceState(null,'','#home');return openComposer(S.prefill?'أحتاج '+S.prefill:'')}
   if(id==='tracking'&&!S.trackId) id='orders';
   if(id==='needDetails'&&!S.needText) id='need';
   closeSheets(true);closeSuggest();closeZoom();
@@ -1265,6 +1276,10 @@ function send(text){
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}});
 input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,110)+'px'});
 $('#chatSend').addEventListener('click',()=>send());
+const askIn=$('#askInput');
+$('#askForm').addEventListener('submit',e=>{e.preventDefault();const t=askIn.value.trim();if(!t){askIn.focus();return}openComposer(t)});
+askIn.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#askForm').requestSubmit()}});
+askIn.addEventListener('input',()=>{askIn.style.height='auto';askIn.style.height=Math.min(askIn.scrollHeight,150)+'px'});
 
 /* ============ تفاصيل الاحتياج ============ */
 $('#needForm').addEventListener('submit',e=>{

@@ -4,11 +4,11 @@
   "files": [
     {
       "path": ".htaccess",
-      "sha256": "5297fb39e8d4521b652f579bad1affe52f0da3d89ea98f0b532e08af171433de"
+      "sha256": "0030cf5247ac0901074af42b1c8b7733d180daffa856dda1bdaea33d7cef3f1a"
     },
     {
       "path": "index.html",
-      "sha256": "5752bc7103a5875c9680bc83cdcb098c77224c871f660bbc4d40761e831b26c1"
+      "sha256": "7b6ff0ae995542c9e5972ede367f69a4d2fe3c897ab9b847cd325e723f12d23d"
     },
     {
       "path": "septlion-bridge.js",

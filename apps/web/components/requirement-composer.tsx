@@ -9,7 +9,7 @@ import {FormEvent, useEffect, useRef, useState} from 'react';
 import {PlatformHeader} from './platform-header';
 import {edge, hasSession, publicFunction, sessionUserId} from '../lib/api';
 import {createTradeRequirement} from '../lib/trade-data';
-import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
+import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, applyGuidance, displayRequirementValue, needsGuidance, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
 
 const labels = {
   ar: {product:'المنتج', application:'الاستخدام', quantity:'الكمية والوحدة', packing:'التعبئة', destination:'الدولة أو الميناء', incoterm:'شرط التجارة', payment:'طريقة الدفع'},
@@ -71,25 +71,23 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     event?.preventDefault();
     if (!draft.input.trim() || saving || draft.savedRequirementId) return;
     const submitted = draft.input.trim();
-    setDraft(d=>answerRequirement(d,submitted,lang)); setSaveError('');
-    // Optional server-side guidance: deterministic field extraction remains authoritative.
-    if (!draft.reorder && submitted.length >= 12) {
-      // Hostinger publishes static pages only. Guidance runs in the Supabase Edge Function
-      // interpret-requirement; the local deterministic interpreter above stays authoritative.
+    const answered=answerRequirement(draft,submitted,lang);
+    setDraft(answered); setSaveError('');
+    // Only when the buyer's own words leave the product, quantity or destination unknown, ask the
+    // interpret-requirement function. It fills empty fields only; local parsing stays authoritative.
+    if (needsGuidance(answered) && submitted.length >= 12) {
       const guidance = new AbortController();
       const guidanceTimeout = setTimeout(()=>guidance.abort(),12000);
       void publicFunction('interpret-requirement', {text:submitted}, guidance.signal)
         .then(async response=>{
         if(!response.ok)return;
         const payload:unknown=await response.json();
-        const result=payload && typeof payload==='object' && 'result' in payload
-          ? (payload as {result?:unknown}).result : null;
-        if(typeof result!=='string'||!result.trim())return;
+        const fields=payload && typeof payload==='object' && 'fields' in payload ? (payload as {fields?:unknown}).fields : null;
         setDraft(current=>{
           if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
-          return {...current,messages:[...current.messages.slice(0,-1),{role:'assistant' as const,text:result.slice(0,1500)}]};
+          return applyGuidance(current,fields,lang);
         });
-      }).catch(()=>{ /* Existing composer works without optional AI guidance. */ })
+      }).catch(()=>{ /* The composer works without optional guidance. */ })
         .finally(()=>clearTimeout(guidanceTimeout));
     }
     requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});
@@ -133,7 +131,7 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
           {draft.messages.map((message,i)=><div key={i} className={'chat-msg '+message.role}><div>{message.text}</div></div>)}
         </div>}
         <span className="sr-only" aria-live="polite">{lastReply}</span>
-        {hydrated&&Object.keys(draft.data).length>0&&!reviewOnly&&<div className="composer-inline-summary" aria-label={ar?'ملخص الطلب':'Request summary'}><div><strong>{ar?'ما عرفناه عن طلبك':'What we know so far'}</strong><span>{ready?(ar?'الأساسيات مكتملة':'Essentials complete'):(ar?missing.length+' تفاصيل متبقية':missing.length+' details remaining')}</span></div><dl>{requirementFields.filter(k=>!!draft.data[k]).map(k=><div key={k}><dt>{labels[lang][k]}</dt><dd>{draft.data[k]}</dd></div>)}</dl>{storageError?<p role="alert" className="workspace-error">{ar?'تعذر حفظ المسودة؛ لا تنتقل قبل حل مشكلة التخزين.':'Could not save your draft; resolve storage before continuing.'}</p>:<DesignLink className="primary-link" href="/review">{ar?'مراجعة التفاصيل وإرسال الطلب':'Review details and send request'}</DesignLink>}</div>}
+        {hydrated&&Object.keys(draft.data).length>0&&!reviewOnly&&<div className="composer-inline-summary" aria-label={ar?'ملخص الطلب':'Request summary'}><div><strong>{ar?'ما عرفناه عن طلبك':'What we know so far'}</strong><span>{ready?(ar?'الأساسيات مكتملة':'Essentials complete'):(ar?missing.length+' تفاصيل متبقية':missing.length+' details remaining')}</span></div><dl>{requirementFields.filter(k=>!!draft.data[k]).map(k=><div key={k}><dt>{labels[lang][k]}</dt><dd>{displayRequirementValue(k,draft.data[k]||'',lang)}</dd></div>)}</dl>{storageError?<p role="alert" className="workspace-error">{ar?'تعذر حفظ المسودة؛ لا تنتقل قبل حل مشكلة التخزين.':'Could not save your draft; resolve storage before continuing.'}</p>:<DesignLink className="primary-link" href="/review">{ar?'مراجعة التفاصيل وإرسال الطلب':'Review details and send request'}</DesignLink>}</div>}
         {hydrated&&Object.keys(draft.data).length>0&&reviewOnly&&<section className="composer-review layer-4" aria-labelledby="review-title"><DesignLayers sheen/><div className="card-content">
           <div className="composer-review-head"><div><small>{ar?'تفاصيل الطلب':'REQUEST DETAILS'}</small><h2 id="review-title">{ar?'راجع ما سنرسله':'Review what we will send'}</h2></div><span>{ready?(ar?'الأساسيات مكتملة':'Essentials complete'):(ar?missing.length+' معلومات متبقية':missing.length+' details remaining')}</span></div>
           <p>{draft.reorder?(ar?'يمكنك تعديل الكمية بوحدة '+draft.reorder.unit+'. لبقية التغييرات، ابدأ طلبًا جديدًا.':'Change the quantity in '+draft.reorder.unit+'. Start a new request for other changes.'):(ar?'يمكنك تعديل أي حقل مباشرة. التعبئة غير المحددة تبقى للمناقشة، ولا نعتمد مواصفة نيابةً عنك.':'Edit any field directly. Unconfirmed packing remains to be agreed with you.')}</p>
