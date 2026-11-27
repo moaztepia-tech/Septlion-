@@ -267,6 +267,20 @@ class ReleaseTest(unittest.TestCase):
         self.assertIn("discover/index.html", live_reads)
         self.assertIn(".htaccess", live_reads)
 
+    def test_release_of_the_other_site_keeps_the_manifest_for_this_one(self):
+        self.run_cmd("release")
+        other = self.dir / "other"
+        other.mkdir()
+        (other / "index.html").write_bytes(b"<html>new home</html>")
+        (other / "sw.js").write_bytes(b"worker v2")
+        release.main(["release", "--package", str(other), "--out", str(self.dir / "out2")])
+        (self.pkg / "discover/index.html").write_bytes(b"<html>discover v2</html>")
+        self.fake.downloads.clear()
+        self.run_cmd("release")
+        live_reads = {p[len(ROOT) + 1:] for p in self.fake.downloads if p.startswith(ROOT + "/")}
+        self.assertNotIn("same.txt", live_reads)
+        self.assertIn("discover/index.html", live_reads)
+
     def test_file_edited_by_hand_on_the_server_is_downloaded_and_backed_up(self):
         self.run_cmd("release")
         self.fake.files[ROOT + "/same.txt"] = b"hand edit"
