@@ -43,9 +43,9 @@ export const waLink=(n?:string|null)=>{const d=(n||'').replace(/\D/g,'');return 
 
 // One navigation for every team screen. Phone: a slim top bar and a bottom tab bar.
 // Desktop: the same items in the top bar. Every screen marks its own tab.
-export type OpsTab='home'|'requests'|'work'|'radar'|'stats'|'content'|'account';
+export type OpsTab='home'|'requests'|'work'|'radar'|'brain'|'stats'|'content'|'account';
 const TABS:[OpsTab,string,string][]=[['home','/command-center','الرئيسية'],['requests','/operations','الطلبات'],['work','/demand-intelligence/workbench','التشغيل'],['radar','/demand-intelligence','الرادار']];
-const MORE:[OpsTab,string,string,string][]=[['stats','/analytics','الإحصاءات','أرقام المنصة مباشرة من قاعدة البيانات'],['content','/site-content','محتوى الموقع','عدّل نصوص الصفحة الرئيسية'],['account','/account','حسابي','بياناتك وتسجيل الخروج']];
+const MORE:[OpsTab,string,string,string][]=[['brain','/demand-intelligence/brain','العقل','قراراتك المنتظرة وعمل الوكلاء'],['stats','/analytics','الإحصاءات','أرقام المنصة مباشرة من قاعدة البيانات'],['content','/site-content','محتوى الموقع','عدّل نصوص الصفحة الرئيسية'],['account','/account','حسابي','بياناتك وتسجيل الخروج']];
 const TAB_ICON:Record<string,React.ReactNode>={
  home:<><path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/></>,
  requests:<><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></>,
@@ -63,7 +63,7 @@ export function OpsFrame({active,children}:{active:OpsTab;children:React.ReactNo
    <Link href="/command-center" className="ops-brand"><b>SEPTLION</b><small>لوحة الفريق</small></Link>
    <nav className="ops-nav" aria-label="أقسام اللوحة">
     {TABS.map(([t,href,label])=><Link key={t} href={href} aria-current={cur(t)}>{label}</Link>)}
-    {MORE.slice(0,2).map(([t,href,label])=><Link key={t} href={href} aria-current={cur(t)}>{label}</Link>)}
+    {MORE.slice(0,3).map(([t,href,label])=><Link key={t} href={href} aria-current={cur(t)}>{label}</Link>)}
    </nav>
    <nav className="ops-icons" aria-label="اختصارات">
     <Link href="/discover" aria-label="ما يراه العميل" title="ما يراه العميل"><PlatformIcon name="discover"/></Link>
