@@ -46,8 +46,12 @@
     return { amount, unit };
   }
 
+  /** Card id -> {productId, skuId}, filled from the team panel catalog by fromPlatform(). */
+  const platformRefs = {};
+
   /** Catalog ids such as "asasi50" map to platform SKU "sku-asasi-50" of product "prod-zollana-asasi". */
   function catalogRef(productId) {
+    if (platformRefs[productId]) return Object.assign({}, platformRefs[productId]);
     const m = String(productId || '').match(/^([a-z]+)(\d+)$/);
     return m ? { productId: 'prod-zollana-' + m[1], skuId: 'sku-' + m[1] + '-' + m[2] } : null;
   }
@@ -210,7 +214,49 @@
     return n ? '+' + countryOf(iso)[1] + ' ' + formatNational(n) : '';
   }
 
-  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput, buildIntake, splitPhone, formatNational, checkPhone, joinPhone, COUNTRIES };
+  /**
+   * Turns the team panel catalog (trade-api catalog.public) into the home page catalog:
+   * one card per SKU, with its photos, packing and container facts. The team panel is
+   * the one place where products are added or changed; the home page only shows them.
+   */
+  function fromPlatform(items) {
+    const sectors = [], products = [];
+    (Array.isArray(items) ? items : []).forEach(prod => {
+      if (!prod || !clean(prod.name) || !Array.isArray(prod.skus)) return;
+      const sector = clean(prod.sector && prod.sector.name, 80) || 'عام';
+      prod.skus.forEach(sku => {
+        if (!sku || !sku.id) return;
+        const spec = sku.specifications && typeof sku.specifications === 'object' ? sku.specifications : {};
+        const sub = clean(spec.sub, 80) || sector;
+        let sec = sectors.find(x => x.name === sector);
+        if (!sec) { sec = { name: sector, subs: [] }; sectors.push(sec); }
+        if (!sec.subs.includes(sub)) sec.subs.push(sub);
+        const m = String(sku.id).match(/^sku-([a-z]+)-(\d+)$/);
+        const id = m ? m[1] + m[2] : String(sku.id);
+        platformRefs[id] = { productId: String(prod.id), skuId: String(sku.id) };
+        const name = clean(prod.name, 160);
+        const size = clean(spec.size, 60) || clean(String(sku.name || '').replace(name, ''), 60);
+        const imgs = (Array.isArray(sku.media) ? sku.media : [])
+          .filter(x => x && x.type === 'IMAGE' && /^https:\/\//.test(String(x.url || '')))
+          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map(x => String(x.url));
+        const fields = [];
+        if (clean(spec.type)) fields.push({ ic: 'type', l: 'النوع', v: clean(spec.type, 120) });
+        if (clean(spec.packing)) fields.push({ ic: 'pack', l: 'التعبئة', v: clean(spec.packing, 120) });
+        if (clean(spec.container)) fields.push({ ic: 'size', l: 'الحاوية', v: clean(spec.container, 60) });
+        if (clean(spec.perContainer)) fields.push({ ic: 'dot', l: 'في الحاوية', v: clean(spec.perContainer, 120) });
+        if (clean(spec.brand)) fields.push({ ic: 'brand', l: 'العلامة', v: clean(spec.brand, 60) });
+        products.push({
+          id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
+          type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack: clean(spec.packing, 120), size,
+          art: spec.art === 'bottle' ? 'bottle' : 'sack', short: clean(spec.short, 40), tag: clean(spec.tag, 40),
+          kw: [clean(prod.description, 600), clean(sku.name, 160)].filter(Boolean).join(' '), imgs, fields,
+        });
+      });
+    });
+    return { version: 'platform', sectors, products };
+  }
+
+  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput, buildIntake, splitPhone, formatNational, checkPhone, joinPhone, COUNTRIES, fromPlatform };
   if (typeof document === 'undefined') return api;
 
   /* ------------------------------------------------------------------ browser */
@@ -462,6 +508,18 @@
     } catch (e) { /* counting must never break the page */ }
   }
   track(location.pathname);
+
+  /** The home page catalog from the team panel; null when it cannot be read in 4 seconds. */
+  api.platformCatalog = async function () {
+    const c = typeof AbortController === 'function' ? new AbortController() : null;
+    const t = c && setTimeout(() => c.abort(), 4000);
+    try {
+      const r = await fetch(SUPABASE_URL + '/functions/v1/trade-api', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY }, body: JSON.stringify({ action: 'catalog.public' }), cache: 'no-cache', signal: c ? c.signal : undefined });
+      const b = await body(r);
+      const d = r.ok && b && Array.isArray(b.items) ? fromPlatform(b.items) : null;
+      return d && d.products.length ? d : null;
+    } catch (e) { return null; } finally { if (t) clearTimeout(t); }
+  };
 
   api.submit = function (x) {
     current = x; step = 'contact'; ensureSheet(); render(); track('/e/request-open');

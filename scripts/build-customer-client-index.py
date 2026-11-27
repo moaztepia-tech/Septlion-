@@ -25,6 +25,9 @@ one('href="icons/apple-touch-icon-180.png"', 'href="/new-app/icons/apple-touch-i
 one('href="manifest.webmanifest"', 'href="/new-app/manifest.webmanifest"')
 every('https://www.septlion.com/icons/og-image.png', 'https://www.septlion.com/new-app/icons/og-image.png', 2)
 one("new URL('data/products.json',location.href)", "new URL('/new-app/data/products.json',location.href)")
+# One place for products (founder, 2026-11-27): the cards come from the team panel catalog
+# ("المنتجات والقطاعات"); the new-app file is used only when the platform cannot be reached.
+one("async function loadCatalog(){\n  try{", "async function loadCatalog(){\n  try{const d=await SeptlionBridge.platformCatalog();if(d){store.set(CATALOG_KEY,d);return d}}catch{}\n  try{")
 one("imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean)",
     "imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean).map(u=>/^(https?:|\\/|data:)/.test(u)?u:'/new-app/'+u)")
 # Requests go to the SEPTLION platform after an email code (septlion-bridge.js); WhatsApp stays as a fallback.

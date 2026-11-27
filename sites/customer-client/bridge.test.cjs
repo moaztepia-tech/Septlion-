@@ -100,3 +100,29 @@ test('phone numbers are grouped, checked and joined', () => {
   const i = B.buildInput({ id: 'RFQ-5', kind: 'sku', title: 'x', dest: 'مصر', qty: 1 }, { ...contact, whatsapp: B.joinPhone('QA', '5512 3456') }, {}, null);
   assert.equal(i.buyer.whatsapp, '97455123456');
 });
+
+test('home page cards come from the team panel catalog', () => {
+  const items = [
+    { id: 'prod-zollana-asasi', name: 'زولانا أساسي', description: 'دقيق القمح متعدد الاستخدامات', sector: { id: 'sector-food', name: 'الأغذية' },
+      skus: [
+        { id: 'sku-asasi-50', name: 'زولانا أساسي 50 كجم', skuCode: 'ZOL-ASASI-50', specifications: { packing: 'شوال منسوج 50 كجم', container: '20 قدماً', perContainer: 'نحو 450 شوالاً' },
+          media: [{ url: 'https://www.septlion.com/new-app/uploads/b.webp', type: 'IMAGE', sortOrder: 1 }, { url: 'https://www.septlion.com/new-app/uploads/a.webp', type: 'IMAGE', sortOrder: 0 }, { url: 'http://x/c.webp', type: 'IMAGE', sortOrder: 2 }] },
+      ] },
+    { id: 'prod-new-rice', name: 'أرز', sector: { name: 'الأغذية' }, skus: [{ id: 'rice-5kg', name: 'أرز 5 كجم', specifications: { packing: 'كيس 5 كجم', sub: 'أرز' } }] },
+    { id: 'empty', name: '', skus: [] },
+  ];
+  const d = B.fromPlatform(items);
+  assert.deepEqual(d.sectors, [{ name: 'الأغذية', subs: ['الأغذية', 'أرز'] }]);
+  assert.equal(d.products.length, 2);
+  const [a, r] = d.products;
+  assert.equal(a.id, 'asasi50');
+  assert.equal(a.name, 'زولانا أساسي');
+  assert.equal(a.size, '50 كجم');
+  assert.equal(a.pack, 'شوال منسوج 50 كجم');
+  assert.deepEqual(a.imgs, ['https://www.septlion.com/new-app/uploads/a.webp', 'https://www.septlion.com/new-app/uploads/b.webp']);
+  assert.deepEqual(a.fields.map(f => f.v), ['شوال منسوج 50 كجم', '20 قدماً', 'نحو 450 شوالاً']);
+  assert.deepEqual(B.catalogRef('asasi50'), { productId: 'prod-zollana-asasi', skuId: 'sku-asasi-50' });
+  assert.equal(r.id, 'rice-5kg');
+  assert.deepEqual(B.catalogRef('rice-5kg'), { productId: 'prod-new-rice', skuId: 'rice-5kg' });
+  assert.deepEqual(B.fromPlatform(null), { version: 'platform', sectors: [], products: [] });
+});

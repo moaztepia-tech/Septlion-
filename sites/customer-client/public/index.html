@@ -1381,6 +1381,7 @@ function applyData(d){
   renderFeed();
 }
 async function loadCatalog(){
+  try{const d=await SeptlionBridge.platformCatalog();if(d){store.set(CATALOG_KEY,d);return d}}catch{}
   try{
     const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);
     const r=await fetch(new URL('/new-app/data/products.json',location.href),{cache:'no-cache',signal:c.signal});clearTimeout(t);

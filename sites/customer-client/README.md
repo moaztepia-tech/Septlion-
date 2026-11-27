@@ -7,8 +7,12 @@ panel, as the face of the site, and to run the SEPTLION platform behind it.
 * `public/index.html` is the live `/new-app/index.html`, archived in
   `sites/new-app-live/`, with the edits made by
   `scripts/build-customer-client-index.py`:
-  * images, fonts, icons and `data/products.json` load from `/new-app/`, so
-    the new-app admin panel keeps managing the catalog and photos;
+  * images, fonts and icons load from `/new-app/`;
+  * the product cards come from the team panel catalog ("المنتجات والقطاعات",
+    `trade-api` `catalog.public`, one card per SKU, see `fromPlatform` in the
+    bridge). `/new-app/data/products.json` is only a fallback when the platform
+    cannot be reached in 4 seconds, so editing products in the new-app admin
+    panel no longer changes the home page;
   * the "request a quote" and "describe your need" buttons call
     `SeptlionBridge.submit()` instead of opening WhatsApp directly.
 * `public/septlion-bridge.js` asks for name, company, WhatsApp and email, sends
