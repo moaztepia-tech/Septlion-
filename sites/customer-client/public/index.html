@@ -961,7 +961,7 @@ function zoomSpec(p){
   const tiles=key.length?`<div class="ztiles">${key.map(f=>`<div><b${f.zv.length>6?' class="zlong"':''}><bdi>${esc(f.zv)}</bdi></b><small>${esc(f.zl)}</small></div>`).join('')}</div>`:'';
   const wide=f=>f.zl==='الشهادات'||f.zv.length>22;
   const fill=r=>{let run=0;return r.map((f,i)=>{if(wide(f)){run=0;return Object.assign({},f,{w:1})}run++;const nx=r[i+1];return Object.assign({},f,{w:run%2===1&&(!nx||wide(nx))?1:0})})};
-  const row=f=>f.zl==='الشهادات'?`<div class="zwide"><dt>${esc(f.zl)}</dt><dd class="zchips">${f.zv.split(/\s*[·،,]\s*/).filter(Boolean).map(c=>`<i><bdi>${esc(c)}</bdi></i>`).join('')}</dd></div>`:`<div${f.w?' class="zwide"':''}><dt>${esc(f.zl)}</dt><dd><bdi>${esc(f.zv)}</bdi></dd></div>`;
+  const row=f=>f.zl==='الشهادات'?`<div class="zwide"><dt>${esc(f.zl)}</dt><dd class="zchips">${f.zv.split(/\s*[·،,]\s*/).filter(Boolean).map(c=>`<i><bdi>${esc(c)}</bdi></i>`).join('')}</dd></div>`:`<div${f.w?' class="zwide"':''}><dt>${esc(f.zl)}</dt><dd><bdi${/[؀-ۿ]/.test(f.zv)?' dir="rtl"':''}>${esc(f.zv)}</bdi></dd></div>`;
   return `<div class="zspec">${ZG.map(([g,t])=>{const r=rest.filter(f=>f.g===g),top=g==='q'?tiles:'';return r.length||top?`<section><h3>${t}</h3>${top}${r.length?`<dl>${fill(r).map(row).join('')}</dl>`:''}</section>`:''}).join('')}</div>`;
 }
 function fieldsOf(p){

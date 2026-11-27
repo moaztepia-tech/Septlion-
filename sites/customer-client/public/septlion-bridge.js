@@ -242,21 +242,29 @@
         // "شوال منسوج 50 كجم" shows as packing "شوال منسوج" and size "50 كجم", so nothing repeats.
         const packing = clean(spec.packing, 120);
         const pack = size && packing.endsWith(' ' + size) ? packing.slice(0, -size.length - 1) : packing;
-        // Before enlarging, the six facts a flour buyer filters on: quality (protein), origin,
-        // the certificate their market asks for first (halal), packing, size, and the minimum
-        // load. After enlarging, everything a buyer checks before asking for an offer.
+        // Before enlarging, the six facts a container buyer (Sudan, the Gulf, Africa) filters on:
+        // quality (protein), origin, the certificate their market asks for first (halal), the
+        // unit ("شوال 50 كجم"), the minimum load, and the delivery terms. After enlarging,
+        // everything a buyer checks before asking for an offer.
         const certs = clean(spec.certificates, 160);
         const firstCert = certs.split(/\s*[·،,]\s*/)[0];
         // f(icon, card label, card value, group, label and value in the enlarged list)
         const f = (ic, l, v, g, zl, zv) => ({ ic, l, v, g, zl, zv: zv == null ? v : zv });
         const val = (k, n) => clean(spec[k], n || 60);
         const card = [], more = [];
+        // Packing and size apart, for the enlarged view only: the card already shows them as one unit.
+        const zoomOnly = [];
+        if (pack) zoomOnly.push(f('pack', 'التعبئة', pack, 's', 'التعبئة'));
+        if (size) zoomOnly.push(f('size', 'الحجم', size, 's', 'الحجم'));
         if (val('protein')) card.push(f('type', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
         if (val('origin')) card.push(f('origin', 'المنشأ', val('origin'), 'c', 'المنشأ'));
         if (firstCert) card.push(Object.assign(f('grade', '', firstCert, 'c', 'الشهادات'), { zoom: certs === firstCert }));
-        if (pack) card.push(f('pack', 'التعبئة', pack, 's', 'التعبئة'));
-        if (size) card.push(f('size', 'الحجم', size, 's', 'الحجم'));
+        const unit = [pack.split(' ')[0], size].filter(Boolean).join(' ');
+        if (unit) card.push(Object.assign(f('pack', 'التعبئة', unit, 's', 'التعبئة'), { zoom: false }));
         if (val('container')) card.push(f('port', 'أقل طلب', 'حاوية ' + val('container'), 's', 'أقل طلب'));
+        // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
+        const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
+        if (val('delivery', 80)) card.push(f('moq', 'التسليم', terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
         if (val('type', 120)) more.push(f('type', 'النوع', val('type', 120), 'q', 'النوع'));
         if (val('moisture')) more.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
         if (val('gluten')) more.push(f('dot', '', 'جلوتين رطب ' + val('gluten'), 'q', 'الجلوتين الرطب', val('gluten')));
@@ -271,7 +279,7 @@
         if (val('brand')) more.push(f('brand', 'العلامة', val('brand'), 'c', 'العلامة'));
         // The card shows at most six; pad it from the details so it never looks empty.
         while (card.length < 6 && more.length) card.push(more.shift());
-        const fields = card.concat(more);
+        const fields = card.concat(more, zoomOnly);
         products.push({
           id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
           type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack, size,
