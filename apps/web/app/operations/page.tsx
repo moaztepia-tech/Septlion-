@@ -46,8 +46,8 @@ export default function Operations(){
  return <OpsFrame active="requests">
   <div className="ops-row">
    <div><h1 className="ops-h1">الطلبات</h1><p className="ops-sub">{rfqs?(counts.new?`${nNew(counts.new)} بانتظار عرض سعر`:'لا توجد طلبات جديدة الآن'):'طلبات العملاء الواردة من الموقع'}</p></div>
-   <div className="ops-chips" role="tablist" aria-label="عرض">
-    {([['requests','الطلبات'],['deals','الصفقات'],['system','النظام']] as const).map(([k,l])=><button key={k} role="tab" className="ops-chip" aria-pressed={tab===k} aria-selected={tab===k} onClick={()=>setTab(k)}>{l}</button>)}
+   <div className="ops-seg" role="tablist" aria-label="عرض">
+    {([['requests','الطلبات'],['deals','الصفقات'],['system','النظام']] as const).map(([k,l])=><button key={k} role="tab" aria-selected={tab===k} onClick={()=>setTab(k)}>{l}</button>)}
    </div>
   </div>
   {err&&<div className="ops-card ops-row"><p className="ops-alert" role="alert">{err}</p><a className="ops-btn pri" href="/account?next=/operations">تسجيل الدخول</a></div>}

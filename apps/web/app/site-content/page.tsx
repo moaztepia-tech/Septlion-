@@ -44,13 +44,13 @@ export default function SiteContentEditor() {
   } finally { setBusy(''); }
  }
 
- if (state !== 'ready') return <OpsFrame active="home"><section className="ops-card" style={{maxWidth: 520, margin: '8vh auto 0', textAlign: 'center'}}>
+ if (state !== 'ready') return <OpsFrame active="content"><section className="ops-card" style={{maxWidth: 520, margin: '8vh auto 0', textAlign: 'center'}}>
   <h1 className="ops-h1">محتوى الموقع</h1>
   <p className="ops-sub">{state === 'checking' ? 'جارٍ التحقق من حسابك…' : 'هذه الصفحة لفريق سبتليون فقط. سجّل الدخول بحساب الفريق.'}</p>
   {state === 'denied' && <a className="ops-btn pri" href="/account?next=/site-content" style={{marginTop: 12}}>تسجيل الدخول</a>}
  </section></OpsFrame>;
 
- return <OpsFrame active="home">
+ return <OpsFrame active="content">
   <div>
    <h1 className="ops-h1">محتوى الموقع</h1>
    <p className="ops-sub">عدّل النص واضغط «حفظ». يظهر التعديل لزوار الموقع فور فتحهم الصفحة. اترك الحقل كما هو أو استعد النص الأصلي في أي وقت.</p>

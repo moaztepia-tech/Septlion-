@@ -2,6 +2,7 @@
 import {useEffect,useState} from 'react';
 import {OpsFrame} from '../../components/ops-console';
 import {edge,accessToken} from '../../lib/api';
+import {VisitorsCard} from '../command-center/visitors-card';
 
 type Snapshot=Record<string,number|string>;
 const groups:[string,[string,string,boolean?][]][]=[
@@ -14,11 +15,12 @@ export default function Analytics(){
  const [h,setH]=useState<Snapshot|null>(null);
  const [e,setE]=useState('');
  useEffect(()=>{if(accessToken())edge<Snapshot>('analytics.snapshot').then(setH).catch(x=>setE(x instanceof Error?x.message:'تعذر تحميل المؤشرات'));else setE('سجّل الدخول بحساب الفريق لعرض المؤشرات.')},[]);
- return <OpsFrame active="home">
+ return <OpsFrame active="stats">
   <div>
-   <h1 className="ops-h1">صحة المنصة</h1>
+   <h1 className="ops-h1">الإحصاءات</h1>
    <p className="ops-sub">أرقام مباشرة من قاعدة البيانات، وليست أرقامًا تسويقية.</p>
   </div>
+  <VisitorsCard/>
   {e&&<p className="ops-alert" role="alert">{e}</p>}
   {!h&&!e&&<p className="ops-sub" role="status">جارٍ التحميل…</p>}
   {h&&groups.map(([title,rows])=><section key={title} className="ops-card" aria-label={title}>

@@ -10,7 +10,7 @@ export const metadata={robots:{index:false,follow:false},title:'رادار ال�
 export default function DemandIntelligence(){
  return <OpsFrame active="radar"><TeamGate next="/demand-intelligence/">
   <div>
-   <h1 className="ops-h1" id="radar">رادار الطلب</h1>
+   <h1 className="ops-h1" id="radar">الرادار</h1>
    <p className="ops-sub">طلبات شراء ومناقصات حقيقية يرصدها النظام تلقائيًا من الأسواق كل 6 ساعات. كل إشارة تُعامل كفرصة محتملة حتى يتم التحقق منها.</p>
   </div>
   <DemandRadar/>

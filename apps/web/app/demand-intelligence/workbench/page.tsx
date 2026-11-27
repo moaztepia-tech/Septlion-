@@ -3,7 +3,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {accessToken} from '../../../lib/api';
 import Link from 'next/link';
-import {OpsFrame} from '../../../components/ops-console';
+import {OpsFrame,ago,dateAr} from '../../../components/ops-console';
 import {DemandPageRef,buyerReply,fetchDemandPages,replyLink} from '../../../lib/buyer-reply';
 import './workbench.css';
 
@@ -81,7 +81,7 @@ const patternAr:Record<string,string>={RECURRING:'طلب متكرر',EMERGING:'�
 const runAr:Record<string,string>={SUCCESS:'نجح',FAILED:'فشل',RUNNING:'يعمل الآن',PARTIAL:'جزئي'};
 const statusAr:Record<string,string>={NEW:'جديد',DRAFT:'مسودة',READY:'جاهز',PUBLISHED:'منشور',PENDING:'قيد الانتظار',APPROVED:'معتمد'};
 const tr=(m:Record<string,string>,v?:string|null)=>v?(m[v]||v):'';
-const day=(v?:string|null)=>v?v.slice(0,10):'—';
+const day=dateAr;
 const PAGE=8;
 
 async function api(init?:RequestInit){
@@ -114,13 +114,13 @@ export default function DemandWorkbench(){
    const snap=await api();
    setData(snap);
   }catch(e){
-   if(e instanceof Error&&e.message==='UNAUTHORIZED'){setData(null);setError('يلزم تسجيل الدخول بحساب SEPTLION التشغيلي.');}
+   if(e instanceof Error&&e.message==='UNAUTHORIZED'){setData(null);setError('سجّل الدخول بحساب الفريق للمتابعة.');}
    else setError('تعذر تحميل لوحة التشغيل الآن.');
   }finally{if(!silent)setBusy(false)}
  }
 
  useEffect(()=>{
-  if(accessToken())void load();else setError('يلزم تسجيل الدخول بحساب SEPTLION التشغيلي.')
+  if(accessToken())void load();else setError('سجّل الدخول بحساب الفريق للمتابعة.')
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
 
@@ -150,7 +150,7 @@ export default function DemandWorkbench(){
    await api({method:'POST',body:JSON.stringify({action:'register_push',subscription:subscription.toJSON()})});
    setPushState('enabled');
    await load(true);
-  }catch{setPushState('idle');setError('تعذر تفعيل إشعارات RFQ على هذا الجهاز.')}
+  }catch{setPushState('idle');setError('تعذر تفعيل التنبيهات على هذا الجهاز.')}
  }
 
  async function markAlert(alertId:string){
@@ -175,7 +175,7 @@ export default function DemandWorkbench(){
  const stageCounts=useMemo(()=>{const m=new Map<string,number>();for(const t of sorted)m.set(t.stage,(m.get(t.stage)||0)+1);return [...m.entries()]},[sorted]);
  const filtered=useMemo(()=>stageFilter==='ALL'?sorted:sorted.filter(t=>t.stage===stageFilter),[sorted,stageFilter]);
 
- if(!data)return <OpsFrame active="work"><div className="dw-login"><div className="dw-login-card"><p className="kicker">لوحة التشغيل الداخلية</p><h1>لوحة تشغيل الطلبات</h1><p>{error||'جارٍ التحقق من صلاحية حسابك…'}</p>{error&&<Link href="/account?next=/demand-intelligence/workbench"><button>تسجيل الدخول</button></Link>}</div></div></OpsFrame>;
+ if(!data)return <OpsFrame active="work"><section className="ops-card" style={{maxWidth:520,margin:'8vh auto 0',textAlign:'center'}}><h1 className="ops-h1">التشغيل</h1><p className="ops-sub">{error||'جارٍ التحقق من حسابك…'}</p>{error&&<div className="ops-actions" style={{justifyContent:'center',marginTop:16}}><Link className="ops-btn pri" href="/account?next=/demand-intelligence/workbench">تسجيل الدخول</Link></div>}</section></OpsFrame>;
 
  const st=data.stats;
  const pushOn=pushState==='enabled'||st.activePushSubscriptions>0;
@@ -189,8 +189,7 @@ export default function DemandWorkbench(){
  return <OpsFrame active="work"><div className="dw">
 
   <section className="dw-hero shell">
-   <p className="kicker">لوحة التشغيل الداخلية</p>
-   <h1>لوحة تشغيل الطلبات</h1>
+   <h1>التشغيل</h1>
    <p>كل طلب يصل، وكل مشترٍ محتمل، والخطوة التالية لكل صفقة، في مكان واحد.</p>
    <div className="dw-status">
     <span className="dw-chip dw-chip-live"><i/> تتحدث تلقائيًا</span>
@@ -201,10 +200,10 @@ export default function DemandWorkbench(){
   </section>
 
   <section className="dw-section dw-first shell">
-   <div className="dw-head"><div><p className="kicker">يحتاج انتباهك الآن</p><h2>طلبات جديدة {data.alerts.length>0&&<em>{data.alerts.length}</em>}</h2></div>{data.alerts.length>1&&<button className="dw-link" onClick={markAllAlerts}>تمت مراجعة الكل</button>}</div>
+   <div className="dw-head"><div><h2>تنبيهات جديدة {data.alerts.length>0&&<em>{data.alerts.length}</em>}</h2></div>{data.alerts.length>1&&<button className="dw-link" onClick={markAllAlerts}>تمت مراجعة الكل</button>}</div>
    {data.alerts.length>0?<div className="dw-alerts">
     {data.alerts.map(a=><article key={a.id} className={'dw-alert dw-alert-'+a.severity.toLowerCase()}>
-     <div><span className="dw-tag dw-tag-warn">{tr(severityAr,a.severity)} · {tr(alertTypeAr,a.type)}</span><h3>{a.title}</h3><p>{a.body}</p><small>{a.createdAt.slice(0,16).replace('T',' ')}</small></div>
+     <div><span className="dw-tag dw-tag-warn">{tr(severityAr,a.severity)} · {tr(alertTypeAr,a.type)}</span><h3>{a.title}</h3><p>{a.body}</p><small>{ago(a.createdAt)}</small></div>
      <button onClick={()=>markAlert(a.id)}>تمت المراجعة</button>
     </article>)}
    </div>:<div className="dw-empty dw-calm">لا توجد طلبات جديدة الآن. سيصلك تنبيه على الجوال فور وصول أي طلب.</div>}
@@ -225,7 +224,7 @@ export default function DemandWorkbench(){
   </section>
 
   <section className="dw-section shell">
-   <div className="dw-head"><div><p className="kicker">ما يجب عمله</p><h2>المهام</h2></div><button className="dw-link" onClick={()=>load()} disabled={busy}>{busy?'يتم التحديث…':'تحديث'}</button></div>
+   <div className="dw-head"><div><h2>المهام</h2></div><button className="dw-link" onClick={()=>load()} disabled={busy}>{busy?'يتم التحديث…':'تحديث'}</button></div>
    {stageCounts.length>1&&<div className="dw-filters">
     <button className={stageFilter==='ALL'?'on':''} onClick={()=>{setStageFilter('ALL');setTaskLimit(PAGE)}}>الكل <b>{sorted.length}</b></button>
     {stageCounts.map(([stage,n])=><button key={stage} className={stageFilter===stage?'on':''} onClick={()=>{setStageFilter(stage);setTaskLimit(PAGE)}}>{stageAr[stage]||stage} <b>{n}</b></button>)}
@@ -274,7 +273,7 @@ export default function DemandWorkbench(){
   </section>
 
   <section className="dw-section shell">
-   <div className="dw-head"><div><p className="kicker">من يشتري</p><h2>المشترون المحتملون</h2></div><p>مرتبون حسب الأولوية: قوة نية الشراء وسهولة الوصول إلى المشتري.</p></div>
+   <div className="dw-head"><div><h2>المشترون المحتملون</h2></div><p>مرتبون حسب الأولوية: قوة نية الشراء وسهولة الوصول إلى المشتري.</p></div>
    <div className="dw-buyers">
     {data.buyers.slice(0,buyerLimit).map(b=><article className="dw-buyer" key={b.id}>
      <div className="dw-buyer-score"><b>{b.priorityScore??b.executionScore}</b><span>أولوية</span></div>
@@ -302,10 +301,10 @@ export default function DemandWorkbench(){
 
   <section className="dw-section shell">
    <details className="dw-engine">
-    <summary><div><p className="kicker">خلف الكواليس</p><h2>صحة محركات الرصد</h2><small>{data.sources.length} مصدر · {sourcesOk} يعمل{sourcesErr>0?' · '+sourcesErr+' فيه خطأ':''} · {data.patterns.length} نمط طلب</small></div><span className="dw-engine-toggle">عرض التفاصيل</span></summary>
+    <summary><div><h2>صحة محركات الرصد</h2><small>{data.sources.length} مصدر · {sourcesOk} يعمل{sourcesErr>0?' · '+sourcesErr+' فيه خطأ':''} · {data.patterns.length} نمط طلب</small></div><span className="dw-engine-toggle">عرض التفاصيل</span></summary>
     <h4>المصادر</h4>
     <div className="dw-rows">
-     {data.sources.map(s=><div key={s.id} className={s.lastError?'err':''}><b>{s.name}</b><span className="dw-state">{s.active?(s.lastError?'خطأ':'يعمل'):'متوقف'}</span><small>{s.lastError?s.lastError:s.lastSuccessAt?'آخر نجاح '+s.lastSuccessAt.slice(0,16).replace('T',' '):'لم يعمل بعد'}</small></div>)}
+     {data.sources.map(s=><div key={s.id} className={s.lastError?'err':''}><b>{s.name}</b><span className="dw-state">{s.active?(s.lastError?'خطأ':'يعمل'):'متوقف'}</span><small>{s.lastError?s.lastError:s.lastSuccessAt?'آخر نجاح '+ago(s.lastSuccessAt):'لم يعمل بعد'}</small></div>)}
     </div>
     <h4>أنماط الطلب</h4>
     <p className="dw-note">لا نعرض توقعًا إلا بعد تراكم إشارات كافية، فالإشارة الواحدة تبقى «بيانات غير كافية».</p>
@@ -314,7 +313,7 @@ export default function DemandWorkbench(){
     </div>
     <h4>آخر جولات الجمع</h4>
     <div className="dw-rows">
-     {data.recentRuns.slice(0,8).map((r,i)=><div key={r.sourceId+'-'+r.startedAt+'-'+i}><b>{r.sourceId}</b><span className={'dw-state'+(r.status==='FAILED'?' bad':'')}>{tr(runAr,r.status)}</span><small>فحص {r.scanned} · قُبل {r.accepted} · {r.startedAt.slice(0,16).replace('T',' ')}</small></div>)}
+     {data.recentRuns.slice(0,8).map((r,i)=><div key={r.sourceId+'-'+r.startedAt+'-'+i}><b>{r.sourceId}</b><span className={'dw-state'+(r.status==='FAILED'?' bad':'')}>{tr(runAr,r.status)}</span><small>فحص {r.scanned} · قُبل {r.accepted} · {ago(r.startedAt)}</small></div>)}
     </div>
    </details>
   </section>
