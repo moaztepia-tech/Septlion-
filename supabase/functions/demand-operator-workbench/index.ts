@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
   const operator = { id: user.id, label: user.email || "SEPTLION Operator", active: true };
 
   if (req.method === "GET") {
-    const [queue, signals, sources, patterns, runs, alerts, pushSubscriptions, supplierProfiles, buyers] = await Promise.all([
+    const [queue, signals, sources, patterns, runs, alerts, pushSubscriptions, supplierProfiles, buyers, assessments, engineRuns, buyerPatterns] = await Promise.all([
       db.from("DemandWorkbenchQueue")
         .select("*")
         .in("taskStatus", ["OPEN","IN_PROGRESS","BLOCKED"])
@@ -78,6 +78,9 @@ Deno.serve(async (req: Request) => {
         .order("priorityScore", { ascending: false })
         .order("lastBuyingSignalAt", { ascending: false, nullsFirst: false })
         .limit(100),
+      db.from("DemandAssessment").select("*").order("fresh", { ascending: false }).order("inScope", { ascending: false }).limit(200),
+      db.from("DemandEngineRun").select("id,startedAt,finishedAt,status,processed,summary,errors").order("startedAt", { ascending: false }).limit(10),
+      db.from("DemandBuyerPattern").select("buyerId,productKey,market,observationCount,confidence,predictedWindowStart,predictedWindowEnd,basis").limit(100),
     ]);
 
     const rows = signals.data || [];
@@ -94,7 +97,8 @@ Deno.serve(async (req: Request) => {
       activePushSubscriptions: (pushSubscriptions.data || []).length,
       supplierProfiles: (supplierProfiles.data || []).length,
       buyers: (buyers.data || []).length,
-      buyerVerified: (buyers.data || []).filter((x: any) => ["VERIFIED","SELF_SUBMITTED"].includes(x.verificationStatus)).length,
+      buyerVerified: (buyers.data || []).filter((x: any) => x.verificationStatus === "VERIFIED").length,
+      buyerSelfSubmitted: (buyers.data || []).filter((x: any) => x.verificationStatus === "SELF_SUBMITTED").length,
       buyerExecutable: (buyers.data || []).filter((x: any) => x.executionScore >= 70).length,
       buyerContactReady: (buyers.data || []).filter((x: any) => x.contactReadinessScore >= 60).length,
     };
@@ -108,6 +112,10 @@ Deno.serve(async (req: Request) => {
       recentRuns: runs.data || [],
       alerts: alerts.data || [],
       buyers: buyers.data || [],
+      assessments: assessments.data || [],
+      engineRuns: engineRuns.data || [],
+      buyerPatterns: buyerPatterns.data || [],
+      engineErrors: [assessments.error, engineRuns.error, buyerPatterns.error].filter(Boolean).map((e: any) => e.message),
     });
   }
 
@@ -116,6 +124,12 @@ Deno.serve(async (req: Request) => {
     const taskId = String(body?.taskId || "");
     const action = String(body?.action || "");
     const note = body?.note ? String(body.note).slice(0, 2000) : null;
+
+    if (action === "run_operations") {
+      const { data, error } = await db.rpc("run_demand_operations", { batch_size: 200 });
+      if (error) return json(req, { error: "Unable to run operations" }, 500);
+      return json(req, { ok: data?.errors?.length === 0, result: data });
+    }
 
     if (action === "register_push") {
       const subscription = body?.subscription || {};
@@ -238,13 +252,16 @@ Deno.serve(async (req: Request) => {
       const currentStage = signal?.stage || "";
 
       if (currentStage === "QUALIFICATION") {
-        await db.from("DemandQualification")
+        const { error } = await db.from("DemandQualification")
           .update({ decision: "QUALIFIED", updatedAt: new Date().toISOString() })
           .eq("signalId", task.signalId);
+        if (error) return json(req, { error: "Qualification could not advance" }, 409);
       } else if (currentStage === "OFFER_BUILD") {
-        await db.from("DemandOfferBuild")
+        if (!memberships.some((m: any) => m.role === "ADMIN")) return json(req, { error: "Admin approval required" }, 403);
+        const { data: approved, error } = await db.from("DemandOfferBuild")
           .update({ status: "READY", approvedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
-          .eq("signalId", task.signalId);
+          .eq("signalId", task.signalId).select("id").maybeSingle();
+        if (error || !approved) return json(req, { error: "Current sourced costs, a selected supplier and qualification are required before approval" }, 409);
 
         await db.from("DemandTask")
           .update({ status: "DONE", updatedAt: new Date().toISOString() })
