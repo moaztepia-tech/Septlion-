@@ -129,6 +129,13 @@ const askIn=$('#askInput');
 $('#askForm').addEventListener('submit',e=>{e.preventDefault();const t=askIn.value.trim();if(!t){askIn.focus();return}openComposer(t)});
 askIn.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#askForm').requestSubmit()}});
 askIn.addEventListener('input',()=>{askIn.style.height='auto';askIn.style.height=Math.min(askIn.scrollHeight,150)+'px'});""")
+# Icons a trader reads at a glance: a wheat ear for protein, a ship for delivery terms,
+# a container for the minimum load.
+one("const ico=k=>", """Object.assign(ICONS,{
+ wheat:'<path d="M12 21V6M12 6c-1.6-.8-2.5-2.2-2.5-3.5 1.6.2 2.5 1.6 2.5 3.5zM12 6c1.6-.8 2.5-2.2 2.5-3.5-1.6.2-2.5 1.6-2.5 3.5zM12 11c-2.2-.4-3.5-2-3.5-3.8 2.2.2 3.5 1.8 3.5 3.8zM12 11c2.2-.4 3.5-2 3.5-3.8-2.2.2-3.5 1.8-3.5 3.8zM12 16c-2.2-.4-3.5-2-3.5-3.8 2.2.2 3.5 1.8 3.5 3.8zM12 16c2.2-.4 3.5-2 3.5-3.8-2.2.2-3.5 1.8-3.5 3.8z"/>',
+ ship:'<path d="M3 15h18l-2.5 5h-13zM6 15v-4h12v4M12 11V4l5 3-5 2"/>',
+ box:'<path d="M3 7h18v11H3zM7.5 9.5v6M12 9.5v6M16.5 9.5v6"/>'});
+const ico=k=>""")
 # Card facts: hide enlarged-only details and give the minimum load its own full line.
 one('const fieldsHTML=p=>{const f=fieldsOf(p).slice(0,6),cols=Math.max(1,Math.ceil(f.length/2));return `<ul class="fields" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li title="${esc(x.l||\'\')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||\'\')}: </span><span class="v${/^[A-Za-z0-9 .\\-\\/]+$/.test(x.v)?\' lat\':\'\'}" dir="auto">${esc(x.v)}</span></li>`).join(\'\')}</ul>`};', 'const fieldsHTML=p=>{const a=fieldsOf(p).filter(x=>x.card!==false),w=a.filter(x=>x.wide).slice(0,1),f=a.filter(x=>!x.wide).slice(0,6).concat(w),cols=Math.max(1,Math.ceil((f.length-w.length)/2));return `<ul class="fields${w.length?\' w3\':\'\'}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li${x.wide?\' class="wide"\':\'\'} title="${esc(x.l||\'\')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||\'\')}: </span><span class="v${/^[A-Za-z0-9 .\\-\\/]+$/.test(x.v)?\' lat\':\'\'}" dir="auto">${esc(x.v)}</span></li>`).join(\'\')}</ul>`};')
 # The service worker file lives in /new-app/ and cannot control the root.
