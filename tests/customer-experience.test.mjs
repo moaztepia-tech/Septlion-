@@ -180,3 +180,35 @@ test('AI guidance may replace a field that only holds the buyer whole sentence',
  const g=draft.applyGuidance(d,{product:'طحين',quantity:'',destination:''},'ar',text);
  assert.notEqual(g.data.product,text);
 });
+test('questions are answered, never stored, and the AI reply leads the next question',()=>{
+ const start=draft.emptyComposerDraft('home');
+ const q=draft.answerRequirement(start,'كم سعر الطن عندكم؟','ar');
+ assert.deepEqual(q.data,{});assert.match(q.messages.at(-1).text,/عرض سبتليون المكتوب/);assert.match(q.messages.at(-1).text,/المنتج/);
+ assert.equal(draft.needsAI(start,q,'كم سعر الطن عندكم؟'),true);
+ const g=draft.applyGuidance(q,{product:'',quantity:'',destination:'',packing:'',incoterm:'',payment:''},'ar','كم سعر الطن عندكم؟','السعر يصلك في العرض المكتوب.','question');
+ assert.match(g.messages.at(-1).text,/^السعر يصلك في العرض المكتوب\.\n\nما المنتج/);
+ assert.equal(draft.needsAI(start,draft.answerRequirement(start,'السلام عليكم','ar'),'السلام عليكم'),false);
+});
+test('a complaint kept as a field by the local fallback is removed when the AI says it is not a request',()=>{
+ const base={...draft.emptyComposerDraft('home'),data:{product:'Wheat Flour',quantity:'5 FCL',destination:'كوتونو'}};
+ const text='انتم بطيئين جدا في الرد';
+ const d=draft.answerRequirement(base,text,'ar');
+ const field=Object.keys(d.data).find(k=>d.data[k]===text);assert.ok(field);
+ const g=draft.applyGuidance(d,{product:'',quantity:'',destination:'',packing:'',incoterm:'',payment:''},'ar',text,'نعتذر عن التأخير، سنهتم بطلبك.','other');
+ assert.equal(Object.values(g.data).includes(text),false);assert.match(g.messages.at(-1).text,/^نعتذر/);
+});
+test('a correction the AI marks as changed replaces the earlier value; a natural AI question is used as is',()=>{
+ const base={...draft.emptyComposerDraft('home'),data:{product:'Wheat Flour',quantity:'5 FCL',destination:'كوتونو'},messages:[{role:'user',text:'x'},{role:'assistant',text:'y'}]};
+ const d=draft.answerRequirement(base,'لا خليها 10 حاويات وإلى لومي','ar');
+ const g=draft.applyGuidance(d,{product:'Wheat Flour',quantity:'10 حاويات',destination:'لومي',packing:'',incoterm:'',payment:''},'ar','لا خليها 10 حاويات وإلى لومي','تمام، 10 حاويات إلى لومي. ما حجم التعبئة؟','request',['quantity','destination']);
+ assert.equal(g.data.quantity,'10 FCL');assert.equal(g.data.destination,'لومي');
+ assert.equal(g.messages.at(-1).text,'تمام، 10 حاويات إلى لومي. ما حجم التعبئة؟');
+ const same=draft.applyGuidance(d,{product:'دقيق',quantity:'',destination:'',packing:'',incoterm:'',payment:''},'ar','x','', 'request',[]);
+ assert.equal(same.data.product,'Wheat Flour');
+ assert.deepEqual(Object.keys(draft.aiContext(base)),['fields','history']);
+});
+test('a trade term named inside a question is not taken as the choice',()=>{
+ const d=draft.answerRequirement({...draft.emptyComposerDraft('home'),data:{product:'Wheat Flour',destination:'جيبوتي'}},'حوالي 10 حاويات، بس ايش الفرق بين CIF و FOB؟','ar');
+ assert.equal(d.data.quantity,'10 FCL');assert.equal(d.data.incoterm,undefined);
+ assert.equal(draft.answerRequirement(d,'CIF','ar').data.incoterm,'CIF');
+});

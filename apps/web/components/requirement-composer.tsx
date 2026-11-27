@@ -9,7 +9,7 @@ import {FormEvent, useEffect, useRef, useState} from 'react';
 import {SeptlionSymbol} from './septlion-symbol';
 import {edge, hasSession, publicFunction, sessionUserId} from '../lib/api';
 import {createTradeRequirement} from '../lib/trade-data';
-import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, applyGuidance, displayRequirementValue, needsGuidance, smallTalk, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
+import {COMPOSER_DRAFT_KEY, ComposerDraft, RequirementField, answerRequirement, applyGuidance, displayRequirementValue, needsAI, aiContext, draftFromFeed, emptyComposerDraft, isFeedContext, missingComposerFields, requirementFields, reorderPayload, requirementPayload, requirementQuestion, restoreComposerDraft} from '../lib/composer-draft';
 
 const labels = {
   ar: {product:'المنتج', application:'الاستخدام', quantity:'الكمية والوحدة', packing:'التعبئة', destination:'الدولة أو الميناء', incoterm:'شرط التجارة', payment:'طريقة الدفع'},
@@ -18,6 +18,7 @@ const labels = {
 export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
   const [contact,setContact]=useState({name:'',company:'',email:'',phone:''}),[verifiedContact,setVerifiedContact]=useState('');
   const [lang,setLang] = useState<'ar'|'en'>('ar');
+  const [thinking,setThinking] = useState(false);
   const [draft,setDraft] = useState<ComposerDraft>(()=>emptyComposerDraft(''));
   const [hydrated,setHydrated] = useState(false), [saving,setSaving] = useState(false);
   const [saveError,setSaveError] = useState(''), [storageError,setStorageError] = useState(false);
@@ -75,20 +76,24 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
     setDraft(answered); setSaveError('');
     // Only when the buyer's own words leave the product, quantity or destination unknown, ask the
     // interpret-requirement function. It fills empty fields only; local parsing stays authoritative.
-    if (needsGuidance(answered) && submitted.length >= 12 && !smallTalk(submitted)) {
+    if (needsAI(draft,answered,submitted)) {
       const guidance = new AbortController();
       const guidanceTimeout = setTimeout(()=>guidance.abort(),12000);
-      void publicFunction('interpret-requirement', {text:submitted}, guidance.signal)
+      setThinking(true);
+      void publicFunction('interpret-requirement', {text:submitted, context:aiContext(draft)}, guidance.signal)
         .then(async response=>{
         if(!response.ok)return;
         const payload:unknown=await response.json();
-        const fields=payload && typeof payload==='object' && 'fields' in payload ? (payload as {fields?:unknown}).fields : null;
+        const body=(payload && typeof payload==='object' ? payload : {}) as {fields?:unknown;reply?:unknown;intent?:unknown;changed?:unknown};
+        const reply=typeof body.reply==='string'?body.reply:'';
+        const intent=typeof body.intent==='string'?body.intent:'request';
+        const changedFields=Array.isArray(body.changed)?body.changed.filter((f):f is string=>typeof f==='string'):[];
         setDraft(current=>{
           if(current.savedRequirementId || current.messages.at(-2)?.role!=='user' || current.messages.at(-2)?.text!==submitted) return current;
-          return applyGuidance(current,fields,lang,submitted);
+          return applyGuidance(current,body.fields??null,lang,submitted,reply,intent,changedFields);
         });
       }).catch(()=>{ /* The composer works without optional guidance. */ })
-        .finally(()=>clearTimeout(guidanceTimeout));
+        .finally(()=>{clearTimeout(guidanceTimeout);setThinking(false);});
     }
     requestAnimationFrame(()=>{end.current?.scrollIntoView({block:'nearest'});box.current?.focus();});
   }
@@ -131,7 +136,7 @@ export function RequirementComposer({reviewOnly=false}: {reviewOnly?:boolean}) {
         {draft.feed&&<div className="feed-context-card"><div><small>{ar?'منتج اخترته من اكتشف':'Selected in Discover'}{draft.feed.buyer.company ? ' · '+draft.feed.buyer.company : ''}</small><b>{draft.feed.product.name}</b>{draft.feed.containerSize&&<small>{ar?'مقاس الحاوية المفضل: ':'Preferred container size: '}{draft.feed.containerSize} {ar?'قدم':'ft'}</small>}</div><span>{ar?'معلومات اختيارك مرفقة، والتعديلات أدناه هي تفاصيل الطلب الذي سيُرسل.':'Your selection is attached. The edited details below will be sent.'}</span></div>}
         {!reviewOnly&&<div className="composer-conversation" role="log" aria-label={ar?'محادثة الطلب':'Request conversation'}>
           {draft.feed&&!draft.messages.length&&missing.length>0&&<div className="chat-msg assistant"><div>{requirementQuestion(missing[0],lang,draft.feed)}</div></div>}
-          {draft.messages.map((message,i)=><div key={i} className={'chat-msg '+message.role}><div>{message.text}</div></div>)}
+          {draft.messages.map((message,i)=>thinking&&i===draft.messages.length-1&&message.role==='assistant'?<div key={i} className="chat-msg assistant thinking" aria-label={ar?'يكتب…':'Typing…'}><div><span/><span/><span/></div></div>:<div key={i} className={'chat-msg '+message.role}><div>{message.text}</div></div>)}
         </div>}
         <span className="sr-only" aria-live="polite">{lastReply}</span>
         {hydrated&&Object.keys(draft.data).length>0&&!reviewOnly&&<div className="composer-inline-summary" aria-label={ar?'ملخص الطلب':'Request summary'}><div><strong>{ar?'ما عرفناه عن طلبك':'What we know so far'}</strong><span>{ready?(ar?'الأساسيات مكتملة':'Essentials complete'):(ar?missing.length+' تفاصيل متبقية':missing.length+' details remaining')}</span></div><dl>{requirementFields.filter(k=>!!draft.data[k]).map(k=><div key={k}><dt>{labels[lang][k]}</dt><dd>{displayRequirementValue(k,draft.data[k]||'',lang)}</dd></div>)}</dl>{storageError?<p role="alert" className="workspace-error">{ar?'تعذر حفظ المسودة؛ لا تنتقل قبل حل مشكلة التخزين.':'Could not save your draft; resolve storage before continuing.'}</p>:<DesignLink className="primary-link" href="/review">{ar?'مراجعة التفاصيل وإرسال الطلب':'Review details and send request'}</DesignLink>}</div>}

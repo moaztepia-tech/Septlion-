@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Anthropic from "npm:@anthropic-ai/sdk@1.6.0";
-import { GEMINI_MODEL, buildGeminiRequest, buildRequest, createRateLimiter, interpretGeminiResponse, interpretResponse, stripContacts, validInput } from "./interpret.ts";
+import { type Context, GEMINI_MODEL, buildGeminiRequest, buildRequest, cleanContext, createRateLimiter, interpretGeminiResponse, interpretResponse, validInput } from "./interpret.ts";
 
 // Optional AI guidance for the public request composer. The browser's local parser stays
 // authoritative: any failure here returns no result and the buyer keeps the local answer.
@@ -16,11 +16,11 @@ const client = apiKey ? new Anthropic({ apiKey, timeout: 12000, maxRetries: 1 })
 const geminiKey = Deno.env.get("GEMINI_API_KEY") || "";
 const geminiModel = (Deno.env.get("GEMINI_MODEL") || GEMINI_MODEL).replace(/[^a-z0-9.\-]/gi, "");
 
-async function askGemini(text: string) {
+async function askGemini(text: string, context: Context) {
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
-    body: JSON.stringify(buildGeminiRequest(text)),
+    body: JSON.stringify(buildGeminiRequest(text, context)),
     signal: AbortSignal.timeout(12000),
   });
   if (!res.ok) { console.error("[Septlion interpreter] Gemini status:", res.status); return null; }
@@ -47,12 +47,13 @@ Deno.serve(async (req) => {
   if (!withinLimit(ip)) return out({ error: "حاول بعد دقيقة" }, 429);
   if (Number(req.headers.get("Content-Length")) > 16000) return out({ error: "Request too large" }, 413);
   let text: unknown;
-  try { const raw = await req.text(); if (raw.length > 16000) return out({ error: "Request too large" }, 413); text = JSON.parse(raw)?.text; }
+  let context: Context = { fields: {}, history: [] };
+  try { const raw = await req.text(); if (raw.length > 16000) return out({ error: "Request too large" }, 413); const body = JSON.parse(raw); text = body?.text; context = cleanContext(body?.context); }
   catch { return out({ error: "بيانات غير صالحة" }, 400); }
   if (!validInput(text)) return out({ error: "اكتب وصفًا لا يتجاوز ٤٠٠٠ حرف" }, 400);
   if (geminiKey) {
     try {
-      const interpreted = await askGemini(text);
+      const interpreted = await askGemini(text, context);
       return interpreted ? out(interpreted) : out({ result: null, mode: "unavailable" }, 503);
     } catch {
       console.error("[Septlion interpreter] Gemini request failed");
@@ -61,7 +62,7 @@ Deno.serve(async (req) => {
   }
   if (!client) return out({ result: null, mode: "unavailable" }, 503);
   try {
-    const message = await client.messages.create(buildRequest(stripContacts(text)));
+    const message = await client.messages.create(buildRequest(text, context));
     const interpreted = interpretResponse(message);
     return interpreted ? out(interpreted) : out({ result: null, mode: "unavailable" }, 503);
   } catch (error) {

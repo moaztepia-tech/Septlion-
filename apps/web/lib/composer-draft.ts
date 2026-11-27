@@ -126,7 +126,18 @@ export function answerRequirement(draft: ComposerDraft, text: string, lang: 'ar'
     return {...draft, input: '', messages: [...draft.messages, {role: 'user' as const, text: answer}, {role: 'assistant' as const, text: opener + question}].slice(-100)};
   }
   const data: RequirementData = mergeRequirementInput(answer, draft.data);
+  // A trade term or payment named inside a question («ما الفرق بين CIF و FOB؟») is not a choice.
+  if (looksLikeQuestion(answer)) for (const term of ['incoterm', 'payment'] as const) {
+    if (parsed[term]) {if (draft.data[term]) data[term] = draft.data[term]; else delete data[term]; delete parsed[term];}
+  }
   const next = missingRequirementFields(draft.data)[0];
+  const asked = looksLikeQuestion(answer) && Object.keys(parsed).length === 0;
+  if (asked) {
+    const missingNow = missingRequirementFields(draft.data);
+    const holding = lang === 'ar' ? 'سؤال في محله. الأسعار والمواعيد وشروط الدفع تصلك في عرض سبتليون المكتوب بعد مراجعة طلبك.' : 'Good question. Prices, dates and payment terms come in Septlion\'s written offer after your request is reviewed.';
+    const follow = missingNow.length ? requirementQuestion(missingNow[0], lang, draft.feed) : lang === 'ar' ? 'طلبك جاهز للمراجعة متى شئت.' : 'Your request is ready to review.';
+    return {...draft, input: '', messages: [...draft.messages, {role: 'user' as const, text: answer}, {role: 'assistant' as const, text: holding + '\n\n' + follow}].slice(-100)};
+  }
   if (next && !parsed[next] && Object.keys(parsed).length === 0) {
     data[next] = next === 'payment' && /ناقش|تحدد|تُحدد|أخرى|اخرى|other|discuss/i.test(answer) ? 'OTHER'
       : next === 'packing' && /لا أعرف|لا اعرف|غير متأكد|not sure|تُحدد|تحدد|agree with/i.test(answer) ? (lang === 'ar' ? 'تُحدد مع Septlion' : 'Agree with Septlion') : answer;
@@ -190,29 +201,51 @@ const coreFields: RequirementField[] = ['product', 'quantity', 'destination'];
 export function needsGuidance(draft: ComposerDraft) {
   return !draft.reorder && coreFields.some(field => !draft.data[field]);
 }
-export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' | 'en', submitted = ''): ComposerDraft {
+export function applyGuidance(draft: ComposerDraft, fields: unknown, lang: 'ar' | 'en', submitted = '', aiReply = '', intent = 'request', changedByBuyer: readonly string[] = []): ComposerDraft {
   if (!fields || typeof fields !== 'object' || Array.isArray(fields) || draft.reorder || draft.savedRequirementId) return draft;
   const given = fields as Record<string, unknown>;
   const known = (field: string) => {
     const value = typeof given[field] === 'string' ? (given[field] as string).trim() : '';
     return value && !/^(غير محدد|لا أعرف|غير معروف|unknown|null|n\/a|not specified)$/i.test(value) ? value.slice(0, 120) : '';
   };
+  const raw = submitted.trim();
   const data: RequirementData = {...draft.data};
   let changed = false;
+  // A question, complaint or chat that the local fallback kept as a field value is taken out again.
+  if (raw && intent !== 'request') for (const field of Object.keys(data) as RequirementField[]) if (data[field] === raw) {delete data[field]; changed = true;}
   for (const field of ['product', 'quantity', 'destination', 'packing', 'incoterm', 'payment'] as RequirementField[]) {
     const value = known(field);
-    // A field that only holds the buyer's whole sentence (the local fallback) may be corrected.
-    if (!value || (data[field] && data[field] !== submitted.trim())) continue;
+    // A field that only holds the buyer's whole sentence (the local fallback) may be corrected,
+    // and so may any field the buyer explicitly changed in this message.
+    const corrected = intent === 'request' && changedByBuyer.includes(field);
+    if (!value || (data[field] && data[field] !== raw && !corrected)) continue;
     const parsed = extractRequirement(value);
     const next = field === 'product' ? parsed.product || value
       : field === 'destination' ? parsed.destination || value
       : field === 'packing' ? parsed.packing || value
       : parsed[field];
-    if (next) {data[field] = next; changed = true;}
+    if (next && next !== data[field]) {data[field] = next; changed = true;}
   }
-  if (!changed) return draft;
+  const answer = aiReply.replace(/[ \t]+/g, ' ').trim().slice(0, 600);
+  if (!changed && !answer) return draft;
   const missing = missingRequirementFields(data);
-  const reply = missing.length ? requirementQuestion(missing[0], lang, draft.feed)
+  const question = missing.length ? requirementQuestion(missing[0], lang, draft.feed)
     : lang === 'ar' ? 'اكتملت الأساسيات. راجع ملخص الطلب وعدّل أي معلومة قبل إرساله لإعداد العرض.' : 'The essentials are complete. Review and correct the summary before sending it for an offer.';
-  return {...draft, data, messages: [...draft.messages.slice(0, -1), {role: 'assistant' as const, text: reply}]};
+  return {...draft, data, messages: [...draft.messages.slice(0, -1), {role: 'assistant' as const, text: !answer ? question : /[?؟]|جاهز|ready/i.test(answer) ? answer : answer + '\n\n' + question}]};
+}
+
+// A question (ends with ? or starts with a question word) is never kept as a field value.
+export function looksLikeQuestion(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  return /[?؟]\s*$/.test(t) || /^(?:هل|كم|متى|كيف|ليش|لماذا|لماذا|ليه|وين|أين|اين|ايش|إيش|شو|ماذا|ما هو|ما هي|من انتم|من أنتم|مين|فين|امتى|إمتى|what|how|when|why|where|who|do you|can you|is there|are you)\b/.test(t);
+}
+
+// Ask the AI whenever the buyer's own words were not clearly understood locally.
+// Every message except a plain greeting goes to the AI with the conversation, so it can follow
+// corrections and context; the local answer stays as the instant fallback.
+export function needsAI(before: ComposerDraft, after: ComposerDraft, text: string): boolean {
+  return !smallTalk(text) && text.trim().length >= 2 && !before.reorder && !after.savedRequirementId;
+}
+export function aiContext(draft: ComposerDraft) {
+  return {fields: {...draft.data}, history: draft.messages.slice(-8).map(m => ({role: m.role, text: m.text.slice(0, 500)}))};
 }
