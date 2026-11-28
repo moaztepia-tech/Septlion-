@@ -150,6 +150,7 @@ one("طلبك محفوظ على جهازك ولم يصلنا بعد. أرسله 
 one("function dOptions(raw){", """const FLAG_ISO={'السعودية':'SA','السودان':'SD','الإمارات':'AE','مصر':'EG','تنزانيا':'TZ','كينيا':'KE','اليمن':'YE','غانا':'GH','نيجيريا':'NG','جيبوتي':'DJ','تشاد':'TD'};
 const flagC=c=>{const i=FLAG_ISO[c];return i?String.fromCodePoint(...[...i].map(x=>0x1F1E6+x.charCodeAt(0)-65)):'🌍'};
 function dOptions(raw){
+  if(!norm(raw))return dBrowse();
   const src=dOptions0(raw),out=[],li=src.findIndex(o=>o.h==='آخر وجهة استخدمتها');
   if(li>=0)out.push(src[li],src[li+1]);
   const opts=src.filter((o,i)=>!o.h&&!o.free&&!(li>=0&&i===li+1));
@@ -245,6 +246,25 @@ const guessC=(()=>{let c='';
   return c})();
 // Inland countries: containers by sea to a port, then trucks inland. No choice to make, only a note.
 const TRANSIT={'تشاد':'بحراً إلى دوالا، ثم بالشاحنات إلى نجامينا','إثيوبيا':'بحراً إلى جيبوتي، ثم بالشاحنات إلى أديس أبابا','جنوب السودان':'بحراً إلى مومباسا، ثم بالشاحنات عبر أوغندا إلى جوبا','أوغندا':'بحراً إلى مومباسا، ثم بالشاحنات إلى كمبالا','رواندا':'بحراً إلى دار السلام أو مومباسا، ثم بالشاحنات إلى كيغالي','بوروندي':'بحراً إلى دار السلام، ثم بالشاحنات إلى بوجومبورا','أفريقيا الوسطى':'بحراً إلى دوالا، ثم بالشاحنات إلى بانغي','مالي':'بحراً إلى داكار أو أبيدجان، ثم بالشاحنات إلى باماكو','بوركينا فاسو':'بحراً إلى أبيدجان أو لومي، ثم بالشاحنات إلى واغادوغو','النيجر':'بحراً إلى كوتونو أو لومي، ثم بالشاحنات إلى نيامي','زامبيا':'بحراً إلى دار السلام أو ديربان، ثم بالشاحنات إلى لوساكا','زيمبابوي':'بحراً إلى بيرا أو ديربان، ثم بالشاحنات إلى هراري','ملاوي':'بحراً إلى ناكالا أو بيرا، ثم بالشاحنات إلى ليلونغوي','بوتسوانا':'بحراً إلى ديربان أو والفيس باي، ثم بالشاحنات إلى غابورون','ليسوتو':'بحراً إلى ديربان، ثم بالشاحنات إلى ماسيرو','إسواتيني':'بحراً إلى مابوتو أو ديربان، ثم بالشاحنات إلى مبابان','فلسطين':'بحراً إلى العقبة، ثم بالشاحنات عبر جسر الملك حسين'};
+// Tapping the empty field lists every country by region, so nobody has to type to find theirs.
+const REG=[['الخليج والشرق الأوسط',['السعودية','الإمارات','الكويت','قطر','البحرين','عُمان','اليمن','الأردن','العراق','سوريا','لبنان','فلسطين','تركيا']],['شمال أفريقيا',['مصر','السودان','ليبيا','تونس','الجزائر','المغرب','موريتانيا']],['شرق أفريقيا',['إثيوبيا','إريتريا','جيبوتي','الصومال','كينيا','تنزانيا','أوغندا','رواندا','بوروندي','جنوب السودان','جزر القمر','سيشل','مدغشقر','موريشيوس']],['غرب أفريقيا',['نيجيريا','غانا','ساحل العاج','السنغال','غينيا','غينيا بيساو','غامبيا','سيراليون','ليبيريا','توغو','بنين','مالي','بوركينا فاسو','النيجر','الرأس الأخضر']],['وسط أفريقيا',['تشاد','الكاميرون','أفريقيا الوسطى','الغابون','غينيا الاستوائية','الكونغو','الكونغو الديمقراطية','ساو تومي وبرينسيب','أنغولا']],['جنوب أفريقيا',['جنوب أفريقيا','ناميبيا','موزمبيق','زامبيا','زيمبابوي','ملاوي','بوتسوانا','ليسوتو','إسواتيني']]];
+function dBrowse(){
+  const out=[];let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
+  if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});
+  if(guessC&&!(last&&last.c===guessC))out.push({h:'بلدك؟'},{c:guessC,p:'',b:1});
+  REG.forEach(([h,cs])=>{out.push({h});cs.forEach(c=>out.push({c,p:'',b:1}))});
+  return out;
+}
+const dTag=c=>Object.prototype.hasOwnProperty.call(LAND,c)?'بحراً أو براً':Object.prototype.hasOwnProperty.call(TRANSIT,c)?'بحراً ثم براً':'';
+// A country picked from the full list: with one port it is chosen at once; with several ports (or a
+// land route) its ports open, starting with "any port".
+const dPick0=dPick;
+dPick=function(o){
+  if(o&&o.b){const ports=DEST.filter(d=>d[1]===o.c);
+    if(ports.length>1||Object.prototype.hasOwnProperty.call(LAND,o.c)){dQ.value=o.c;dAct=-1;dSync();dQ.focus();dOpen();dL.scrollTop=0;return}
+    return dPick0({c:o.c,p:ports.length===1?ports[0][0]:''})}
+  return dPick0(o);
+};
 function landUpdate(){
   const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
   const tr=!via&&Object.prototype.hasOwnProperty.call(TRANSIT,c);
@@ -277,7 +297,7 @@ s = s[:_q0] + s[_d0:_t0].replace('<i>2</i>إلى أين؟', '<i>1</i>إلى أي
 one("['نجامينا — نقطة تسليم داخلية','تشاد'", "['نجامينا — عبر دوالا','تشاد'")
 one("'عدن','نجامينا — نقطة تسليم داخلية'];", "'عدن','نجامينا — عبر دوالا'];")
 # A country with no port picked: the first row under each country lets the buyer leave the port to us.
-one(":`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;", ":o.g?'<span>أي ميناء — نقترح لك الأنسب</span>':`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;")
+one(":`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;", ":o.b?`<span>${flagC(o.c)} ${esc(o.c)}</span>${dTag(o.c)?`<small>${dTag(o.c)}</small>`:''}`:o.g?'<span>أي ميناء — نقترح لك الأنسب</span>':`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;")
 # Destination search: English names for the first countries too, and no "use as free text" row
 # when the buyer typed a country we already list.
 one("  [...new Set(DEST.map(x=>x[1]))].forEach(c=>{if(toks.every(t=>norm(c).includes(t))&&!out.some(o=>o.c===c&&!o.p))out.unshift({c,p:''})});", "  const CKW={'مصر':'egypt','السعودية':'saudi arabia ksa المملكه','السودان':'sudan','الإمارات':'uae emirates','تنزانيا':'tanzania','كينيا':'kenya','اليمن':'yemen','غانا':'ghana','نيجيريا':'nigeria','جيبوتي':'djibouti','تشاد':'chad tchad','الكونغو':'congo kongo','الكونغو الديمقراطية':'congo kongo drc zaire زائير'};\n  [...new Set(DEST.map(x=>x[1]))].forEach(c=>{if(toks.every(t=>norm(c+' '+(CKW[c]||'')).includes(t))&&!out.some(o=>o.c===c&&!o.p))out.unshift({c,p:''})});")
