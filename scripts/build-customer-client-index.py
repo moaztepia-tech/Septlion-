@@ -88,7 +88,23 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .zspec dt{flex:none;font-size:12.5px}
 .zspec dd{text-align:end;font-size:13.5px;line-height:1.5}
 .zspec dd.zchips{justify-content:flex-end;margin-top:0!important}
-.zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}""")
+.zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}
+/* Quote sheet: numbered steps, a product box with the real photo and key facts, quick
+   quantity picks, and the terms shown open. */
+.rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
+.rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
+.rfq .pbox{align-items:center;gap:12px;padding:8px;background:#ffffff08;border-color:#ffffff1f}
+.rfq .pthumb.photo{width:64px;height:64px;border-radius:10px;background:#ffffff10}
+.rfq .pthumb.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.rfq .pinfo strong{font-size:15px}
+.rfq .pmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.rfq .pmeta span{font-size:11px;padding:2px 8px;border-radius:999px;background:#ffffff10;border:1px solid #ffffff1a;color:#dbe6f8}
+.rfq .pmoq{display:block;margin-top:5px;font-size:11px;color:var(--gold)}
+.sheet.rfq .presets{display:flex}
+.rfq .tier{font-size:11.5px;color:#9db3d6;padding-top:6px}
+.rfq .opt.terms>summary{min-height:42px;padding:10px 14px;font-size:12.5px;color:#9db3d6}
+.rfq .opt.terms>summary b{color:#f2f6fd}
+.rfq .opt.terms .helper{font-size:11.5px;line-height:1.7;color:#9db3d6}""")
 one("fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v)})).filter(f=>f.v)};",
     "fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false),card:!(f&&f.card===false),wide:!!(f&&f.wide)})).filter(f=>f.v)};")
 # Requests go to the SEPTLION platform after an email code (septlion-bridge.js); WhatsApp stays as a fallback.
@@ -167,6 +183,14 @@ one('const fieldsHTML=p=>{const f=fieldsOf(p).slice(0,6),cols=Math.max(1,Math.ce
 # Price wording: the price depends on the buyer's quantity, port and terms, so "حسب الطلب".
 every("esc(p.price||'حسب العرض')", "esc(p.price||'حسب الطلب')", 1)
 one("['السعر','حسب العرض']", "['السعر','حسب الطلب']")
+# Quote sheet, laid out as three numbered steps (quantity, destination, terms) under a product
+# box that shows the real photo and the card's key facts; terms open by default.
+one('$(\'#pbox\').innerHTML=`<div class="pthumb" aria-hidden="true">${art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)}</strong><div class="pmeta">${[p.type,p.pack,p.size].filter(Boolean).map(v=>`<span>${esc(v)}</span>`).join(\'\')}<span class="sku">${esc(p.sku)}</span></div></div>`;', '$(\'#pbox\').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?\' photo\':\'\'}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)} · ${esc(p.size||\'\')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join(\'\')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:\'\'}</div>`;')
+one('<div class="rlabel">كم تحتاج؟</div>', '<div class="rlabel"><i>1</i>كم تحتاج؟</div>')
+one('<div class="rlabel">إلى أين؟</div>', '<div class="rlabel"><i>2</i>إلى أين؟</div>')
+one('<details class="opt lv" open><summary>عرض مستويات الطلب</summary>', '<details class="opt lv"><summary>مستويات الطلب</summary>')
+one('<details class="opt" id="termsD"><summary>الشروط: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>', '<div class="rlabel"><i>3</i>بأي شروط؟</div>\n    <details class="opt terms" id="termsD" open><summary>التسليم والدفع: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>')
+one("const PAYS={LC:'<b>LC</b> — اعتماد مستندي عبر البنك.',TT:'<b>TT</b> — تحويل بنكي مباشر.'};", "const PAYS={LC:'<b>LC</b> — اعتماد مستندي يغطي القيمة كاملة قبل الشحن.',TT:'<b>TT</b> — تحويل بنكي للقيمة كاملة قبل الشحن.'};")
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n

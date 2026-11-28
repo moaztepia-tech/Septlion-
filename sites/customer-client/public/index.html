@@ -519,6 +519,22 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .zspec dd{text-align:end;font-size:13.5px;line-height:1.5}
 .zspec dd.zchips{justify-content:flex-end;margin-top:0!important}
 .zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}
+/* Quote sheet: numbered steps, a product box with the real photo and key facts, quick
+   quantity picks, and the terms shown open. */
+.rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
+.rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
+.rfq .pbox{align-items:center;gap:12px;padding:8px;background:#ffffff08;border-color:#ffffff1f}
+.rfq .pthumb.photo{width:64px;height:64px;border-radius:10px;background:#ffffff10}
+.rfq .pthumb.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.rfq .pinfo strong{font-size:15px}
+.rfq .pmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.rfq .pmeta span{font-size:11px;padding:2px 8px;border-radius:999px;background:#ffffff10;border:1px solid #ffffff1a;color:#dbe6f8}
+.rfq .pmoq{display:block;margin-top:5px;font-size:11px;color:var(--gold)}
+.sheet.rfq .presets{display:flex}
+.rfq .tier{font-size:11.5px;color:#9db3d6;padding-top:6px}
+.rfq .opt.terms>summary{min-height:42px;padding:10px 14px;font-size:12.5px;color:#9db3d6}
+.rfq .opt.terms>summary b{color:#f2f6fd}
+.rfq .opt.terms .helper{font-size:11.5px;line-height:1.7;color:#9db3d6}
 /* V15 — اكتشف */
 .finder{flex:none;position:relative;z-index:30;padding:8px 10px 2px}
 .searchbar{display:flex;align-items:center;gap:6px}
@@ -833,13 +849,13 @@ details.opt.lv>:not(summary){margin-inline:0}
   <div class="rfq-body">
     <div class="pbox" id="pbox"></div>
 
-    <div class="rlabel">كم تحتاج؟</div>
+    <div class="rlabel"><i>1</i>كم تحتاج؟</div>
     <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span>حاوية</span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
     <div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>
     <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
-    <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
+    <details class="opt lv"><summary>مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
 
-    <div class="rlabel">إلى أين؟</div>
+    <div class="rlabel"><i>2</i>إلى أين؟</div>
     <div id="destPick" class="dpick">
       <div class="dbox" id="dBox">
         <span class="dpin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></span>
@@ -851,7 +867,8 @@ details.opt.lv>:not(summary){margin-inline:0}
     </div>
     <p class="err" id="destErr" role="alert"></p>
 
-    <details class="opt" id="termsD"><summary>الشروط: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>
+    <div class="rlabel"><i>3</i>بأي شروط؟</div>
+    <details class="opt terms" id="termsD" open><summary>التسليم والدفع: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>
       <div class="pop"><div class="grid2">
         <div class="field"><span class="label" id="incoL">التسليم</span><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button></div></div>
         <div class="field"><span class="label" id="payL">الدفع</span><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">LC · اعتماد</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">TT · تحويل</button></div></div>
@@ -1228,14 +1245,14 @@ $('#presets').innerHTML=[1,5,10,20,50].map(n=>`<button type="button" data-act="q
 function openRfq(id,trigger){
   S.selected=PRODUCTS.find(p=>p.id===id)||null; if(!S.selected) return;
   const p=S.selected;
-  $('#pbox').innerHTML=`<div class="pthumb" aria-hidden="true">${art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:''}<strong>${esc(p.name)}</strong><div class="pmeta">${[p.type,p.pack,p.size].filter(Boolean).map(v=>`<span>${esc(v)}</span>`).join('')}<span class="sku">${esc(p.sku)}</span></div></div>`;
+  $('#pbox').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?' photo':''}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:''}<strong>${esc(p.name)} · ${esc(p.size||'')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join('')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:''}</div>`;
   try{$('#rfqCo').value=localStorage.getItem('septlion.company')||''}catch{$('#rfqCo').value=''}$('#rfqNote').value='';
   qty.value=1; $$('#rfq details.opt:not(.lv)').forEach(d=>d.open=false);if($('#rfqCo').value)$('#noteD').open=true;dClose();$('#destPick').classList.remove('bad');$('#destErr').textContent='';setDest('','');
   setSeg('incoterm','CIF'); setSeg('payment','LC — اعتماد مستندي'); tierUpdate();
   open($('#rfq'),trigger);
 }
 const TERMS={CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',FOB:'<b>FOB</b> — التسليم على ظهر السفينة في ميناء الشحن، والشحن على المشتري.'};
-const PAYS={LC:'<b>LC</b> — اعتماد مستندي عبر البنك.',TT:'<b>TT</b> — تحويل بنكي مباشر.'};
+const PAYS={LC:'<b>LC</b> — اعتماد مستندي يغطي القيمة كاملة قبل الشحن.',TT:'<b>TT</b> — تحويل بنكي للقيمة كاملة قبل الشحن.'};
 function rfqSum(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   $('#termSum').textContent=`${S.incoterm||''} · ${(S.payment||'').split(' ')[0]}`;

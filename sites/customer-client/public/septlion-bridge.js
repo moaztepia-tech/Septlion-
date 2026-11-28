@@ -278,8 +278,9 @@
         // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
         const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
         if (val('delivery', 80)) card.push(f('ship', 'التسليم', terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
-        // "مقدماً قبل الشحن" shows as "الدفع مقدماً"; longer terms stay for the enlarged view.
-        const payShort = val('payment', 120).split(/\s+قبل\s+/)[0];
+        // Full payment before shipping (advance transfer or a letter of credit, as Egypt requires)
+        // shows as "الدفع قبل الشحن"; other short terms show as they are, longer ones when enlarged.
+        const payShort = /قبل الشحن/.test(val('payment', 120)) ? 'قبل الشحن' : val('payment', 120);
         if (payShort && payShort.length <= 10) card.push(f('cash', 'الدفع', 'الدفع ' + payShort, 's', 'الدفع', val('payment', 120)));
         if (val('type', 120)) more.push(f('type', 'النوع', val('type', 120), 'q', 'النوع'));
         if (val('gluten')) more.push(f('dot', '', 'جلوتين رطب ' + val('gluten'), 'q', 'الجلوتين الرطب', val('gluten')));
