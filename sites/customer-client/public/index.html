@@ -555,6 +555,7 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .rfq .terms .field{margin-top:0!important;gap:6px}
 .rfq .terms .tpanel>.grid2{margin-top:0}
 .rfq .terms .seg button{min-height:42px;font-size:12px;padding:0 4px;white-space:nowrap}
+.sheet.rfq .terms .seg[data-key=payment]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
 .rfq .terms .helper{margin:10px 2px 0;font-size:11.5px;line-height:1.7;color:#9db3d6}
 /* V15 — اكتشف */
 .finder{flex:none;position:relative;z-index:30;padding:8px 10px 2px}
@@ -888,13 +889,16 @@ details.opt.lv>:not(summary){margin-inline:0}
     <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
     <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
 
-    <div class="rlabel"><i>3</i>التسليم والدفع</div>
+    <div class="rlabel"><i>3</i><span id="incoL">التسليم</span></div>
     <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>
-      <div class="tpanel"><div class="grid2">
-        <div class="field"><span class="label" id="incoL">التسليم</span><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB" class="seaopt">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" class="landopt" hidden>تسليم الحدود · DAP</button><button type="button" role="radio" aria-checked="false" data-v="FCA" class="landopt" hidden>تسليم المطحن · FCA</button></div></div>
-        <div class="field"><span class="label" id="payL">الدفع</span><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">اعتماد مستندي</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">تحويل مقدم</button></div></div>
-      </div>
+      <div class="tpanel"><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB" class="seaopt">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" class="landopt" hidden>تسليم الحدود · DAP</button><button type="button" role="radio" aria-checked="false" data-v="FCA" class="landopt" hidden>تسليم المطحن · FCA</button></div>
       <p class="helper" id="termHelp" aria-live="polite"></p></div>
+    </div>
+
+    <div class="rlabel"><i>4</i><span id="payL">الدفع</span></div>
+    <div class="terms" id="payD">
+      <div class="tpanel"><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">اعتماد مستندي</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">تحويل مقدم</button></div>
+      <p class="helper" id="payHelp" aria-live="polite"></p></div>
     </div>
 
     <details class="opt" id="noteD"><summary>إضافة اسم الشركة أو ملاحظات<span class="ed">اختياري</span></summary>
@@ -1333,7 +1337,7 @@ const PAYS={LC:'<b>LC</b> — اعتماد مستندي يغطي القيمة ك
 function rfqSum(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   $('#termSum').textContent=`${S.incoterm||''} · ${(S.payment||'').split(' ')[0]}`;
-  $('#termHelp').innerHTML=`<span style="display:block">${TERMS[S.incoterm]||''}</span><span style="display:block">${PAYS[(S.payment||'').split(' ')[0]]||''}</span>`;
+  $('#termHelp').innerHTML=TERMS[S.incoterm]||'';$('#payHelp').innerHTML=PAYS[(S.payment||'').split(' ')[0]]||'';
   $$('#presets button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===n)));
 }
 function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum();if(key==='mode')modeApply();else if(key==='incoterm')tierUpdate()}
