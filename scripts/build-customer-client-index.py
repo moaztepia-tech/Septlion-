@@ -166,7 +166,7 @@ function dOptions(raw){
 function dOptions0(raw){""")
 one("<span>${dHl(o.p,q)}</span><small>${dHl(o.c,q)}</small>", "<span>${dHl(o.p,q)}</span>${o.g?'':`<small>${flagC(o.c)} ${dHl(o.c,q)}</small>`}")
 one("const destLabel=()=>dest.value?dest.value+(port.value?' — '+port.value:''):'';", "const destLabel=()=>dest.value?flagC(dest.value)+' '+dest.value+(port.value?' — '+port.value:''):'';")
-one("${o.last?'آخر وجهة':esc(o.c)}", "${o.last?'آخر وجهة':o.mine?'بلدك؟':flagC(o.c)+' '+esc(o.c)}")
+one("${o.last?'آخر وجهة':esc(o.c)}", "${o.last?'آخر وجهة':o.mine?'':flagC(o.c)+' '+esc(o.c)}")
 one(".dh{padding:8px 10px 4px;font-size:10.5px;font-weight:700;color:#8da4c9}", ".dh{padding:10px 10px 4px;font-size:13px;font-weight:800;color:#c9d8f0;display:flex;align-items:center;gap:6px}.dh .dflag{font-size:18px;line-height:1}")
 # Smart request (founder, 2026-11-27): the buyer writes the need in their own words on the
 # home page, and the platform composer at /require/ understands it, asks one question at a
@@ -251,7 +251,7 @@ const REG=[['الخليج والشرق الأوسط',['السعودية','الإ
 function dBrowse(){
   const out=[];let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
   if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});
-  if(guessC&&!(last&&last.c===guessC))out.push({h:'بلدك؟'},{c:guessC,p:'',b:1});
+  if(guessC&&!(last&&last.c===guessC))out.push({c:guessC,p:'',b:1});
   REG.forEach(([h,cs])=>{out.push({h});cs.forEach(c=>out.push({c,p:'',b:1}))});
   return out;
 }
@@ -303,7 +303,7 @@ one(":`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;
 one("  [...new Set(DEST.map(x=>x[1]))].forEach(c=>{if(toks.every(t=>norm(c).includes(t))&&!out.some(o=>o.c===c&&!o.p))out.unshift({c,p:''})});", "  const CKW={'مصر':'egypt','السعودية':'saudi arabia ksa المملكه','السودان':'sudan','الإمارات':'uae emirates','تنزانيا':'tanzania','كينيا':'kenya','اليمن':'yemen','غانا':'ghana','نيجيريا':'nigeria','جيبوتي':'djibouti','تشاد':'chad tchad','الكونغو':'congo kongo','الكونغو الديمقراطية':'congo kongo drc zaire زائير'};\n  [...new Set(DEST.map(x=>x[1]))].forEach(c=>{if(toks.every(t=>norm(c+' '+(CKW[c]||'')).includes(t))&&!out.some(o=>o.c===c&&!o.p))out.unshift({c,p:''})});")
 one("  if(raw.trim().length>=2)out.push({c:raw.trim(),p:'',free:true});", "  if(raw.trim().length>=2&&!DEST.some(d=>norm(d[1])===q))out.push({c:raw.trim(),p:'',free:true});")
 # Suggest the buyer's own country first (guessed from the phone's time zone).
-one("    if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});", "    if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});\n    if(guessC&&!(last&&last.c===guessC))out.push({h:'بلدك؟'},{c:guessC,p:''});")
+one("    if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});", "    if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});\n    if(guessC&&!(last&&last.c===guessC))out.push({c:guessC,p:''});")
 one("  const L=[];if(last&&last.c)L.push({c:last.c,p:last.p||'',last:1});", "  const L=[];if(last&&last.c)L.push({c:last.c,p:last.p||'',last:1});\n  if(guessC&&!L.some(o=>o.c===guessC))L.push({c:guessC,p:'',mine:1});")
 one("${esc(o.p||o.c)} <small>", "${o.mine?flagC(o.c)+' ':''}${esc(o.p||o.c)} <small>")
 # Every country in Africa and the Middle East in the destination search, with its main port

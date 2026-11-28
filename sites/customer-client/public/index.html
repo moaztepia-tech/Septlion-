@@ -1207,7 +1207,7 @@ function dOptions0(raw){
   if(!q){
     let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
     if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});
-    if(guessC&&!(last&&last.c===guessC))out.push({h:'بلدك؟'},{c:guessC,p:''});
+    if(guessC&&!(last&&last.c===guessC))out.push({c:guessC,p:''});
     out.push({h:'وجهات شائعة'});
     DEST_POP.forEach(n=>{const d=DEST.find(x=>x[0]===n);if(d)out.push({c:d[1],p:d[0]})});
     return out;
@@ -1239,7 +1239,7 @@ function dQuick(){
   const L=[];if(last&&last.c)L.push({c:last.c,p:last.p||'',last:1});
   if(guessC&&!L.some(o=>o.c===guessC))L.push({c:guessC,p:'',mine:1});
   DEST_POP.forEach(n=>{const d=DEST.find(x=>x[0]===n);if(d&&!L.some(o=>o.c===d[1]&&o.p===d[0]))L.push({c:d[1],p:d[0]})});
-  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${o.mine?flagC(o.c)+' ':''}${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':o.mine?'بلدك؟':flagC(o.c)+' '+esc(o.c)}</small></button>`).join('');
+  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${o.mine?flagC(o.c)+' ':''}${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':o.mine?'':flagC(o.c)+' '+esc(o.c)}</small></button>`).join('');
 }
 $('#destQuick').addEventListener('click',e=>{const b=e.target.closest('button');if(b)dPick({c:b.dataset.c,p:b.dataset.p})});
 function dSync(){dBox.classList.toggle('ok',!!dest.value);dClr.hidden=!dest.value&&!dQ.value;dQuick();rfqSum()}
@@ -1263,7 +1263,7 @@ const REG=[['الخليج والشرق الأوسط',['السعودية','الإ
 function dBrowse(){
   const out=[];let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
   if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});
-  if(guessC&&!(last&&last.c===guessC))out.push({h:'بلدك؟'},{c:guessC,p:'',b:1});
+  if(guessC&&!(last&&last.c===guessC))out.push({c:guessC,p:'',b:1});
   REG.forEach(([h,cs])=>{out.push({h});cs.forEach(c=>out.push({c,p:'',b:1}))});
   return out;
 }
