@@ -103,7 +103,32 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .dh .dtag{margin-inline-start:auto;font-style:normal;font-size:11px;font-weight:700;color:#f3dfa6;border:1px solid rgba(243,223,166,.35);border-radius:999px;padding:1px 8px;white-space:nowrap}
 /* The quote sheet grew (destination list, sea/land, four steps): keep it inside the screen, scroll its
    middle and keep the title and the send button always in view. */
-#rfq.sheet.rfq{max-height:94dvh;overflow:hidden}
+#rfq.sheet.rfq{max-height:calc(100dvh - 20px);overflow:hidden}
+/* Compact sheet so the whole request fits on one phone screen without scrolling. */
+#rfq .rfq-body{gap:5px}
+#rfq .sheet-head{padding-top:14px;padding-bottom:4px;min-height:0}
+#rfq .dbox{min-height:44px}
+#rfq #pbox{padding:6px 10px;gap:10px;align-items:center}
+#rfq #pbox .pmeta{display:none}
+#rfq #pbox .pthumb{width:48px;height:48px;min-width:48px;border-radius:10px}
+#rfq #pbox strong{font-size:14px}
+#rfq .rlabel{display:flex;align-items:center;gap:8px;height:auto;min-height:22px;font-size:14px;margin:4px 0 0;padding:0;line-height:1.3}
+#rfq .rlabel i{width:20px;height:20px;font-size:11px}
+#rfq #modeL,#rfq #qtyHint{display:none}
+#rfq .moderow{margin-top:2px;gap:6px}
+#rfq .moderow .seg button,#rfq .terms .seg button{min-height:36px}
+#rfq .landnote{margin:0 2px;font-size:11.5px;line-height:1.5}
+#rfq .qty{min-height:44px}
+#rfq .trow{margin-top:0;padding:9px 12px 7px}
+#rfq .trow .tier{padding-bottom:7px}
+#rfq .lvnext{margin-top:4px;padding-top:0;border-top:0}
+#rfq .lvnext button{padding:0}
+#rfq .terms{padding:8px 10px}
+#rfq .terms .tpanel{padding:0;margin:0}
+#rfq .terms .helper{margin:6px 2px 0;font-size:11px;line-height:1.5;min-height:0}
+#rfq #noteD>summary{min-height:34px;padding-block:4px}
+#rfq .rfq-foot{padding-top:6px;padding-bottom:calc(8px + var(--safe-b))}
+@media(max-height:820px){#rfq .rfq-body{gap:3px}#rfq .rlabel{margin-top:2px;min-height:20px;font-size:13.5px}#rfq .moderow .seg button,#rfq .terms .seg button{min-height:34px}#rfq .dbox,#rfq .qty{min-height:42px}#rfq .trow{padding:7px 10px 6px}#rfq .trow .tier{padding-bottom:5px}#rfq #pbox{padding:4px 8px}#rfq #pbox .pthumb{width:42px;height:42px;min-width:42px}#rfq .terms{padding:6px 8px}#rfq .terms .helper{margin-top:4px}#rfq #noteD>summary{min-height:30px}}
 #rfq.sheet.rfq .rfq-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:14px;scrollbar-width:thin}
 /* Levels: one card with the current level, a 7-step progress track and the step to the next level. */
 .rfq .trow{margin-top:10px;padding:12px 12px 10px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
@@ -291,7 +316,7 @@ function landUpdate(){
   const tr=!via&&Object.prototype.hasOwnProperty.call(TRANSIT,c);
   $('#modeRow').hidden=!via&&!tr;$('#modeL').hidden=$('#modeRow .seg').hidden=!via;
   if(!via&&S.mode!=='sea')setSeg('mode','sea');
-  $('#landNote').textContent=via?'يمكن الشحن بحراً، أو براً بالشاحنات عبر '+via+'.':Object.prototype.hasOwnProperty.call(TRANSIT,c)?'الشحن '+TRANSIT[c]+'.':'';
+  $('#landNote').textContent=via?'براً عبر '+via+' · الشاحنة ≈ '+TRUCK_T+' طن':Object.prototype.hasOwnProperty.call(TRANSIT,c)?'الشحن '+TRANSIT[c]+'.':'';
 }
 function modeApply(){
   const land=S.mode==='land';
@@ -308,7 +333,7 @@ function setDest(c,p,keepText){
   dSync();landUpdate();
 }""")
 one('<p class="err" id="destErr" role="alert"></p>', '<p class="err" id="destErr" role="alert"></p><div class="moderow" id="modeRow" hidden><span class="label" id="modeL">طريقة الشحن</span><div class="seg" role="radiogroup" aria-labelledby="modeL" data-key="mode"><button type="button" role="radio" aria-checked="true" data-v="sea">بحراً · حاويات</button><button type="button" role="radio" aria-checked="false" data-v="land">براً · شاحنات</button></div><p class="landnote" id="landNote" aria-live="polite"></p></div>')
-one("const TERMS={CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',", "const TERMS={DAP:'<b>DAP</b> — نسلّم بالشاحنات عند المنفذ الحدودي، والتخليص في بلد الوصول على المشتري.',FCA:'<b>FCA</b> — تستلم البضاعة محمّلة على شاحنتك من المطحن في مصر.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',")
+one("const TERMS={CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',", "const TERMS={DAP:'<b>DAP</b> — نسلّم بالشاحنات عند المنفذ الحدودي، والتخليص على المشتري.',FCA:'<b>FCA</b> — تستلم البضاعة محمّلة على شاحنتك من المطحن في مصر.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',")
 # By land each container travels on one truck, so the counter also shows the trucks.
 one('function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum()}', 'function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum();if(key===\'mode\')modeApply();else if(key===\'incoterm\')tierUpdate()}')
 # Destination comes first: it decides sea or land, and so the unit of the quantity.
