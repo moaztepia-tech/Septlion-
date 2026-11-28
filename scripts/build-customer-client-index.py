@@ -102,9 +102,13 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .rfq .pmoq{display:block;margin-top:5px;font-size:11px;color:var(--gold)}
 .sheet.rfq .presets{display:flex}
 .rfq .tier{font-size:11.5px;color:#9db3d6;padding-top:6px}
-.rfq .opt.terms>summary{min-height:42px;padding:10px 14px;font-size:12.5px;color:#9db3d6}
-.rfq .opt.terms>summary b{color:#f2f6fd}
-.rfq .opt.terms .helper{font-size:11.5px;line-height:1.7;color:#9db3d6}""")
+.rfq .terms{padding:12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
+.sheet.rfq .terms .grid2{grid-template-columns:1fr 1fr;gap:12px}
+.rfq .terms .label{font-size:12px;font-weight:700;color:#9db3d6}
+.rfq .terms .field{margin-top:0!important;gap:6px}
+.rfq .terms .tpanel>.grid2{margin-top:0}
+.rfq .terms .seg button{min-height:42px;font-size:12px;padding:0 4px;white-space:nowrap}
+.rfq .terms .helper{margin:10px 2px 0;font-size:11.5px;line-height:1.7;color:#9db3d6}""")
 one("fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v)})).filter(f=>f.v)};",
     "fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false),card:!(f&&f.card===false),wide:!!(f&&f.wide)})).filter(f=>f.v)};")
 # Requests go to the SEPTLION platform after an email code (septlion-bridge.js); WhatsApp stays as a fallback.
@@ -189,7 +193,11 @@ one('$(\'#pbox\').innerHTML=`<div class="pthumb" aria-hidden="true">${art(p)}</d
 one('<div class="rlabel">كم تحتاج؟</div>', '<div class="rlabel"><i>1</i>كم تحتاج؟</div>')
 one('<div class="rlabel">إلى أين؟</div>', '<div class="rlabel"><i>2</i>إلى أين؟</div>')
 one('<details class="opt lv" open><summary>عرض مستويات الطلب</summary>', '<details class="opt lv"><summary>مستويات الطلب</summary>')
-one('<details class="opt" id="termsD"><summary>الشروط: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>', '<div class="rlabel"><i>3</i>بأي شروط؟</div>\n    <details class="opt terms" id="termsD" open><summary>التسليم والدفع: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>')
+one('<details class="opt" id="termsD"><summary>الشروط: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>', '<div class="rlabel"><i>3</i>التسليم والدفع</div>\n    <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>')
+one('data-v="LC — اعتماد مستندي">LC · اعتماد</button>', 'data-v="LC — اعتماد مستندي">اعتماد مستندي</button>')
+one('data-v="TT — تحويل بنكي">TT · تحويل</button>', 'data-v="TT — تحويل بنكي">تحويل مقدم</button>')
+one('<div class="pop"><div class="grid2">', '<div class="tpanel"><div class="grid2">')
+one('<p class="helper" id="termHelp" aria-live="polite"></p></div>\n    </details>', '<p class="helper" id="termHelp" aria-live="polite"></p></div>\n    </div>')
 one("const PAYS={LC:'<b>LC</b> — اعتماد مستندي عبر البنك.',TT:'<b>TT</b> — تحويل بنكي مباشر.'};", "const PAYS={LC:'<b>LC</b> — اعتماد مستندي يغطي القيمة كاملة قبل الشحن.',TT:'<b>TT</b> — تحويل بنكي للقيمة كاملة قبل الشحن.'};")
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)

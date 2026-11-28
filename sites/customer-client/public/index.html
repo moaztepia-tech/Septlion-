@@ -532,9 +532,13 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .rfq .pmoq{display:block;margin-top:5px;font-size:11px;color:var(--gold)}
 .sheet.rfq .presets{display:flex}
 .rfq .tier{font-size:11.5px;color:#9db3d6;padding-top:6px}
-.rfq .opt.terms>summary{min-height:42px;padding:10px 14px;font-size:12.5px;color:#9db3d6}
-.rfq .opt.terms>summary b{color:#f2f6fd}
-.rfq .opt.terms .helper{font-size:11.5px;line-height:1.7;color:#9db3d6}
+.rfq .terms{padding:12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
+.sheet.rfq .terms .grid2{grid-template-columns:1fr 1fr;gap:12px}
+.rfq .terms .label{font-size:12px;font-weight:700;color:#9db3d6}
+.rfq .terms .field{margin-top:0!important;gap:6px}
+.rfq .terms .tpanel>.grid2{margin-top:0}
+.rfq .terms .seg button{min-height:42px;font-size:12px;padding:0 4px;white-space:nowrap}
+.rfq .terms .helper{margin:10px 2px 0;font-size:11.5px;line-height:1.7;color:#9db3d6}
 /* V15 — اكتشف */
 .finder{flex:none;position:relative;z-index:30;padding:8px 10px 2px}
 .searchbar{display:flex;align-items:center;gap:6px}
@@ -867,14 +871,14 @@ details.opt.lv>:not(summary){margin-inline:0}
     </div>
     <p class="err" id="destErr" role="alert"></p>
 
-    <div class="rlabel"><i>3</i>بأي شروط؟</div>
-    <details class="opt terms" id="termsD" open><summary>التسليم والدفع: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>
-      <div class="pop"><div class="grid2">
+    <div class="rlabel"><i>3</i>التسليم والدفع</div>
+    <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>
+      <div class="tpanel"><div class="grid2">
         <div class="field"><span class="label" id="incoL">التسليم</span><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button></div></div>
-        <div class="field"><span class="label" id="payL">الدفع</span><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">LC · اعتماد</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">TT · تحويل</button></div></div>
+        <div class="field"><span class="label" id="payL">الدفع</span><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">اعتماد مستندي</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">تحويل مقدم</button></div></div>
       </div>
       <p class="helper" id="termHelp" aria-live="polite"></p></div>
-    </details>
+    </div>
 
     <details class="opt" id="noteD"><summary>إضافة اسم الشركة أو ملاحظات<span class="ed">اختياري</span></summary>
       <div class="pop"><div class="fld-opt"><label class="label" for="rfqCo">اسم الشركة أو الاسم</label><input class="input" id="rfqCo" autocomplete="organization" placeholder="مثال: شركة النور للتجارة"></div>
