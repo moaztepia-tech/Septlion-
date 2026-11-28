@@ -259,8 +259,8 @@
         if (size) zoomOnly.push(zoomItem(f('size', 'الحجم', size, 's', 'الحجم')));
         if (val('protein')) card.push(f('wheat', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
         if (val('moisture')) card.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
-        if (val('origin')) card.push(f('origin', 'المنشأ', 'منشأ ' + val('origin'), 'c', 'المنشأ', val('origin')));
         if (firstCert) card.push(Object.assign(f('brand', '', firstCert, 'c', 'الشهادات'), { zoom: certs === firstCert }));
+        if (val('origin')) card.push(f('origin', 'المنشأ', 'منشأ ' + val('origin'), 'c', 'المنشأ', val('origin')));
         const unit = [pack.split(' ')[0], size].filter(Boolean).join(' ');
         if (unit) card.push(Object.assign(f('size', 'التعبئة', unit, 's', 'التعبئة'), { zoom: false }));
         // The minimum load with how much it holds: "حاوية 20 قدماً · 450 شوالاً".
