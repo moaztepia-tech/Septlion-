@@ -229,7 +229,7 @@ one('<button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</b
 one('<button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button>', '<button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button>')
 one("function setDest(c,p,keepText){\n  dest.value=c||'';port.value=p||'';\n  if(!keepText)dQ.value=destLabel();\n  dSync();\n}", """// Countries a mill in Egypt reaches by truck, with the border crossing used (expert panel:
 // Sudan and eastern Libya only; Chad and South Sudan are served by sea through other ports).
-const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=62.5;
+const LAND={'السودان':'أرقين أو أشكيت أو أوسيف','ليبيا':'السلوم'},TRUCK_T=62.5;
 function landUpdate(){
   const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
   $('#modeRow').hidden=!via;

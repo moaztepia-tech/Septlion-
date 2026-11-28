@@ -1238,7 +1238,7 @@ $('#destQuick').addEventListener('click',e=>{const b=e.target.closest('button');
 function dSync(){dBox.classList.toggle('ok',!!dest.value);dClr.hidden=!dest.value&&!dQ.value;dQuick();rfqSum()}
 // Countries a mill in Egypt reaches by truck, with the border crossing used (expert panel:
 // Sudan and eastern Libya only; Chad and South Sudan are served by sea through other ports).
-const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=62.5;
+const LAND={'السودان':'أرقين أو أشكيت أو أوسيف','ليبيا':'السلوم'},TRUCK_T=62.5;
 function landUpdate(){
   const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
   $('#modeRow').hidden=!via;
