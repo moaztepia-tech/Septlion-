@@ -91,7 +91,7 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}
 /* Quote sheet: numbered steps, a product box with the real photo and key facts, quick
    quantity picks, and the terms shown open. */
-.rfq .qtons{padding:3px 10px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
+.rfq .qtons{white-space:nowrap;padding:3px 9px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
 .rfq .qtons:empty{display:none}
 .sheet.rfq .terms .seg[data-key=incoterm]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
 .rfq .landnote{margin:8px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
@@ -212,7 +212,7 @@ one("const PAYS={LC:'<b>LC</b> — اعتماد مستندي عبر البنك.'
 # comes from the catalog).
 one("fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:", "tpc:Number(r.tpc)>0?Number(r.tpc):0,fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:")
 one('<span>حاوية</span></div>', '<span>حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div>')
-one("  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;", "  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;\n  const tpc=Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';")
+one("  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;", "  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;\n  const tpc=Number(qty.dataset.tpc)||0,trk=S.incoterm==='DAP'?`${n} ${n===1?'شاحنة':n===2?'شاحنتان':n<=10?'شاحنات':'شاحنة'}`:'';$('#qtyT').textContent=[tpc?`${+(n*tpc).toFixed(1)} طن`:'',trk].filter(Boolean).join(' · ');")
 # Land shipping, worked out from the destination like the tonnage: countries reached overland
 # from Egypt get a third delivery choice "بر · DAP" (trucks to the border or the buyer's city),
 # and it is chosen for them when they have no sea port.
@@ -233,6 +233,8 @@ function setDest(c,p,keepText){
 }""")
 one('<p class="err" id="destErr" role="alert"></p>', '<p class="err" id="destErr" role="alert"></p><p class="landnote" id="landNote" aria-live="polite"></p>')
 one("const TERMS={CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',", "const TERMS={DAP:'<b>DAP</b> — شحن بري بالشاحنات حتى الحدود أو مدينتك، والتخليص على المشتري.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',")
+# By land each container travels on one truck, so the counter also shows the trucks.
+one('function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum()}', 'function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum();if(key===\'incoterm\')tierUpdate()}')
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n

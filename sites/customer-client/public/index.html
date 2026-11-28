@@ -521,7 +521,7 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}
 /* Quote sheet: numbered steps, a product box with the real photo and key facts, quick
    quantity picks, and the terms shown open. */
-.rfq .qtons{padding:3px 10px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
+.rfq .qtons{white-space:nowrap;padding:3px 9px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
 .rfq .qtons:empty{display:none}
 .sheet.rfq .terms .seg[data-key=incoterm]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
 .rfq .landnote{margin:8px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
@@ -1165,7 +1165,7 @@ function tierUpdate(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   let i=LEVELS.findIndex(l=>n>=l[2]&&(l[3]===null||n<=l[3])); if(i<0)i=6; const l=LEVELS[i];
   $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;
-  const tpc=Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';
+  const tpc=Number(qty.dataset.tpc)||0,trk=S.incoterm==='DAP'?`${n} ${n===1?'شاحنة':n===2?'شاحنتان':n<=10?'شاحنات':'شاحنة'}`:'';$('#qtyT').textContent=[tpc?`${+(n*tpc).toFixed(1)} طن`:'',trk].filter(Boolean).join(' · ');
   $$('#levels button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
   rfqSum();
 }
@@ -1283,7 +1283,7 @@ function rfqSum(){
   $('#termHelp').innerHTML=`<span style="display:block">${TERMS[S.incoterm]||''}</span><span style="display:block">${PAYS[(S.payment||'').split(' ')[0]]||''}</span>`;
   $$('#presets button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===n)));
 }
-function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum()}
+function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum();if(key==='incoterm')tierUpdate()}
 const CONTACT={wa:'249123667759',mail:'info@septlion.com',tel:'+249 123 667 759'};
 function reqText(x){
   const L=['طلب عرض سعر — سبتليون',`رقم الطلب: ${x.id}`];
