@@ -1238,7 +1238,7 @@ $('#destQuick').addEventListener('click',e=>{const b=e.target.closest('button');
 function dSync(){dBox.classList.toggle('ok',!!dest.value);dClr.hidden=!dest.value&&!dQ.value;dQuick();rfqSum()}
 // Countries a mill in Egypt reaches by truck, with the border crossing used (expert panel:
 // Sudan and eastern Libya only; Chad and South Sudan are served by sea through other ports).
-const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=25;
+const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=62.5;
 function landUpdate(){
   const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
   $('#modeRow').hidden=!via;
@@ -1301,7 +1301,7 @@ function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>
 const CONTACT={wa:'249123667759',mail:'info@septlion.com',tel:'+249 123 667 759'};
 function reqText(x){
   const L=['طلب عرض سعر — سبتليون',`رقم الطلب: ${x.id}`];
-  if(x.kind==='sku'){L.push(`الصنف: ${x.title}`);if(x.description)L.push(`الوصف: ${x.description}`);L.push(`الكمية: ${x.qty} ${x.mode==='land'?'شاحنة (≈ 25 طن للشاحنة)':'حاوية'}`,`الشحن: ${x.mode==='land'?'بري':'بحري'}`,`الوجهة: ${x.dest}${x.port?' — '+x.port:''}`,`التسليم: ${x.incoterm}`,`الدفع: ${x.payment}`);if(x.company)L.push(`الشركة: ${x.company}`);if(x.note)L.push(`ملاحظات: ${x.note}`)}
+  if(x.kind==='sku'){L.push(`الصنف: ${x.title}`);if(x.description)L.push(`الوصف: ${x.description}`);L.push(`الكمية: ${x.qty} ${x.mode==='land'?'شاحنة (≈ 62.5 طن للشاحنة)':'حاوية'}`,`الشحن: ${x.mode==='land'?'بري':'بحري'}`,`الوجهة: ${x.dest}${x.port?' — '+x.port:''}`,`التسليم: ${x.incoterm}`,`الدفع: ${x.payment}`);if(x.company)L.push(`الشركة: ${x.company}`);if(x.note)L.push(`ملاحظات: ${x.note}`)}
   else{L.push(`الاحتياج: ${x.description}`);if(x.quantity)L.push(`الكمية: ${x.quantity}`);if(x.destination)L.push(`الوجهة: ${x.destination}`);if(x.terms)L.push(`شروط أخرى: ${x.terms}`);if(x.phone)L.push(`واتساب العميل: ${x.phone}`)}
   return L.join('\n');
 }

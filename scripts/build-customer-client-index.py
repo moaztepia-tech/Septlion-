@@ -220,7 +220,7 @@ one('<span>حاوية</span></div>', '<span id="qtyU">حاوية</span><span cla
 one("  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;", "  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} ${S.mode==='land'?'شاحنة':'حاوية'}`;\n  const tpc=S.mode==='land'?TRUCK_T:Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';")
 one('<div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>', '<p class="qhint" id="qtyHint" aria-live="polite"></p><div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>')
 one("qty:n,incoterm:S.incoterm,", "qty:n,mode:S.mode==='land'?'land':'sea',incoterm:S.incoterm,")
-one("L.push(`الكمية: ${x.qty} حاوية`,", "L.push(`الكمية: ${x.qty} ${x.mode==='land'?'شاحنة (≈ 25 طن للشاحنة)':'حاوية'}`,`الشحن: ${x.mode==='land'?'بري':'بحري'}`,")
+one("L.push(`الكمية: ${x.qty} حاوية`,", "L.push(`الكمية: ${x.qty} ${x.mode==='land'?'شاحنة (≈ 62.5 طن للشاحنة)':'حاوية'}`,`الشحن: ${x.mode==='land'?'بري':'بحري'}`,")
 one("${esc(x.qty)} حاوية · ${esc(x.incoterm)}", "${esc(x.qty)} ${x.mode==='land'?'شاحنة':'حاوية'} · ${esc(x.incoterm)}")
 # Land shipping, worked out from the destination like the tonnage: countries reached overland
 # from Egypt get a third delivery choice "بر · DAP" (trucks to the border or the buyer's city),
@@ -229,7 +229,7 @@ one('<button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</b
 one('<button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button>', '<button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button>')
 one("function setDest(c,p,keepText){\n  dest.value=c||'';port.value=p||'';\n  if(!keepText)dQ.value=destLabel();\n  dSync();\n}", """// Countries a mill in Egypt reaches by truck, with the border crossing used (expert panel:
 // Sudan and eastern Libya only; Chad and South Sudan are served by sea through other ports).
-const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=25;
+const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=62.5;
 function landUpdate(){
   const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
   $('#modeRow').hidden=!via;

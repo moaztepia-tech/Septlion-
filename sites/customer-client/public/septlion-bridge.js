@@ -17,7 +17,7 @@
   const SESSION_KEY = 'septlion_session';
   const INCOTERMS = ['CIF', 'CFR', 'FOB'];
   // Land terms the quote sheet offers; a truck carries about 25 t of bagged flour.
-  const LAND_TERMS = ['DAP', 'FCA'], TRUCK_TONS = 25;
+  const LAND_TERMS = ['DAP', 'FCA'], TRUCK_TONS = 62.5;
 
   const digits = v => String(v == null ? '' : v).replace(/[٠-٩۰-۹]/g, c => {
     const a = '٠١٢٣٤٥٦٧٨٩'.indexOf(c); return String(a < 0 ? '۰۱۲۳۴۵۶۷۸۹'.indexOf(c) : a);
