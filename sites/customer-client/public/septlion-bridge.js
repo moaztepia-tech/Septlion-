@@ -258,7 +258,8 @@
         if (pack) zoomOnly.push(zoomItem(f('pack', 'التعبئة', pack, 's', 'التعبئة')));
         if (size) zoomOnly.push(zoomItem(f('size', 'الحجم', size, 's', 'الحجم')));
         if (val('protein')) card.push(f('wheat', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
-        if (val('moisture')) card.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
+        // Extraction names the flour grade in this trade (72% is white flour), so it sits beside protein.
+        if (val('extraction')) card.push(f('type', '', 'استخراج ' + val('extraction'), 'q', 'نسبة الاستخراج', val('extraction')));
         if (firstCert) card.push(Object.assign(f('brand', '', firstCert, 'c', 'الشهادات'), { zoom: certs === firstCert }));
         if (val('origin')) card.push(f('origin', 'المنشأ', 'منشأ ' + val('origin'), 'c', 'المنشأ', val('origin')));
         const unit = [pack.split(' ')[0], size].filter(Boolean).join(' ');
@@ -274,7 +275,7 @@
         if (val('gluten')) more.push(f('dot', '', 'جلوتين رطب ' + val('gluten'), 'q', 'الجلوتين الرطب', val('gluten')));
         if (val('ash')) more.push(f('dot', '', 'رماد ' + val('ash'), 'q', 'الرماد', val('ash')));
         if (val('absorption')) more.push(f('dot', '', 'امتصاص ماء ' + val('absorption'), 'q', 'امتصاص الماء', val('absorption')));
-        if (val('extraction')) more.push(f('dot', '', 'استخراج ' + val('extraction'), 'q', 'نسبة الاستخراج', val('extraction')));
+        if (val('moisture')) more.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
         if (val('shelfLife')) more.push(f('shelf', '', 'صلاحية ' + val('shelfLife'), 'q', 'الصلاحية', val('shelfLife')));
         // Shown in the card's minimum-load line already, so listed apart only when enlarged.
         const perItem = val('perContainer', 120) ? f('moq', 'في الحاوية', val('perContainer', 120), 's', 'في الحاوية') : null;
