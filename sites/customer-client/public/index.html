@@ -531,6 +531,7 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .rfq .qhint:empty{display:none}
 .rfq .landnote{margin:2px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
 .dh .dtag{margin-inline-start:auto;font-style:normal;font-size:11px;font-weight:700;color:#f3dfa6;border:1px solid rgba(243,223,166,.35);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.rfq #destQuick.dq:not(:empty){display:flex;margin-top:8px}
 .rfq .landnote:empty{display:none}
 .rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
 .rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
@@ -1205,6 +1206,7 @@ function dOptions0(raw){
   if(!q){
     let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
     if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});
+    if(guessC&&!(last&&last.c===guessC))out.push({h:'بلدك؟'},{c:guessC,p:''});
     out.push({h:'وجهات شائعة'});
     DEST_POP.forEach(n=>{const d=DEST.find(x=>x[0]===n);if(d)out.push({c:d[1],p:d[0]})});
     return out;
@@ -1234,14 +1236,25 @@ function dClose(){dL.hidden=true;dQ.setAttribute('aria-expanded','false');dAct=-
 function dQuick(){
   let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
   const L=[];if(last&&last.c)L.push({c:last.c,p:last.p||'',last:1});
+  if(guessC&&!L.some(o=>o.c===guessC))L.push({c:guessC,p:'',mine:1});
   DEST_POP.forEach(n=>{const d=DEST.find(x=>x[0]===n);if(d&&!L.some(o=>o.c===d[1]&&o.p===d[0]))L.push({c:d[1],p:d[0]})});
-  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':flagC(o.c)+' '+esc(o.c)}</small></button>`).join('');
+  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${o.mine?flagC(o.c)+' ':''}${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':o.mine?'بلدك؟':flagC(o.c)+' '+esc(o.c)}</small></button>`).join('');
 }
 $('#destQuick').addEventListener('click',e=>{const b=e.target.closest('button');if(b)dPick({c:b.dataset.c,p:b.dataset.p})});
 function dSync(){dBox.classList.toggle('ok',!!dest.value);dClr.hidden=!dest.value&&!dQ.value;dQuick();rfqSum()}
 Object.assign(FLAG_ISO,{'الكويت':'KW','قطر':'QA','البحرين':'BH','عُمان':'OM','الأردن':'JO','العراق':'IQ','سوريا':'SY','لبنان':'LB','فلسطين':'PS','تركيا':'TR','ليبيا':'LY','تونس':'TN','الجزائر':'DZ','المغرب':'MA','موريتانيا':'MR','إريتريا':'ER','الصومال':'SO','إثيوبيا':'ET','جنوب السودان':'SS','أوغندا':'UG','رواندا':'RW','بوروندي':'BI','جزر القمر':'KM','سيشل':'SC','مدغشقر':'MG','موريشيوس':'MU','السنغال':'SN','غامبيا':'GM','غينيا بيساو':'GW','غينيا':'GN','سيراليون':'SL','ليبيريا':'LR','ساحل العاج':'CI','توغو':'TG','بنين':'BJ','الرأس الأخضر':'CV','مالي':'ML','بوركينا فاسو':'BF','النيجر':'NE','الكاميرون':'CM','أفريقيا الوسطى':'CF','الغابون':'GA','غينيا الاستوائية':'GQ','الكونغو':'CG','الكونغو الديمقراطية':'CD','ساو تومي وبرينسيب':'ST','أنغولا':'AO','جنوب أفريقيا':'ZA','ناميبيا':'NA','موزمبيق':'MZ','زامبيا':'ZM','زيمبابوي':'ZW','ملاوي':'MW','بوتسوانا':'BW','ليسوتو':'LS','إسواتيني':'SZ'});
 // Countries a mill in Egypt reaches by truck, with the route used (same routes as the market pages).
 const LAND={'السودان':'أرقين أو أشكيت أو أوسيف','ليبيا':'منفذ السلوم','تونس':'ليبيا ومعبر رأس جدير','الأردن':'عبّارة الشاحنات نويبع–العقبة','السعودية':'عبّارة الشاحنات سفاجا–ضبا','الكويت':'السعودية ومنفذ النويصيب','قطر':'السعودية ومنفذ سلوى–أبو سمرة','البحرين':'السعودية وجسر الملك فهد','الإمارات':'السعودية ومنفذ البطحاء–الغويفات','عُمان':'السعودية أو الإمارات','العراق':'الأردن ومنفذ الكرامة–طريبيل','سوريا':'الأردن ومنفذ جابر–نصيب','لبنان':'الأردن وسوريا','اليمن':'السعودية ومنفذ الوديعة'},TRUCK_T=62.5;
+// Suggest the buyer's own country, guessed on the phone with no outside service: first from the
+// phone's time zone (set by the network, so it follows where the phone is), then from the region
+// of the phone's language (ar-SD). Egypt's language code is a common default, so it is not used.
+// Only a suggestion: it never fills the field by itself.
+const TZ_C={'Africa/Cairo':'مصر','Africa/Khartoum':'السودان','Africa/Tripoli':'ليبيا','Africa/Tunis':'تونس','Africa/Algiers':'الجزائر','Africa/Casablanca':'المغرب','Africa/El_Aaiun':'المغرب','Africa/Nouakchott':'موريتانيا','Asia/Riyadh':'السعودية','Asia/Dubai':'الإمارات','Asia/Kuwait':'الكويت','Asia/Qatar':'قطر','Asia/Bahrain':'البحرين','Asia/Muscat':'عُمان','Asia/Aden':'اليمن','Asia/Amman':'الأردن','Asia/Baghdad':'العراق','Asia/Damascus':'سوريا','Asia/Beirut':'لبنان','Asia/Gaza':'فلسطين','Asia/Hebron':'فلسطين','Europe/Istanbul':'تركيا','Asia/Istanbul':'تركيا','Africa/Asmara':'إريتريا','Africa/Asmera':'إريتريا','Africa/Djibouti':'جيبوتي','Africa/Mogadishu':'الصومال','Africa/Addis_Ababa':'إثيوبيا','Africa/Nairobi':'كينيا','Africa/Dar_es_Salaam':'تنزانيا','Africa/Kampala':'أوغندا','Africa/Kigali':'رواندا','Africa/Bujumbura':'بوروندي','Africa/Juba':'جنوب السودان','Indian/Comoro':'جزر القمر','Indian/Mahe':'سيشل','Indian/Antananarivo':'مدغشقر','Indian/Mauritius':'موريشيوس','Africa/Dakar':'السنغال','Africa/Banjul':'غامبيا','Africa/Bissau':'غينيا بيساو','Africa/Conakry':'غينيا','Africa/Freetown':'سيراليون','Africa/Monrovia':'ليبيريا','Africa/Abidjan':'ساحل العاج','Africa/Accra':'غانا','Africa/Lome':'توغو','Africa/Porto-Novo':'بنين','Africa/Lagos':'نيجيريا','Atlantic/Cape_Verde':'الرأس الأخضر','Africa/Bamako':'مالي','Africa/Timbuktu':'مالي','Africa/Ouagadougou':'بوركينا فاسو','Africa/Niamey':'النيجر','Africa/Ndjamena':'تشاد','Africa/Douala':'الكاميرون','Africa/Bangui':'أفريقيا الوسطى','Africa/Libreville':'الغابون','Africa/Malabo':'غينيا الاستوائية','Africa/Brazzaville':'الكونغو','Africa/Kinshasa':'الكونغو الديمقراطية','Africa/Lubumbashi':'الكونغو الديمقراطية','Africa/Sao_Tome':'ساو تومي وبرينسيب','Africa/Luanda':'أنغولا','Africa/Johannesburg':'جنوب أفريقيا','Africa/Windhoek':'ناميبيا','Africa/Maputo':'موزمبيق','Africa/Lusaka':'زامبيا','Africa/Harare':'زيمبابوي','Africa/Blantyre':'ملاوي','Africa/Gaborone':'بوتسوانا','Africa/Maseru':'ليسوتو','Africa/Mbabane':'إسواتيني'};
+const guessC=(()=>{let c='';
+  try{c=TZ_C[Intl.DateTimeFormat().resolvedOptions().timeZone]||''}catch{}
+  if(!c){try{const iso=Object.fromEntries(Object.entries(FLAG_ISO).map(([k,v])=>[v,k]));
+    for(const l of navigator.languages||[]){const r=(l.split('-')[1]||'').toUpperCase();if(r&&r!=='EG'&&iso[r]){c=iso[r];break}}}catch{}}
+  return c})();
 // Inland countries: containers by sea to a port, then trucks inland. No choice to make, only a note.
 const TRANSIT={'تشاد':'بحراً إلى دوالا، ثم بالشاحنات إلى نجامينا','إثيوبيا':'بحراً إلى جيبوتي، ثم بالشاحنات إلى أديس أبابا','جنوب السودان':'بحراً إلى مومباسا، ثم بالشاحنات عبر أوغندا إلى جوبا','أوغندا':'بحراً إلى مومباسا، ثم بالشاحنات إلى كمبالا','رواندا':'بحراً إلى دار السلام أو مومباسا، ثم بالشاحنات إلى كيغالي','بوروندي':'بحراً إلى دار السلام، ثم بالشاحنات إلى بوجومبورا','أفريقيا الوسطى':'بحراً إلى دوالا، ثم بالشاحنات إلى بانغي','مالي':'بحراً إلى داكار أو أبيدجان، ثم بالشاحنات إلى باماكو','بوركينا فاسو':'بحراً إلى أبيدجان أو لومي، ثم بالشاحنات إلى واغادوغو','النيجر':'بحراً إلى كوتونو أو لومي، ثم بالشاحنات إلى نيامي','زامبيا':'بحراً إلى دار السلام أو ديربان، ثم بالشاحنات إلى لوساكا','زيمبابوي':'بحراً إلى بيرا أو ديربان، ثم بالشاحنات إلى هراري','ملاوي':'بحراً إلى ناكالا أو بيرا، ثم بالشاحنات إلى ليلونغوي','بوتسوانا':'بحراً إلى ديربان أو والفيس باي، ثم بالشاحنات إلى غابورون','ليسوتو':'بحراً إلى ديربان، ثم بالشاحنات إلى ماسيرو','إسواتيني':'بحراً إلى مابوتو أو ديربان، ثم بالشاحنات إلى مبابان','فلسطين':'بحراً إلى العقبة، ثم بالشاحنات عبر جسر الملك حسين'};
 function landUpdate(){
