@@ -16,6 +16,8 @@
   const SUPABASE_KEY = 'sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD';
   const SESSION_KEY = 'septlion_session';
   const INCOTERMS = ['CIF', 'CFR', 'FOB'];
+  // Land terms the quote sheet offers; a truck carries about 25 t of bagged flour.
+  const LAND_TERMS = ['DAP', 'FCA'], TRUCK_TONS = 62.5;
 
   const digits = v => String(v == null ? '' : v).replace(/[٠-٩۰-۹]/g, c => {
     const a = '٠١٢٣٤٥٦٧٨٩'.indexOf(c); return String(a < 0 ? '۰۱۲۳۴۵۶۷۸۹'.indexOf(c) : a);
@@ -46,8 +48,12 @@
     return { amount, unit };
   }
 
+  /** Card id -> {productId, skuId}, filled from the team panel catalog by fromPlatform(). */
+  const platformRefs = {};
+
   /** Catalog ids such as "asasi50" map to platform SKU "sku-asasi-50" of product "prod-zollana-asasi". */
   function catalogRef(productId) {
+    if (platformRefs[productId]) return Object.assign({}, platformRefs[productId]);
     const m = String(productId || '').match(/^([a-z]+)(\d+)$/);
     return m ? { productId: 'prod-zollana-' + m[1], skuId: 'sku-' + m[1] + '-' + m[2] } : null;
   }
@@ -85,6 +91,7 @@
       if (!Number.isSafeInteger(n) || n < 1) throw new Error('حدد عدد الحاويات.');
       const destination = [clean(x.dest, 200), clean(x.port, 90)].filter(Boolean).join(' · ');
       if (!destination) throw new Error('حدد وجهة التسليم.');
+      const land = x.mode === 'land';
       const input = Object.assign(base, {
         product: clean(x.title, 500), destination, quantity: n,
         // Country and port in their own fields: the port prices CIF/CFR, the country sets documents.
@@ -92,7 +99,12 @@
         incoterm: INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF', paymentPreference: paymentCode(x.payment),
         packing: clean(x.description, 300) || null,
         knownFacts: { note: clean(x.note, 1000) || undefined, localProductId: x.productId || undefined },
-      });
+      }, land ? {
+        // By land: trucks of about 25 t, and the land term (DAP border / FCA mill) kept in the facts.
+        quantity: n * TRUCK_TONS, unit: 'MT', containerCount: null, incoterm: 'FOB',
+        knownFacts: { note: clean(x.note, 1000) || undefined, localProductId: x.productId || undefined,
+          shipping: { mode: 'land', trucks: n, term: LAND_TERMS.includes(x.incoterm) ? x.incoterm : 'DAP' } },
+      } : {});
       const ref = catalogRef(x.productId);
       const sku = ref && catalog && catalog.find(p => p.id === ref.productId && (p.skus || []).some(s => s.id === ref.skuId));
       if (sku) { input.catalogProductId = ref.productId; input.variants = [{ skuId: ref.skuId, containers: n }]; }
@@ -136,9 +148,9 @@
       if (!country) throw new Error('حدد وجهة التسليم.');
       return Object.assign(base, {
         product: clean(x.title, 300), country, destinationPort: clean(x.port, 160) || undefined,
-        quantity: n + ' FCL', packing: clean(x.description, 120) || undefined,
-        incoterm: INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF',
-        notes: [pay && 'الدفع: ' + pay, clean(x.note, 1000)].filter(Boolean).join(' · ') || undefined,
+        quantity: x.mode === 'land' ? n * TRUCK_TONS + ' MT' : n + ' FCL', packing: clean(x.description, 120) || undefined,
+        incoterm: x.mode === 'land' ? 'FOB' : INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF',
+        notes: [x.mode === 'land' && 'الشحن: بري · ' + n + ' شاحنة · ' + (LAND_TERMS.includes(x.incoterm) ? x.incoterm : 'DAP'), pay && 'الدفع: ' + pay, clean(x.note, 1000)].filter(Boolean).join(' · ') || undefined,
       });
     }
     const q = parseQuantity(x.quantity) || (extra.amount ? { amount: Number(digits(extra.amount)), unit: extra.unit } : null);
@@ -210,13 +222,123 @@
     return n ? '+' + countryOf(iso)[1] + ' ' + formatNational(n) : '';
   }
 
-  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput, buildIntake, splitPhone, formatNational, checkPhone, joinPhone, COUNTRIES };
+  /**
+   * Turns the team panel catalog (trade-api catalog.public) into the home page catalog:
+   * one card per SKU, with its photos, packing and container facts. The team panel is
+   * the one place where products are added or changed; the home page only shows them.
+   */
+  function fromPlatform(items) {
+    const sectors = [], products = [];
+    (Array.isArray(items) ? items : []).forEach(prod => {
+      if (!prod || !clean(prod.name) || !Array.isArray(prod.skus)) return;
+      const sector = clean(prod.sector && prod.sector.name, 80) || 'عام';
+      prod.skus.forEach(sku => {
+        if (!sku || !sku.id) return;
+        const spec = sku.specifications && typeof sku.specifications === 'object' ? sku.specifications : {};
+        const sub = clean(spec.sub, 80) || sector;
+        let sec = sectors.find(x => x.name === sector);
+        if (!sec) { sec = { name: sector, subs: [] }; sectors.push(sec); }
+        if (!sec.subs.includes(sub)) sec.subs.push(sub);
+        const m = String(sku.id).match(/^sku-([a-z]+)-(\d+)$/);
+        const id = m ? m[1] + m[2] : String(sku.id);
+        platformRefs[id] = { productId: String(prod.id), skuId: String(sku.id) };
+        const name = clean(prod.name, 160);
+        const size = clean(spec.size, 60) || clean(String(sku.name || '').replace(name, ''), 60);
+        const imgs = (Array.isArray(sku.media) ? sku.media : [])
+          .filter(x => x && x.type === 'IMAGE' && /^https:\/\//.test(String(x.url || '')))
+          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map(x => String(x.url));
+        // "شوال منسوج 50 كجم" shows as packing "شوال منسوج" and size "50 كجم", so nothing repeats.
+        const packing = clean(spec.packing, 120);
+        const pack = size && packing.endsWith(' ' + size) ? packing.slice(0, -size.length - 1) : packing;
+        // Before enlarging: what a panel of a Sudanese importer, a Gulf buyer, an Egyptian mill's
+        // export manager and a B2B designer agreed a container buyer filters on: the grade
+        // (protein, the one quality figure that differs between grades), origin, halal with the
+        // food-safety certificate, the sack, the trade terms, advance payment (a deal-breaker
+        // that must not surprise anyone later), and the minimum load in its own line.
+        // Figures every grade shares (extraction, moisture) wait for the enlarged view.
+        const certs = clean(spec.certificates, 160);
+        const firstCert = certs.split(/\s*[·،,]\s*/)[0];
+        // f(icon, card label, card value, group, label and value in the enlarged list)
+        const f = (ic, l, v, g, zl, zv) => ({ ic, l, v, g, zl, zv: zv == null ? v : zv });
+        const val = (k, n) => clean(spec[k], n || 60);
+        const card = [], more = [];
+        // Packing and size apart, for the enlarged view only: the card already shows them as one unit.
+        const zoomOnly = [];
+        const zoomItem = x => Object.assign(x, { card: false });
+        if (pack) zoomOnly.push(zoomItem(f('pack', 'التعبئة', pack, 's', 'التعبئة')));
+        if (size) zoomOnly.push(zoomItem(f('size', 'الحجم', size, 's', 'الحجم')));
+        // The grade: the one quality figure that tells this product's grades apart. The team
+        // writes it per product ("بروتين 12%", "ICUMSA 45", "كسر 5%"); flour falls back to protein.
+        if (val('grade', 24)) card.push(f('type', 'الدرجة', val('grade', 24), 'q', 'الدرجة'));
+        else if (val('protein')) card.push(f('wheat', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
+        if (val('origin')) card.push(f('origin', 'المنشأ', 'منشأ ' + val('origin'), 'c', 'المنشأ', val('origin')));
+        // "حلال · FSSC": the certificate import needs and the one food buyers audit for.
+        const certCard = [firstCert, firstCert !== 'FSSC 22000' && /FSSC/i.test(certs) ? 'FSSC' : ''].filter(Boolean).join(' · ');
+        if (firstCert) card.push(Object.assign(f('brand', '', certCard, 'c', 'الشهادات'), { zoom: certs === firstCert }));
+        const unit = [pack.split(' ')[0], size].filter(Boolean).join(' ');
+        if (unit) card.push(Object.assign(f('size', 'التعبئة', unit, 's', 'التعبئة'), { zoom: false }));
+        // Tons per container, for the quote sheet's automatic tonnage: set by the team as
+        // "tonsPerContainer", or worked out from the bags per container and the bag weight.
+        const num = t => Number((String(t || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/\d+(?:\.\d+)?/) || [])[0]) || 0;
+        const kgM = size.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/(\d+(?:\.\d+)?)\s*(كجم|كغ|كيلو|kg)/i);
+        const tpc = num(spec.tonsPerContainer) || (num(spec.perContainer) && kgM ? Math.round(num(spec.perContainer) * Number(kgM[1])) / 1000 : 0);
+        // The minimum load with how much it holds: "حاوية 20 قدماً · 450 شوالاً · 22.5 طن".
+        const perBox = val('perContainer', 120).replace(/^نحو\s+/, '');
+        // It gets its own full line under the six facts, so it is never cut short.
+        const UNIT_AR = { MT: 'طن', KG: 'كجم', FCL: 'حاوية' };
+        const moq = Number(sku.minimumOrderQty) > 0 && UNIT_AR[sku.unit] ? sku.minimumOrderQty + ' ' + UNIT_AR[sku.unit] : '';
+        const wide = !val('container') && moq ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + moq, 's', 'أقل طلب', moq), { wide: true })] : val('container') ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox, tpc ? +tpc.toFixed(1) + ' طن' : ''].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
+        // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
+        const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
+        // Sea and land terms together read "بحر أو بر" on the card.
+        const seaLand = terms.includes('DAP') && terms.some(x => x !== 'DAP');
+        if (val('delivery', 80)) card.push(f('ship', 'التسليم', seaLand ? 'بحر أو بر' : terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
+        // Full payment before shipping (advance transfer or a letter of credit, as Egypt requires)
+        // shows as "الدفع قبل الشحن"; other short terms show as they are, longer ones when enlarged.
+        const payShort = /قبل الشحن/.test(val('payment', 120)) ? 'قبل الشحن' : val('payment', 120);
+        if (payShort && payShort.length <= 10) card.push(f('cash', 'الدفع', 'الدفع ' + payShort, 's', 'الدفع', val('payment', 120)));
+        if (val('type', 120)) more.push(f('type', 'النوع', val('type', 120), 'q', 'النوع'));
+        if (val('gluten')) more.push(f('dot', '', 'جلوتين رطب ' + val('gluten'), 'q', 'الجلوتين الرطب', val('gluten')));
+        if (val('ash')) more.push(f('dot', '', 'رماد ' + val('ash'), 'q', 'الرماد', val('ash')));
+        if (val('absorption')) more.push(f('dot', '', 'امتصاص ماء ' + val('absorption'), 'q', 'امتصاص الماء', val('absorption')));
+        if (val('extraction')) more.push(f('type', '', 'استخراج ' + val('extraction'), 'q', 'نسبة الاستخراج', val('extraction')));
+        if (val('moisture')) more.push(f('color', '', 'رطوبة ' + val('moisture'), 'q', 'الرطوبة', val('moisture')));
+        if (val('shelfLife')) more.push(f('shelf', '', 'صلاحية ' + val('shelfLife'), 'q', 'الصلاحية', val('shelfLife')));
+        // Shown in the card's minimum-load line already, so listed apart only when enlarged.
+        const perItem = val('perContainer', 120) ? f('moq', 'في الحاوية', val('perContainer', 120), 's', 'في الحاوية') : null;
+        if (perItem) (wide.length ? wide : more).push(wide.length ? zoomItem(perItem) : perItem);
+        if (val('payment', 120) && !(payShort && payShort.length <= 10)) more.push(f('dot', 'الدفع', val('payment', 120), 's', 'الدفع'));
+        if (certs && certs !== firstCert) more.push(f('grade', 'الشهادات', certs, 'c', 'الشهادات'));
+        if (val('documents', 200)) more.push(f('dot', 'المستندات', val('documents', 200), 'c', 'المستندات'));
+        if (val('brand')) more.push(f('brand', 'العلامة', val('brand'), 'c', 'العلامة'));
+        // Any other product's own specs, written with Arabic names ("الاستقطاب": "99.8%"), show
+        // in the enlarged quality list, so a new product needs no code change.
+        Object.keys(spec).filter(k => /[\u0600-\u06FF]/.test(k) && typeof spec[k] !== 'object')
+          .forEach(k => { const v = clean(spec[k], 80), l = clean(k, 40); if (v && l) more.push(f('dot', '', l + ' ' + v, 'q', l, v)); });
+        // The card shows at most six; pad it from the details so it never looks empty.
+        while (card.length < 6 && more.length) card.push(more.shift());
+        const fields = card.concat(wide, more, zoomOnly);
+        products.push({
+          id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
+          type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack, size,
+          art: spec.art === 'bottle' ? 'bottle' : 'sack', short: clean(spec.short, 40), tag: clean(spec.tag, 40),
+          kw: [clean(prod.description, 600), clean(sku.name, 160)].filter(Boolean).join(' '), imgs, fields, tpc,
+        });
+      });
+    });
+    return { version: 'platform', sectors, products };
+  }
+
+  const api = { parseQuantity, paymentCode, catalogRef, missing, buildInput, buildIntake, splitPhone, formatNational, checkPhone, joinPhone, COUNTRIES, fromPlatform };
   if (typeof document === 'undefined') return api;
 
   /* ------------------------------------------------------------------ browser */
   const $ = s => document.querySelector(s);
   // The page exposes its sheet, toast and storage helpers as window.SeptlionPage.
   const page = () => root.SeptlionPage || {};
+  // Reply promise shown to the buyer (expert council; founder's choice), and the official
+  // WhatsApp Business number (empty until the founder gives it: the button stays hidden).
+  const REPLY_TIME = 'خلال 4 ساعات عمل', QUOTE_TIME = 'خلال يوم عمل', WORK_HOURS = 'الأحد–الخميس، بتوقيت القاهرة', OFFICIAL_WA = '';
   const escH = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const headers = token => Object.assign({ 'Content-Type': 'application/json', apikey: SUPABASE_KEY }, token ? { Authorization: 'Bearer ' + token } : {});
   const body = async r => { try { return await r.json(); } catch (e) { return null; } };
@@ -368,9 +490,10 @@
   const seg = (name, label, options, value) => '<div class="field"><span class="label">' + label + '</span><div class="sb-seg">' + options.map(o => '<label><input type="radio" name="' + name + '" value="' + escH(o[0]) + '"' + (o[0] === value ? ' checked' : '') + '>' + escH(o[1]) + '</label>').join('') + '</div></div>';
   function render(message) {
     const x = current, f = sheet.querySelector('#sbForm'), need = missing(x), saved = store.get('septlion.bridge.contact', {});
+    const tt = sheet.querySelector('#sbTitle'); if (tt) tt.textContent = 'أرسل طلبك إلى سبتليون';
     let h = '';
     if (step === 'contact') {
-      h += '<p class="hint">يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب بعرض واضح.</p>';
+      h += '<p class="hint">يصل طلبك مباشرة إلى فريق سبتليون. نرد عليك عبر واتساب ' + REPLY_TIME + '، ونرسل عرض السعر الرسمي على بريدك أيضاً إن كتبته.</p>';
       h += field('sbName', 'الاسم', 'autocomplete="name" required', saved.name);
       h += field('sbCompany', 'الشركة <small>أو اسمك إن لم تكن شركة</small>', 'autocomplete="organization" required', x.company || saved.company);
       h += field('sbWa', 'رقم واتساب', 'type="tel" inputmode="tel" dir="ltr" autocomplete="tel" required', x.phone || saved.whatsapp);
@@ -381,6 +504,7 @@
       if (need.includes('payment')) h += seg('sbPay', 'الدفع', [['LC', 'اعتماد مستندي'], ['TT', 'تحويل بنكي'], ['OTHER', 'نتفق لاحقًا']], saved.payment || 'OTHER');
       h += '<p class="err" id="sbErr" role="alert">' + escH(message || '') + '</p>';
       h += '<button class="btn btn-primary" type="submit" style="margin-top:14px">أرسل الطلب <span class="arrow">←</span></button>';
+      h += '<p class="sb-privacy">نستخدم بياناتك للرد على طلبك فقط، ولا نشاركها مع أي جهة خارج سبتليون.</p>';
     } else {
       h += '<p class="hint">أرسلنا رمزًا إلى <b dir="ltr">' + escH(api._pending.contact.email) + '</b>. اكتبه هنا. قد يصل إلى مجلد الرسائل غير المرغوبة.</p>';
       h += field('sbCode', 'رمز التحقق', 'class="input sb-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required', '');
@@ -432,12 +556,25 @@
   function done(ref) {
     track('/e/request-sent');
     markSent(current.id, ref);
-    if (page().closeSheets) page().closeSheets(true);
-    const box = $('#doneBox');
-    if (box && $('#needDone') && current.kind === 'free') {
-      box.innerHTML = '<div class="mk">✓</div><h1>تم استلام طلبك.</h1><p>' + (ref ? 'رقم الطلب <b class="latin">' + escH(ref) + '</b>. ' : '') + 'سيتواصل معك فريقنا عبر واتساب أو البريد بعرض مناسب.</p><button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>';
-    }
-    if (page().toast) page().toast('تم استلام طلبك' + (ref ? ' — رقم الطلب ' + ref : ''), { label: 'طلباتي', go: 'orders' });
+    // Confirmation screen (expert council): reference, summary, when and from where we reply,
+    // the bank-details warning, next steps.
+    const box = sheet && sheet.querySelector('#sbForm'), c = (api._pending && api._pending.contact) || {}, mail = String(c.email || '').trim(), wa = String(c.whatsapp || '').trim();
+    if (box) {
+      const t = sheet.querySelector('#sbTitle'); if (t) t.textContent = 'تم استلام طلبك';
+      const x = current, unit = x.mode === 'land' ? 'شاحنة' : 'حاوية';
+      const sum = x.kind === 'sku' ? [x.title, x.qty ? x.qty + ' ' + unit : '', [x.dest, x.port].filter(Boolean).join(' — '), x.incoterm].filter(Boolean).join(' · ') : (x.title || '');
+      box.innerHTML = '<div class="sb-done"><div class="mk">✓</div>' +
+        (ref ? '<p class="dref">رقم الطلب <b class="latin" id="dRef">' + escH(ref) + '</b> <button type="button" class="dcopy" data-copy="' + escH(ref) + '">نسخ</button></p>' : '') +
+        (sum ? '<p class="dsum">' + escH(sum) + '</p>' : '') +
+        '<p>نرد عليك عبر واتساب' + (wa ? ' على <b dir="ltr">' + escH(wa) + '</b>' : '') + ' ' + REPLY_TIME + ' (' + WORK_HOURS + ')، ونرسل عرض السعر الرسمي ' + QUOTE_TIME + (mail ? ' على واتساب وبريدك' : '') + '.</p>' +
+        '<ol class="dsteps"><li>يراجع فريقنا الكمية والوجهة والشروط.</li><li>نرسل لك عرض السعر الرسمي مع مدة صلاحيته.</li><li>بعد موافقتك نصدر الفاتورة المبدئية ونحدد مواعيد الشحن.</li></ol>' +
+        '<p class="dwarn"><b>للأمان:</b> لن نغيّر بياناتنا البنكية أبداً عبر واتساب أو البريد. بيانات الدفع تصلك فقط في الفاتورة المبدئية الرسمية، واتصل بنا للتأكد قبل أي تحويل.</p>' +
+        (OFFICIAL_WA ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + OFFICIAL_WA + '?text=' + encodeURIComponent('مرحباً، رقم طلبي ' + (ref || '')) + '">راسلنا على واتساب الآن</a><button class="btn btn-ghost" data-go="orders">طلباتي</button>' : '<button class="btn btn-primary" data-go="orders" style="margin-top:12px">طلباتي</button>') +
+        '<button class="btn btn-ghost" data-go="home">تصفح أصنافاً أخرى</button></div>';
+      const cp = box.querySelector('.dcopy');
+      if (cp) cp.addEventListener('click', () => { try { navigator.clipboard.writeText(cp.dataset.copy); cp.textContent = 'تم النسخ'; } catch (e) { /* no clipboard */ } });
+      box.scrollTop = 0;
+    } else if (page().toast) page().toast('تم استلام طلبك' + (ref ? ' — رقم الطلب ' + ref : ''), { label: 'طلباتي', go: 'orders' });
     step = 'contact'; current = null;
   }
 
@@ -462,6 +599,18 @@
     } catch (e) { /* counting must never break the page */ }
   }
   track(location.pathname);
+
+  /** The home page catalog from the team panel; null when it cannot be read in 4 seconds. */
+  api.platformCatalog = async function () {
+    const c = typeof AbortController === 'function' ? new AbortController() : null;
+    const t = c && setTimeout(() => c.abort(), 4000);
+    try {
+      const r = await fetch(SUPABASE_URL + '/functions/v1/trade-api', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY }, body: JSON.stringify({ action: 'catalog.public' }), cache: 'no-cache', signal: c ? c.signal : undefined });
+      const b = await body(r);
+      const d = r.ok && b && Array.isArray(b.items) ? fromPlatform(b.items) : null;
+      return d && d.products.length ? d : null;
+    } catch (e) { return null; } finally { if (t) clearTimeout(t); }
+  };
 
   api.submit = function (x) {
     current = x; step = 'contact'; ensureSheet(); render(); track('/e/request-open');

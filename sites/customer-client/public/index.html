@@ -477,6 +477,141 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .zoombox .bottle{height:100%;width:auto;aspect-ratio:.48;max-height:640px}
 .zoombox .bottle-body span{font-size:16px}.zoombox .bottle-body strong{font-size:24px}.zoombox .bottle-body small{font-size:34px}
 .zoomcap{text-align:center;display:grid;gap:3px}.zoomcap strong{font-size:18px}.zoomcap span{font-size:12px;color:var(--muted)}
+/* Card facts in one compact framed panel: three columns sized to their text with hairline
+   dividers, and the minimum load as a slim footer, so the photo keeps its room. */
+.fields.w3{grid-template-columns:repeat(3,auto)!important;grid-template-rows:repeat(2,19px) auto;height:auto;gap:3px 0;padding:5px 2px 0;margin-top:2px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-radius:11px;overflow:hidden}
+.fields.w3 li:not(.wide){padding-inline:6px;gap:4px;font-size:11.5px}
+.fields.w3 li:not(.wide):not(:nth-child(3n+1)){border-inline-start:1px solid rgba(255,255,255,.09)}
+.fields.w3 svg{width:13px;height:13px}
+.fields li.wide{grid-column:1/-1;margin:2px -2px 0;padding:3px 10px;background:rgba(214,178,94,.09);border-top:1px solid rgba(255,255,255,.09);line-height:19px}
+.zspec{display:grid;gap:12px;max-height:min(36vh,320px);overflow:auto;text-align:start;width:min(100%,520px);margin:4px auto 2px;padding:12px;border:1px solid #ffffff1f;border-radius:16px;background:#0b1f38b3}
+.ztiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ztiles div{display:grid;gap:2px;justify-items:center;padding:10px 6px;border-radius:12px;background:#ffffff0d;border:1px solid #ffffff14;text-align:center}
+.ztiles b{font-size:17px;font-weight:800;color:#f2f6fd;line-height:1.3}
+.ztiles b.zlong{font-size:13px;line-height:1.5}
+.ztiles small{font-size:11px;color:#9db3d6}
+.ztiles+dl{margin-top:6px!important}
+.zspec h3{margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#9db3d6}
+.zspec dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.zspec dl div{display:grid;gap:1px;padding:7px 10px;border-radius:10px;background:#ffffff08;min-width:0}
+.zspec dl .zwide{grid-column:1/-1}
+.zspec dt{font-size:11px;color:#9db3d6}
+.zspec dd{margin:0;font-size:13px;font-weight:700;color:#f2f6fd;overflow-wrap:anywhere}
+.zchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px!important}
+.zchips i{font-style:normal;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#ffffff14;border:1px solid #ffffff24}
+/* Enlarged view as a spec sheet: a shorter photo, the name on top, the sheet scrolling on
+   its own, and the price fixed at the bottom. Each section is one card of label/value rows. */
+.zoom:has(.zspec){grid-template-rows:minmax(0,38vh) minmax(0,1fr);gap:12px;place-items:stretch;padding-top:52px}
+.zoom:has(.zspec) .zoombox{justify-self:center;width:min(100%,520px)}
+.zoom:has(.zspec) .zoomcap{grid-template-rows:auto minmax(0,1fr) auto;min-height:0;gap:8px;justify-self:center;width:min(100%,520px)}
+.zoom .zspec{max-height:none;min-height:0;overflow:auto;gap:10px;width:100%;margin:0;padding:0 0 2px;border:0;border-radius:0;background:none;overscroll-behavior:contain}
+.zoom:has(.zspec) .zoombox .gslide{padding:4px 0 22px}
+.zspec .ztiles b.zlong{font-size:12.5px;white-space:nowrap}
+.zspec section{padding:10px 14px 2px;border-radius:14px;background:#ffffff08;border:1px solid #ffffff12}
+.zspec h3{color:var(--gold);font-size:11.5px;margin-bottom:8px}
+.zspec .ztiles{margin-bottom:4px}
+.zspec .ztiles div{background:#ffffff0a}
+.zspec dl{grid-template-columns:1fr!important;gap:0!important;margin-top:0!important}
+.zspec dl div,.zspec dl .zwide{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:9px 0;border-radius:0;background:none;border-top:1px solid #ffffff10}
+.zspec .ztiles+dl div:first-child{border-top:0}
+.zspec dl div:first-child{border-top:0}
+.zspec dt{flex:none;font-size:12.5px}
+.zspec dd{text-align:end;font-size:13.5px;line-height:1.5}
+.zspec dd.zchips{justify-content:flex-end;margin-top:0!important}
+.zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}
+/* Quote sheet: numbered steps, a product box with the real photo and key facts, quick
+   quantity picks, and the terms shown open. */
+.rfq .qtons{white-space:nowrap;padding:3px 9px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
+.rfq .qtons:empty{display:none}
+.sheet.rfq .terms .seg[data-key=incoterm]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
+.rfq .moderow{margin-top:12px;display:grid;gap:6px}
+.rfq .moderow .label{font-size:12px;font-weight:700;color:#9db3d6}
+.rfq .moderow .seg button{min-height:42px;font-size:13px}
+.rfq .qhint{margin:6px 4px 0;font-size:11.5px;color:#9db3d6;text-align:center}
+.rfq .qhint:empty{display:none}
+.rfq .landnote{margin:2px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
+.dh .dtag{margin-inline-start:auto;font-style:normal;font-size:11px;font-weight:700;color:#f3dfa6;border:1px solid rgba(243,223,166,.35);border-radius:999px;padding:1px 8px;white-space:nowrap}
+/* The quote sheet grew (destination list, sea/land, four steps): keep it inside the screen, scroll its
+   middle and keep the title and the send button always in view. */
+#rfq.sheet.rfq{max-height:calc(100dvh - 20px);overflow:hidden}
+/* Compact sheet so the whole request fits on one phone screen without scrolling. */
+#rfq .rfq-body{gap:5px}
+#rfq .sheet-head{padding-top:14px;padding-bottom:4px;min-height:0}
+#rfq .dbox{min-height:44px}
+#rfq #pbox{padding:6px 10px;gap:10px;align-items:center}
+#rfq #pbox .pmeta{display:none}
+#rfq #pbox .pthumb{width:48px;height:48px;min-width:48px;border-radius:10px}
+#rfq #pbox strong{font-size:14px}
+#rfq .rlabel{display:flex;align-items:center;gap:8px;height:auto;min-height:22px;font-size:14px;margin:4px 0 0;padding:0;line-height:1.3}
+#rfq .rlabel i{width:20px;height:20px;font-size:11px}
+#rfq #modeL,#rfq #qtyHint{display:none}
+#rfq .moderow{margin-top:2px;gap:6px}
+#rfq .moderow .seg button,#rfq .terms .seg button{min-height:36px}
+#rfq .landnote{margin:0 2px;font-size:11.5px;line-height:1.5}
+#rfq .qty{min-height:44px}
+#rfq .trow{margin-top:0;padding:9px 12px 7px}
+#rfq .trow .tier{padding-bottom:7px}
+#rfq .lvnext{margin-top:4px;padding-top:0;border-top:0}
+#rfq .lvnext button{padding:0}
+#rfq .terms{padding:8px 10px}
+#rfq .terms .tpanel{padding:0;margin:0}
+#rfq .terms .helper{margin:6px 2px 0;font-size:11px;line-height:1.5;min-height:0}
+#rfq #noteD>summary{min-height:34px;padding-block:4px}
+#rfq .rfq-foot{padding-top:6px;padding-bottom:calc(8px + var(--safe-b))}
+/* The company is asked in the send step, so the notes box keeps only the notes. */
+#rfq .fld-opt:has(#rfqCo){display:none}
+#rfq #noteD .fld-opt{margin-top:0!important}
+#sbForm .sb-done{text-align:center;display:grid;gap:8px;padding-bottom:6px}#sbForm .sb-done .mk{margin:0 auto;width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:#2e7d5b33;color:#7fe0b0;font-size:26px}#sbForm .sb-done p{margin:0;font-size:13.5px;line-height:1.7;color:#dbe6f8}#sbForm .sb-done .btn{width:100%}#sbForm .sb-done .dref{font-size:15px}#sbForm .sb-done .dref b{font-size:20px;color:#f3dfa6}
+#sbForm .sb-done .dsteps{margin:10px auto 4px;padding-inline-start:20px;text-align:start;max-width:320px;font-size:13px;line-height:1.9;color:#c3d1ee}
+#sbForm .sb-done .dcopy{margin-inline-start:6px;padding:3px 10px;border-radius:99px;border:1px solid #ffffff33;background:none;color:#c3d1ee;font:600 12px var(--font)}
+#sbForm .sb-done .dsum{font-size:13px;color:#c3d1ee}
+#sbForm .sb-done .dwarn{margin:12px auto;max-width:340px;padding:10px 12px;border-radius:12px;border:1px solid #f3dfa64d;background:#f3dfa612;font-size:12.5px;line-height:1.7;color:#f3dfa6;text-align:start}
+.sb-privacy{margin:8px 2px 0;font-size:11px;color:#8da4c9;text-align:center}
+@media(max-height:820px){#rfq .rfq-body{gap:3px}#rfq .rlabel{margin-top:2px;min-height:20px;font-size:13.5px}#rfq .moderow .seg button,#rfq .terms .seg button{min-height:34px}#rfq .dbox,#rfq .qty{min-height:42px}#rfq .trow{padding:7px 10px 6px}#rfq .trow .tier{padding-bottom:5px}#rfq #pbox{padding:4px 8px}#rfq #pbox .pthumb{width:42px;height:42px;min-width:42px}#rfq .terms{padding:6px 8px}#rfq .terms .helper{margin-top:4px}#rfq #noteD>summary{min-height:30px}}
+#rfq.sheet.rfq .rfq-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:14px;scrollbar-width:thin}
+/* Levels: one card with the current level, a 7-step progress track and the step to the next level. */
+.rfq .trow{margin-top:10px;padding:12px 12px 10px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
+.rfq .trow .tier{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 0 10px}
+.rfq .tier .lvname{font-size:14px;font-weight:800;color:#f3dfa6}
+.rfq .tier .lvrange{font-size:12px;font-weight:700;color:#c3d1ee;white-space:nowrap}
+.rfq .trow details.opt.lv>.levels.lvtrack{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;direction:rtl}
+.sheet.rfq .levels.lvtrack button{min-height:30px;padding:4px 0;border:0;border-radius:0;background:none;display:grid;gap:5px;justify-items:stretch;color:#7f95ba}
+.rfq .levels.lvtrack button[aria-pressed=true]{background:none;border:0}
+.rfq .lvtrack i{display:block;height:6px;border-radius:99px;background:#ffffff1f;transition:background .2s}
+.rfq .lvtrack button.done i{background:#c9a24a99}
+.rfq .lvtrack button.cur i{background:#f3dfa6;box-shadow:0 0 0 3px #f3dfa633}
+.rfq .trow details.opt.lv{margin:0!important;padding:0!important;border:0;min-height:0}
+.rfq .lvtrack b{font:800 10px var(--latin);text-align:center}
+.rfq .lvtrack button.cur b{color:#fff}
+.rfq .lvnext{margin:10px 0 0;padding-top:8px;border-top:1px solid #ffffff14;font-size:12px;color:#9db3d6}
+.rfq .lvnext button{background:none;border:0;padding:4px 0;color:#c3d1ee;font:600 12px var(--font);text-align:start;cursor:pointer}
+.rfq .lvnext button b{color:#f3dfa6;font-weight:800}
+.rfq #destQuick.dq:not(:empty){display:flex;margin-top:8px}
+.rfq .landnote:empty{display:none}
+.rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
+.rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
+.rfq .pbox{align-items:center;gap:12px;padding:8px;background:#ffffff08;border-color:#ffffff1f}
+.rfq .pthumb.photo{width:64px;height:64px;border-radius:10px;background:#ffffff10}
+.rfq .pthumb.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.rfq .pinfo strong{font-size:15px}
+.rfq .pmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.rfq .pmeta span{font-size:11px;padding:2px 8px;border-radius:999px;background:#ffffff10;border:1px solid #ffffff1a;color:#dbe6f8}
+.rfq .pmoq{display:block;margin-top:5px;font-size:11px;color:var(--gold)}
+.rfq .opt.lv>summary{display:none}
+.rfq .opt.lv{margin-top:8px}
+.sheet.rfq .levels{gap:4px}
+.sheet.rfq .levels button{min-height:52px;padding:4px 1px;border-radius:9px;gap:3px}
+.sheet.rfq .levels strong{font-size:10.5px}
+.sheet.rfq .levels span{font-size:9px;line-height:1.25}
+.rfq .tier{font-size:11.5px;color:#9db3d6;padding-top:6px}
+.rfq .terms{padding:12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
+.sheet.rfq .terms .grid2{grid-template-columns:1fr;gap:12px}
+.rfq .terms .label{font-size:12px;font-weight:700;color:#9db3d6}
+.rfq .terms .field{margin-top:0!important;gap:6px}
+.rfq .terms .tpanel>.grid2{margin-top:0}
+.rfq .terms .seg button{min-height:42px;font-size:12px;padding:0 4px;white-space:nowrap}
+.sheet.rfq .terms .seg[data-key=payment]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
+.rfq .terms .helper{margin:10px 2px 0;font-size:11.5px;line-height:1.7;color:#9db3d6}
 /* V15 — اكتشف */
 .finder{flex:none;position:relative;z-index:30;padding:8px 10px 2px}
 .searchbar{display:flex;align-items:center;gap:6px}
@@ -680,7 +815,7 @@ details.opt.lv>:not(summary){margin-inline:0}
   <div class="commit"><div class="mk">◈</div><div><span>OUR COMMITMENT</span><strong>أكثر من مجرد العثور على مورد.</strong><p>تعمل SEPTLION طرفًا تجاريًا مسؤولًا ضمن نطاق الاتفاق، وتنسّق التوريد والعلامات والخدمات اللوجستية.</p></div></div>
   <div class="signoff"><span class="lg lg-v" role="img" aria-label="سبتليون Septlion"><svg viewBox="109.5 80.9 860.6 727.6" aria-hidden="true"><use href="#lg-v"/></svg></span><p class="slogan">أتقن الخطوات، قصّر المسافات</p><small>MASTER STEPS. SHORTEN DISTANCES.</small></div>
   <section class="contact" aria-labelledby="ctH"><h3 id="ctH">تواصل مع فريق سبتليون</h3><p>للاستفسار عن منتج أو متابعة طلب قائم.</p>
-    <a class="cbtn pri wa" href="https://wa.me/201070088181" target="_blank" rel="noopener"><span class="ci"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 18.8z"/><path d="M9.3 8.8c.2 2.6 3.1 5.4 5.9 5.9l1-1.3-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2z"/></svg></span><span class="ct"><small>واتساب</small><b class="ltr" dir="ltr">+20 107 008 8181</b></span><span class="go" aria-hidden="true">←</span></a>
+    <a class="cbtn pri wa" href="https://wa.me/249123667759" target="_blank" rel="noopener"><span class="ci"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 18.8z"/><path d="M9.3 8.8c.2 2.6 3.1 5.4 5.9 5.9l1-1.3-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2z"/></svg></span><span class="ct"><small>واتساب</small><b class="ltr" dir="ltr">+249 123 667 759</b></span><span class="go" aria-hidden="true">←</span></a>
     <a class="cbtn ml" href="mailto:info@septlion.com"><span class="ci"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7.5 8 6 8-6"/></svg></span><span class="ct"><small>البريد الإلكتروني</small><b class="ltr" dir="ltr">info@septlion.com</b></span><span class="go" aria-hidden="true">←</span></a>
     <button class="copy" type="button" data-act="copy" data-v="info@septlion.com">نسخ البريد الإلكتروني</button>
   </section>
@@ -751,7 +886,7 @@ details.opt.lv>:not(summary){margin-inline:0}
     <div class="field"><label for="fPhone">رقم واتساب مع رمز الدولة</label><input class="input" id="fPhone" type="tel" inputmode="tel" dir="ltr" placeholder="+249 …" autocomplete="tel" aria-describedby="fPhoneErr"><p class="err" id="fPhoneErr" role="alert"></p></div>
     <p class="hint" style="margin-top:10px">سنتواصل معك على هذا الرقم عبر واتساب لمتابعة الطلب.</p>
     <button class="btn btn-primary" type="submit" style="margin-top:18px">طلب عرض سعر <span class="arrow">←</span></button>
-    <p class="compose-note">نؤكد بريدك مرة واحدة، ثم يصل طلبك مباشرة إلى فريق سبتليون.</p>
+    <p class="compose-note">يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب خلال 4 ساعات عمل.</p>
   </form>
 </section>
 
@@ -791,13 +926,7 @@ details.opt.lv>:not(summary){margin-inline:0}
   <div class="rfq-body">
     <div class="pbox" id="pbox"></div>
 
-    <div class="rlabel">كم تحتاج؟</div>
-    <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span>حاوية</span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
-    <div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>
-    <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
-    <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
-
-    <div class="rlabel">إلى أين؟</div>
+    <div class="rlabel"><i>1</i>إلى أين؟</div>
     <div id="destPick" class="dpick">
       <div class="dbox" id="dBox">
         <span class="dpin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></span>
@@ -807,17 +936,27 @@ details.opt.lv>:not(summary){margin-inline:0}
       <div class="dlist" id="destList" role="listbox" aria-label="اقتراحات الوجهة" hidden></div>
       <div class="dq" id="destQuick" role="group" aria-label="وجهات سريعة"></div>
     </div>
-    <p class="err" id="destErr" role="alert"></p>
+    <p class="err" id="destErr" role="alert"></p><div class="moderow" id="modeRow" hidden><span class="label" id="modeL">طريقة الشحن</span><div class="seg" role="radiogroup" aria-labelledby="modeL" data-key="mode"><button type="button" role="radio" aria-checked="true" data-v="sea">بحراً · حاويات</button><button type="button" role="radio" aria-checked="false" data-v="land">براً · شاحنات</button></div><p class="landnote" id="landNote" aria-live="polite"></p></div>
 
-    <details class="opt" id="termsD"><summary>الشروط: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>
-      <div class="pop"><div class="grid2">
-        <div class="field"><span class="label" id="incoL">التسليم</span><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button></div></div>
-        <div class="field"><span class="label" id="payL">الدفع</span><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">LC · اعتماد</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">TT · تحويل</button></div></div>
-      </div>
+    <div class="rlabel"><i>2</i>كم تحتاج؟</div>
+    <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span id="qtyU">حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
+    <p class="qhint" id="qtyHint" aria-live="polite"></p><div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>
+    <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
+    <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details><p class="lvnext" id="lvNext" aria-live="polite"></p></div>
+
+    <div class="rlabel"><i>3</i><span id="incoL">التسليم</span></div>
+    <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>
+      <div class="tpanel"><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB" class="seaopt">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" class="landopt" hidden>تسليم الحدود · DAP</button><button type="button" role="radio" aria-checked="false" data-v="FCA" class="landopt" hidden>تسليم المطحن · FCA</button></div>
       <p class="helper" id="termHelp" aria-live="polite"></p></div>
-    </details>
+    </div>
 
-    <details class="opt" id="noteD"><summary>إضافة اسم الشركة أو ملاحظات<span class="ed">اختياري</span></summary>
+    <div class="rlabel"><i>4</i><span id="payL">الدفع</span></div>
+    <div class="terms" id="payD">
+      <div class="tpanel"><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">اعتماد مستندي</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">تحويل مقدم</button></div>
+      <p class="helper" id="payHelp" aria-live="polite"></p></div>
+    </div>
+
+    <details class="opt" id="noteD"><summary>إضافة ملاحظات<span class="ed">اختياري</span></summary>
       <div class="pop"><div class="fld-opt"><label class="label" for="rfqCo">اسم الشركة أو الاسم</label><input class="input" id="rfqCo" autocomplete="organization" placeholder="مثال: شركة النور للتجارة"></div>
       <div class="fld-opt" style="margin-top:10px"><label class="label" for="rfqNote">ملاحظات</label><textarea class="input" id="rfqNote" rows="2" placeholder="موعد التسليم المطلوب، مواصفات إضافية…"></textarea></div></div>
     </details>
@@ -851,7 +990,7 @@ const STATUS={
   alternative:{label:'يتوفر خيار بديل',msg:'قد تتوفر مواصفات أو شروط مختلفة، ولا تُعتمد إلا بموافقتك.',step:2},
   unavailable:{label:'تعذّر تلبية الطلب',msg:'لا نستطيع تلبية الاحتياج بالشروط الحالية. نوضح ذلك بدل تقديم وعد غير مؤكد.',step:1,stop:true}
 };
-const FLOW=[['تقديم الاحتياج','يصل الطلب إلى SEPTLION بعد تأكيد بريدك'],['تقييم إمكانية التلبية','التحقق من المواصفات والكمية والوجهة والموردين والشروط بواسطة فريق SEPTLION'],['عرض السعر','يُصدر فقط بعد التحقق من القدرة والشروط التجارية'],['التنفيذ والمتابعة','بعد قبول العرض واستكمال الاتفاق']];
+const FLOW=[['تقديم الاحتياج','يصل الطلب مباشرة إلى SEPTLION بعد كتابة اسمك ورقم واتساب'],['تقييم إمكانية التلبية','التحقق من المواصفات والكمية والوجهة والموردين والشروط بواسطة فريق SEPTLION'],['عرض السعر','يُصدر فقط بعد التحقق من القدرة والشروط التجارية'],['التنفيذ والمتابعة','بعد قبول العرض واستكمال الاتفاق']];
 
 /* ============ حالة التطبيق ============ */
 const S={cat:'الكل',sub:'الكل',brand:'الكل',size:'الكل',prefill:'',sort:'rel',view:store.get('septlion.preview.view.v1','feed'),q:'',items:[],idx:0,selected:null,qty:1,incoterm:'CIF',payment:'LC — اعتماد مستندي',trackId:null,needText:''};
@@ -894,7 +1033,7 @@ function art(p){
 const rows=r=>r.map(([k,v])=>`<div class="fact"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
 // عرض حقائق موثّقة فقط — لا أسعار ولا أرقام تقديرية
 const productRows=p=>[['النوع',p.type],['التعبئة',p.pack]];
-const tradeRows=()=>[['السعر','حسب العرض'],['MOQ','يُحدد في العرض'],['التوريد','حسب الطلب']];
+const tradeRows=()=>[['السعر','حسب الطلب'],['MOQ','يُحدد في العرض'],['التوريد','حسب الطلب']];
 
 /* ============ اكتشف ============ */
 let hyd,io=null;
@@ -936,8 +1075,24 @@ const ICONS={
  temp:'<path d="M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z"/>',
  color:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
  dot:'<circle cx="12" cy="12" r="4"/>'};
+Object.assign(ICONS,{
+ wheat:'<path d="M12 21V6M12 6c-1.6-.8-2.5-2.2-2.5-3.5 1.6.2 2.5 1.6 2.5 3.5zM12 6c1.6-.8 2.5-2.2 2.5-3.5-1.6.2-2.5 1.6-2.5 3.5zM12 11c-2.2-.4-3.5-2-3.5-3.8 2.2.2 3.5 1.8 3.5 3.8zM12 11c2.2-.4 3.5-2 3.5-3.8-2.2.2-3.5 1.8-3.5 3.8zM12 16c-2.2-.4-3.5-2-3.5-3.8 2.2.2 3.5 1.8 3.5 3.8zM12 16c2.2-.4 3.5-2 3.5-3.8-2.2.2-3.5 1.8-3.5 3.8z"/>',
+ ship:'<path d="M3 15h18l-2.5 5h-13zM6 15v-4h12v4M12 11V4l5 3-5 2"/>',
+ box:'<path d="M3 7h18v11H3zM7.5 9.5v6M12 9.5v6M16.5 9.5v6"/>',
+ cash:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v.01M17.5 14.5v.01"/>'});
 const ico=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||ICONS.dot}</svg>`;
 // حقول البطاقة: من p.fields إن وُجدت، وإلا تُشتق من بيانات الصنف. الحد 6 حقول في البطاقة (3 أعمدة × صفين)، وكل الحقول تظهر في نافذة التكبير.
+const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','المنشأ والشهادات']],ZKEY=['البروتين','الرطوبة','الجلوتين الرطب'];
+function zoomSpec(p){
+  const fs=fieldsOf(p).filter(f=>f.zoom!==false);
+  if(!fs.some(f=>f.zl))return `<span>${esc(fs.map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span>`;
+  const k0=ZKEY.map(k=>fs.find(f=>f.zl===k)).filter(Boolean),key=k0.length?k0:fs.filter(f=>f.g==='q'&&f.zoom!==false&&f.zv.length<=14).slice(0,3),rest=fs.filter(f=>!key.includes(f));
+  const tiles=key.length?`<div class="ztiles">${key.map(f=>`<div><b${f.zv.length>6?' class="zlong"':''}><bdi>${esc(f.zv)}</bdi></b><small>${esc(f.zl)}</small></div>`).join('')}</div>`:'';
+  const wide=f=>f.zl==='الشهادات'||f.zv.length>22;
+  const fill=r=>{let run=0;return r.map((f,i)=>{if(wide(f)){run=0;return Object.assign({},f,{w:1})}run++;const nx=r[i+1];return Object.assign({},f,{w:run%2===1&&(!nx||wide(nx))?1:0})})};
+  const row=f=>f.zl==='الشهادات'?`<div class="zwide"><dt>${esc(f.zl)}</dt><dd class="zchips">${f.zv.split(/\s*[·،,]\s*/).filter(Boolean).map(c=>`<i><bdi>${esc(c)}</bdi></i>`).join('')}</dd></div>`:`<div${f.w?' class="zwide"':''}><dt>${esc(f.zl)}</dt><dd><bdi${/[؀-ۿ]/.test(f.zv)?' dir="rtl"':''}>${esc(f.zv)}</bdi></dd></div>`;
+  return `<div class="zspec">${ZG.map(([g,t])=>{const r=rest.filter(f=>f.g===g),top=g==='q'?tiles:'';return r.length||top?`<section><h3>${t}</h3>${top}${r.length?`<dl>${fill(r).map(row).join('')}</dl>`:''}</section>`:''}).join('')}</div>`;
+}
 function fieldsOf(p){
   if(Array.isArray(p.fields)&&p.fields.length) return p.fields;
   const f=[];
@@ -947,7 +1102,7 @@ function fieldsOf(p){
   f.push({ic:'brand',l:'العلامة',v:p.brand===NO_BRAND?'علامة غير محددة':p.brand});
   return f;
 }
-const fieldsHTML=p=>{const f=fieldsOf(p).slice(0,6),cols=Math.max(1,Math.ceil(f.length/2));return `<ul class="fields" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li title="${esc(x.l||'')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||'')}: </span><span class="v${/^[A-Za-z0-9 .\-\/]+$/.test(x.v)?' lat':''}" dir="auto">${esc(x.v)}</span></li>`).join('')}</ul>`};
+const fieldsHTML=p=>{const a=fieldsOf(p).filter(x=>x.card!==false),w=a.filter(x=>x.wide).slice(0,1),f=a.filter(x=>!x.wide).slice(0,6).concat(w),cols=Math.max(1,Math.ceil((f.length-w.length)/2));return `<ul class="fields${w.length?' w3':''}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li${x.wide?' class="wide"':''} title="${esc(x.l||'')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||'')}: </span><span class="v${/^[A-Za-z0-9 .\-\/]+$/.test(x.v)?' lat':''}" dir="auto">${esc(x.v)}</span></li>`).join('')}</ul>`};
 function views(p){
   if(p.imgs&&p.imgs.length) return p.imgs.map((u,i)=>({k:'img',h:`<img class="gimg" src="${esc(u)}" alt="${esc(p.name)} — صورة ${i+1}" loading="${i?'lazy':'eager'}" decoding="async" draggable="false">`}));
   return [{k:'front',h:art(p)},{k:'angle',h:art(p)},{k:'detail',h:art(p)}];
@@ -957,7 +1112,7 @@ function slideHTML(p,i,arr,lazy){const n=arr?arr.length:0,hasB=p.brand!==NO_BRAN
   const dots=n>1&&n<=8?`<span class="vdots" aria-hidden="true">${arr.map((_,k)=>`<i${k===i?' class="on"':''}></i>`).join('')}</span>`:'';
   if(lazy)return `<article class="slide" data-id="${esc(p.id)}" data-i="${i}" data-lazy aria-label="${esc(p.name)} ${esc(p.size)}"></article>`;
   return `<article class="slide" data-id="${esc(p.id)}" aria-label="${esc(p.name)} ${esc(p.size)}"><div class="pc">
-    <header class="pc-head"><div class="pc-title"><h2>${esc(p.name)}</h2><span class="pc-price${p.price?' has':''}"><small>السعر</small><b dir="auto">${esc(p.price||'حسب العرض')}</b></span></div>
+    <header class="pc-head"><div class="pc-title"><h2>${esc(p.name)}</h2><span class="pc-price${p.price?' has':''}"><small>السعر</small><b dir="auto">${esc(p.price||'حسب الطلب')}</b></span></div>
     ${fieldsHTML(p)}</header>
     <div class="visual" data-act="zoom" data-id="${esc(p.id)}">${galleryHTML(p)}${dots}${multi?'<button class="garr prev" data-act="gnav" data-d="-1" aria-label="الصورة السابقة">›</button><button class="garr next" data-act="gnav" data-d="1" aria-label="الصورة التالية">‹</button>':''}<button class="vzoom" data-act="zoom" data-id="${esc(p.id)}" aria-label="تكبير صور ${esc(p.name)} ${esc(p.size)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button></div>
     <button class="btn btn-primary" data-act="request" data-id="${esc(p.id)}">اطلب هذا الصنف <span class="arrow">←</span></button></div></article>`}
@@ -1071,18 +1226,25 @@ $$('.sheet').forEach(sh=>{let y0=0,t=false;
 
 /* ============ نافذة طلب عرض السعر ============ */
 const qty=$('#qty');
-$('#levels').innerHTML=LEVELS.map((l,i)=>`<button type="button" data-act="level" data-i="${i}" aria-pressed="false" aria-label="${l[0]} ${l[1]}"><strong>${l[0]}</strong><span>${l[1]}</span></button>`).join('');
+const lvU=(n,land)=>land?(n===1?'شاحنة واحدة':n===2?'شاحنتين':n<=10?n+' شاحنات':n+' شاحنة'):(n===1?'حاوية واحدة':n===2?'حاويتين':n<=10?n+' حاويات':n+' حاوية');
+$('#levels').classList.add('lvtrack');
+$('#levels').innerHTML=LEVELS.map((l,i)=>`<button type="button" data-lv="${i}" aria-pressed="false" aria-label="${l[0]} ${l[1]}"><i></i><b>${l[0]}</b></button>`).join('');
+// Tapping a level (or the hint under the bar) sets the quantity to that level's minimum.
+$('#rfq').addEventListener('click',e=>{const t=e.target.closest('[data-lv]');if(!t)return;qty.value=LEVELS[Number(t.dataset.lv)][2];qty.dispatchEvent(new Event('input',{bubbles:true}))});
 function tierUpdate(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   let i=LEVELS.findIndex(l=>n>=l[2]&&(l[3]===null||n<=l[3])); if(i<0)i=6; const l=LEVELS[i];
-  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;
-  $$('#levels button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
+  const land=S.mode==='land',uw=land?'شاحنة':'حاوية';
+  $('#tier').innerHTML=`<span class="lvname">${l[0]} · ${l[1]}</span><span class="lvrange">${l[3]===null?l[2]+' '+uw+' فأكثر':l[2]+'–'+l[3]+' '+uw}</span>`;
+  const tpc=S.mode==='land'?TRUCK_T:Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';
+  $$('#levels button').forEach((b,j)=>{b.setAttribute('aria-pressed',String(j===i));b.classList.toggle('done',j<i);b.classList.toggle('cur',j===i)});
+  const nx=LEVELS[i+1];$('#lvNext').innerHTML=nx?`<button type="button" data-lv="${i+1}">أضف ${lvU(nx[2]-n,land)} لتصل إلى <b>${nx[0]} · ${nx[1]}</b></button>`:'<span>أعلى مستوى طلب</span>';
   rfqSum();
 }
 
 /* حقل الوجهة الذكي: اكتب أي دولة أو ميناء، أو اختر من الاقتراحات، وأي نص حر مقبول */
-const DEST=[['جدة الإسلامي','السعودية','جده jeddah ksa saudi'],['الملك عبدالعزيز — الدمام','السعودية','dammam دمام'],['بورتسودان','السودان','port sudan بور سودان'],['وجهة داخلية','السودان','الخرطوم khartoum'],['جبل علي','الإمارات','jebel ali dubai دبي uae'],['خليفة','الإمارات','khalifa abu dhabi أبوظبي'],['الإسكندرية','مصر','alexandria اسكندريه'],['دمياط','مصر','damietta'],['السخنة','مصر','sokhna'],['دار السلام','تنزانيا','dar es salaam tanzania'],['تانغا','تنزانيا','tanga'],['مومباسا','كينيا','mombasa kenya'],['عدن','اليمن','aden yemen'],['الحديدة','اليمن','hodeidah'],['تيما','غانا','tema ghana'],['لاغوس','نيجيريا','lagos nigeria'],['ميناء جيبوتي','جيبوتي','djibouti'],['نجامينا — نقطة تسليم داخلية','تشاد','ndjamena chad'],['ميناء دوالا — عبر الكاميرون','تشاد','douala cameroon الكاميرون']];
-const DEST_POP=['جدة الإسلامي','بورتسودان','جبل علي','الإسكندرية','دار السلام','مومباسا','عدن','نجامينا — نقطة تسليم داخلية'];
+const DEST=[['جدة الإسلامي','السعودية','جده jeddah ksa saudi'],['الملك عبدالعزيز — الدمام','السعودية','dammam دمام'],['بورتسودان','السودان','port sudan بور سودان'],['وجهة داخلية','السودان','الخرطوم khartoum'],['جبل علي','الإمارات','jebel ali dubai دبي uae'],['خليفة','الإمارات','khalifa abu dhabi أبوظبي'],['الإسكندرية','مصر','alexandria اسكندريه'],['دمياط','مصر','damietta'],['السخنة','مصر','sokhna'],['دار السلام','تنزانيا','dar es salaam tanzania'],['تانغا','تنزانيا','tanga'],['مومباسا','كينيا','mombasa kenya'],['عدن','اليمن','aden yemen'],['الحديدة','اليمن','hodeidah'],['تيما','غانا','tema ghana'],['لاغوس','نيجيريا','lagos nigeria'],['ميناء جيبوتي','جيبوتي','djibouti'],['نجامينا — عبر دوالا','تشاد','ndjamena chad'],['ميناء دوالا — عبر الكاميرون','تشاد','douala cameroon الكاميرون'],['الشويخ','الكويت','kuwait shuwaikh'],['حمد','قطر','qatar hamad doha الدوحة'],['خليفة بن سلمان','البحرين','bahrain khalifa bin salman'],['صحار','عُمان','oman sohar عمان'],['صلالة','عُمان','salalah'],['العقبة','الأردن','jordan aqaba عمان amman'],['أم قصر','العراق','iraq umm qasr البصرة basra'],['اللاذقية','سوريا','syria latakia'],['طرطوس','سوريا','tartus'],['بيروت','لبنان','lebanon beirut'],['رام الله — عبر العقبة','فلسطين','palestine ramallah aqaba'],['مرسين','تركيا','turkey mersin'],['إسطنبول','تركيا','istanbul ambarli'],['طرابلس','ليبيا','libya tripoli'],['بنغازي','ليبيا','benghazi'],['مصراتة','ليبيا','misrata'],['رادس','تونس','tunisia rades تونس'],['الجزائر العاصمة','الجزائر','algeria algiers'],['وهران','الجزائر','oran'],['الدار البيضاء','المغرب','morocco casablanca'],['طنجة المتوسط','المغرب','tanger med'],['نواكشوط','موريتانيا','mauritania nouakchott'],['مصوع','إريتريا','eritrea massawa'],['مقديشو','الصومال','somalia mogadishu'],['بربرة','الصومال','berbera'],['أديس أبابا — عبر جيبوتي','إثيوبيا','ethiopia addis ababa djibouti'],['جوبا — عبر مومباسا','جنوب السودان','south sudan juba mombasa'],['كمبالا — عبر مومباسا','أوغندا','uganda kampala mombasa'],['كيغالي — عبر دار السلام','رواندا','rwanda kigali'],['بوجومبورا — عبر دار السلام','بوروندي','burundi bujumbura'],['موروني','جزر القمر','comoros moroni'],['فيكتوريا','سيشل','seychelles victoria'],['تاماتاف','مدغشقر','madagascar toamasina tamatave'],['بورت لويس','موريشيوس','mauritius port louis'],['داكار','السنغال','senegal dakar'],['بانجول','غامبيا','gambia banjul'],['بيساو','غينيا بيساو','guinea bissau'],['كوناكري','غينيا','guinea conakry'],['فريتاون','سيراليون','sierra leone freetown'],['مونروفيا','ليبيريا','liberia monrovia'],['أبيدجان','ساحل العاج','ivory coast cote divoire abidjan كوت ديفوار'],['لومي','توغو','togo lome'],['كوتونو','بنين','benin cotonou'],['برايا','الرأس الأخضر','cape verde praia'],['باماكو — عبر داكار أو أبيدجان','مالي','mali bamako'],['واغادوغو — عبر أبيدجان أو لومي','بوركينا فاسو','burkina faso ouagadougou'],['نيامي — عبر كوتونو أو لومي','النيجر','niger niamey'],['دوالا','الكاميرون','cameroon douala'],['كريبي','الكاميرون','kribi'],['بانغي — عبر دوالا','أفريقيا الوسطى','central african republic bangui'],['ليبرفيل — أوويندو','الغابون','gabon libreville owendo'],['مالابو','غينيا الاستوائية','equatorial guinea malabo'],['بوانت نوار','الكونغو','congo brazzaville pointe noire'],['ماتادي','الكونغو الديمقراطية','dr congo drc kinshasa matadi'],['ساو تومي','ساو تومي وبرينسيب','sao tome'],['لواندا','أنغولا','angola luanda'],['ديربان','جنوب أفريقيا','south africa durban'],['كيب تاون','جنوب أفريقيا','cape town'],['والفيس باي','ناميبيا','namibia walvis bay'],['مابوتو','موزمبيق','mozambique maputo'],['بيرا','موزمبيق','beira'],['لوساكا — عبر دار السلام أو ديربان','زامبيا','zambia lusaka'],['هراري — عبر بيرا أو ديربان','زيمبابوي','zimbabwe harare'],['ليلونغوي — عبر ناكالا أو بيرا','ملاوي','malawi lilongwe'],['غابورون — عبر ديربان أو والفيس باي','بوتسوانا','botswana gaborone'],['ماسيرو — عبر ديربان','ليسوتو','lesotho maseru'],['مبابان — عبر مابوتو أو ديربان','إسواتيني','eswatini swaziland mbabane']];
+const DEST_POP=['جدة الإسلامي','بورتسودان','جبل علي','الإسكندرية','دار السلام','مومباسا','عدن','نجامينا — عبر دوالا'];
 const dest={value:''},port={value:''};   // الحالة: الدولة/الميناء (أو نص حر في dest)
 const LAST_KEY='septlion.lastDest';
 let dAct=-1,dOpts=[];
@@ -1092,14 +1254,16 @@ function dHl(t,q){if(!q)return esc(t);const n=norm(t),i=n.indexOf(q);return i<0|
 const FLAG_ISO={'السعودية':'SA','السودان':'SD','الإمارات':'AE','مصر':'EG','تنزانيا':'TZ','كينيا':'KE','اليمن':'YE','غانا':'GH','نيجيريا':'NG','جيبوتي':'DJ','تشاد':'TD'};
 const flagC=c=>{const i=FLAG_ISO[c];return i?String.fromCodePoint(...[...i].map(x=>0x1F1E6+x.charCodeAt(0)-65)):'🌍'};
 function dOptions(raw){
+  if(!norm(raw))return dBrowse();
   const src=dOptions0(raw),out=[],li=src.findIndex(o=>o.h==='آخر وجهة استخدمتها');
   if(li>=0)out.push(src[li],src[li+1]);
   const opts=src.filter((o,i)=>!o.h&&!o.free&&!(li>=0&&i===li+1));
-  [...new Set(opts.map(o=>o.c))].forEach(c=>{
-    const ports=DEST.filter(d=>d[1]===c);
+  const q=norm(raw),rank=c=>{const n=norm(c);return (n===q?0:n.startsWith(q)?1:2)*100+n.length};
+  [...new Set(opts.map(o=>o.c))].sort((x,y)=>q?rank(x)-rank(y):0).forEach(c=>{
+    const ports=DEST.filter(d=>d[1]===c),has=o=>Object.prototype.hasOwnProperty.call(o,c);
     if(!ports.length){out.push(...opts.filter(o=>o.c===c));return}
-    out.push({h:'<span class="dflag">'+flagC(c)+'</span> '+esc(c)});
-    ports.forEach(d=>out.push({c,p:d[0],g:1}));
+    out.push({h:'<span class="dflag">'+flagC(c)+'</span> '+esc(c)+(has(LAND)?'<em class="dtag">بحراً أو براً</em>':has(TRANSIT)?'<em class="dtag">بحراً ثم براً</em>':'')});
+    if(ports.length>1||has(LAND))out.push({c,p:'',g:1});ports.forEach(d=>out.push({c,p:d[0],g:1}));
   });
   return out.concat(src.filter(o=>o.free));
 }
@@ -1108,14 +1272,16 @@ function dOptions0(raw){
   if(!q){
     let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
     if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});
+    if(guessC&&!(last&&last.c===guessC))out.push({c:guessC,p:''});
     out.push({h:'وجهات شائعة'});
     DEST_POP.forEach(n=>{const d=DEST.find(x=>x[0]===n);if(d)out.push({c:d[1],p:d[0]})});
     return out;
   }
   const toks=q.split(' ').filter(Boolean),seen=new Set();
   DEST.forEach(([p,c,k])=>{const hay=norm(p+' '+c+' '+k);if(toks.every(t=>hay.includes(t))){out.push({c,p});seen.add(c+'|'+p)}});
-  [...new Set(DEST.map(x=>x[1]))].forEach(c=>{if(toks.every(t=>norm(c).includes(t))&&!out.some(o=>o.c===c&&!o.p))out.unshift({c,p:''})});
-  if(raw.trim().length>=2)out.push({c:raw.trim(),p:'',free:true});
+  const CKW={'مصر':'egypt','السعودية':'saudi arabia ksa المملكه','السودان':'sudan','الإمارات':'uae emirates','تنزانيا':'tanzania','كينيا':'kenya','اليمن':'yemen','غانا':'ghana','نيجيريا':'nigeria','جيبوتي':'djibouti','تشاد':'chad tchad','الكونغو':'congo kongo','الكونغو الديمقراطية':'congo kongo drc zaire زائير'};
+  [...new Set(DEST.map(x=>x[1]))].forEach(c=>{if(toks.every(t=>norm(c+' '+(CKW[c]||'')).includes(t))&&!out.some(o=>o.c===c&&!o.p))out.unshift({c,p:''})});
+  if(raw.trim().length>=2&&!DEST.some(d=>norm(d[1])===q))out.push({c:raw.trim(),p:'',free:true});
   return out;
 }
 function dRender(){
@@ -1124,7 +1290,7 @@ function dRender(){
     if(o.h){h+=`<div class="dh" role="presentation">${o.h}</div>`;return}
     const id='dopt'+idx,sel=idx===dAct;
     h+=o.free?`<button type="button" class="dopt free" id="${id}" role="option" aria-selected="${sel}" data-i="${idx}">استخدام «${esc(o.c)}» كوجهة</button>`
-      :`<button type="button" class="dopt" id="${id}" role="option" aria-selected="${sel}" data-i="${idx}">${o.p?`<span>${dHl(o.p,q)}</span>${o.g?'':`<small>${flagC(o.c)} ${dHl(o.c,q)}</small>`}`:`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;
+      :`<button type="button" class="dopt" id="${id}" role="option" aria-selected="${sel}" data-i="${idx}">${o.p?`<span>${dHl(o.p,q)}</span>${o.g?'':`<small>${flagC(o.c)} ${dHl(o.c,q)}</small>`}`:o.b?`<span>${flagC(o.c)} ${esc(o.c)}</span>${dTag(o.c)?`<small>${dTag(o.c)}</small>`:''}`:o.g?'<span>أي ميناء — نقترح لك الأنسب</span>':`<span>${dHl(o.c,q)}</span><small>كل الموانئ</small>`}</button>`;
     o.idx=idx;idx++;
   });
   dL.innerHTML=h||'<div class="dh">اكتب اسم الدولة أو الميناء</div>';
@@ -1136,15 +1302,66 @@ function dClose(){dL.hidden=true;dQ.setAttribute('aria-expanded','false');dAct=-
 function dQuick(){
   let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
   const L=[];if(last&&last.c)L.push({c:last.c,p:last.p||'',last:1});
+  if(guessC&&!L.some(o=>o.c===guessC))L.push({c:guessC,p:'',mine:1});
   DEST_POP.forEach(n=>{const d=DEST.find(x=>x[0]===n);if(d&&!L.some(o=>o.c===d[1]&&o.p===d[0]))L.push({c:d[1],p:d[0]})});
-  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':flagC(o.c)+' '+esc(o.c)}</small></button>`).join('');
+  $('#destQuick').innerHTML=dest.value?'':L.slice(0,6).map((o,i)=>`<button type="button" class="${o.last?'last':''}" data-i="${i}" data-c="${esc(o.c)}" data-p="${esc(o.p)}">${o.mine?flagC(o.c)+' ':''}${esc(o.p||o.c)} <small>${o.last?'آخر وجهة':o.mine?'':flagC(o.c)+' '+esc(o.c)}</small></button>`).join('');
 }
 $('#destQuick').addEventListener('click',e=>{const b=e.target.closest('button');if(b)dPick({c:b.dataset.c,p:b.dataset.p})});
 function dSync(){dBox.classList.toggle('ok',!!dest.value);dClr.hidden=!dest.value&&!dQ.value;dQuick();rfqSum()}
+Object.assign(FLAG_ISO,{'الكويت':'KW','قطر':'QA','البحرين':'BH','عُمان':'OM','الأردن':'JO','العراق':'IQ','سوريا':'SY','لبنان':'LB','فلسطين':'PS','تركيا':'TR','ليبيا':'LY','تونس':'TN','الجزائر':'DZ','المغرب':'MA','موريتانيا':'MR','إريتريا':'ER','الصومال':'SO','إثيوبيا':'ET','جنوب السودان':'SS','أوغندا':'UG','رواندا':'RW','بوروندي':'BI','جزر القمر':'KM','سيشل':'SC','مدغشقر':'MG','موريشيوس':'MU','السنغال':'SN','غامبيا':'GM','غينيا بيساو':'GW','غينيا':'GN','سيراليون':'SL','ليبيريا':'LR','ساحل العاج':'CI','توغو':'TG','بنين':'BJ','الرأس الأخضر':'CV','مالي':'ML','بوركينا فاسو':'BF','النيجر':'NE','الكاميرون':'CM','أفريقيا الوسطى':'CF','الغابون':'GA','غينيا الاستوائية':'GQ','الكونغو':'CG','الكونغو الديمقراطية':'CD','ساو تومي وبرينسيب':'ST','أنغولا':'AO','جنوب أفريقيا':'ZA','ناميبيا':'NA','موزمبيق':'MZ','زامبيا':'ZM','زيمبابوي':'ZW','ملاوي':'MW','بوتسوانا':'BW','ليسوتو':'LS','إسواتيني':'SZ'});
+// Countries a mill in Egypt reaches by truck, with the route used (same routes as the market pages).
+const LAND={'السودان':'أرقين أو أشكيت أو أوسيف','ليبيا':'منفذ السلوم','تونس':'ليبيا ومعبر رأس جدير','الأردن':'عبّارة الشاحنات نويبع–العقبة','السعودية':'عبّارة الشاحنات سفاجا–ضبا','الكويت':'السعودية ومنفذ النويصيب','قطر':'السعودية ومنفذ سلوى–أبو سمرة','البحرين':'السعودية وجسر الملك فهد','الإمارات':'السعودية ومنفذ البطحاء–الغويفات','عُمان':'السعودية أو الإمارات','العراق':'الأردن ومنفذ الكرامة–طريبيل','سوريا':'الأردن ومنفذ جابر–نصيب','لبنان':'الأردن وسوريا','اليمن':'السعودية ومنفذ الوديعة'},TRUCK_T=62.5;
+// Suggest the buyer's own country, guessed on the phone with no outside service: first from the
+// phone's time zone (set by the network, so it follows where the phone is), then from the region
+// of the phone's language (ar-SD). Egypt's language code is a common default, so it is not used.
+// Only a suggestion: it never fills the field by itself.
+const TZ_C={'Africa/Cairo':'مصر','Africa/Khartoum':'السودان','Africa/Tripoli':'ليبيا','Africa/Tunis':'تونس','Africa/Algiers':'الجزائر','Africa/Casablanca':'المغرب','Africa/El_Aaiun':'المغرب','Africa/Nouakchott':'موريتانيا','Asia/Riyadh':'السعودية','Asia/Dubai':'الإمارات','Asia/Kuwait':'الكويت','Asia/Qatar':'قطر','Asia/Bahrain':'البحرين','Asia/Muscat':'عُمان','Asia/Aden':'اليمن','Asia/Amman':'الأردن','Asia/Baghdad':'العراق','Asia/Damascus':'سوريا','Asia/Beirut':'لبنان','Asia/Gaza':'فلسطين','Asia/Hebron':'فلسطين','Europe/Istanbul':'تركيا','Asia/Istanbul':'تركيا','Africa/Asmara':'إريتريا','Africa/Asmera':'إريتريا','Africa/Djibouti':'جيبوتي','Africa/Mogadishu':'الصومال','Africa/Addis_Ababa':'إثيوبيا','Africa/Nairobi':'كينيا','Africa/Dar_es_Salaam':'تنزانيا','Africa/Kampala':'أوغندا','Africa/Kigali':'رواندا','Africa/Bujumbura':'بوروندي','Africa/Juba':'جنوب السودان','Indian/Comoro':'جزر القمر','Indian/Mahe':'سيشل','Indian/Antananarivo':'مدغشقر','Indian/Mauritius':'موريشيوس','Africa/Dakar':'السنغال','Africa/Banjul':'غامبيا','Africa/Bissau':'غينيا بيساو','Africa/Conakry':'غينيا','Africa/Freetown':'سيراليون','Africa/Monrovia':'ليبيريا','Africa/Abidjan':'ساحل العاج','Africa/Accra':'غانا','Africa/Lome':'توغو','Africa/Porto-Novo':'بنين','Africa/Lagos':'نيجيريا','Atlantic/Cape_Verde':'الرأس الأخضر','Africa/Bamako':'مالي','Africa/Timbuktu':'مالي','Africa/Ouagadougou':'بوركينا فاسو','Africa/Niamey':'النيجر','Africa/Ndjamena':'تشاد','Africa/Douala':'الكاميرون','Africa/Bangui':'أفريقيا الوسطى','Africa/Libreville':'الغابون','Africa/Malabo':'غينيا الاستوائية','Africa/Brazzaville':'الكونغو','Africa/Kinshasa':'الكونغو الديمقراطية','Africa/Lubumbashi':'الكونغو الديمقراطية','Africa/Sao_Tome':'ساو تومي وبرينسيب','Africa/Luanda':'أنغولا','Africa/Johannesburg':'جنوب أفريقيا','Africa/Windhoek':'ناميبيا','Africa/Maputo':'موزمبيق','Africa/Lusaka':'زامبيا','Africa/Harare':'زيمبابوي','Africa/Blantyre':'ملاوي','Africa/Gaborone':'بوتسوانا','Africa/Maseru':'ليسوتو','Africa/Mbabane':'إسواتيني'};
+const guessC=(()=>{let c='';
+  try{c=TZ_C[Intl.DateTimeFormat().resolvedOptions().timeZone]||''}catch{}
+  if(!c){try{const iso=Object.fromEntries(Object.entries(FLAG_ISO).map(([k,v])=>[v,k]));
+    for(const l of navigator.languages||[]){const r=(l.split('-')[1]||'').toUpperCase();if(r&&r!=='EG'&&iso[r]){c=iso[r];break}}}catch{}}
+  return c})();
+// Inland countries: containers by sea to a port, then trucks inland. No choice to make, only a note.
+const TRANSIT={'تشاد':'بحراً إلى دوالا، ثم بالشاحنات إلى نجامينا','إثيوبيا':'بحراً إلى جيبوتي، ثم بالشاحنات إلى أديس أبابا','جنوب السودان':'بحراً إلى مومباسا، ثم بالشاحنات عبر أوغندا إلى جوبا','أوغندا':'بحراً إلى مومباسا، ثم بالشاحنات إلى كمبالا','رواندا':'بحراً إلى دار السلام أو مومباسا، ثم بالشاحنات إلى كيغالي','بوروندي':'بحراً إلى دار السلام، ثم بالشاحنات إلى بوجومبورا','أفريقيا الوسطى':'بحراً إلى دوالا، ثم بالشاحنات إلى بانغي','مالي':'بحراً إلى داكار أو أبيدجان، ثم بالشاحنات إلى باماكو','بوركينا فاسو':'بحراً إلى أبيدجان أو لومي، ثم بالشاحنات إلى واغادوغو','النيجر':'بحراً إلى كوتونو أو لومي، ثم بالشاحنات إلى نيامي','زامبيا':'بحراً إلى دار السلام أو ديربان، ثم بالشاحنات إلى لوساكا','زيمبابوي':'بحراً إلى بيرا أو ديربان، ثم بالشاحنات إلى هراري','ملاوي':'بحراً إلى ناكالا أو بيرا، ثم بالشاحنات إلى ليلونغوي','بوتسوانا':'بحراً إلى ديربان أو والفيس باي، ثم بالشاحنات إلى غابورون','ليسوتو':'بحراً إلى ديربان، ثم بالشاحنات إلى ماسيرو','إسواتيني':'بحراً إلى مابوتو أو ديربان، ثم بالشاحنات إلى مبابان','فلسطين':'بحراً إلى العقبة، ثم بالشاحنات عبر جسر الملك حسين'};
+// Tapping the empty field lists every country by region, so nobody has to type to find theirs.
+const REG=[['الخليج والشرق الأوسط',['السعودية','الإمارات','الكويت','قطر','البحرين','عُمان','اليمن','الأردن','العراق','سوريا','لبنان','فلسطين','تركيا']],['شمال أفريقيا',['مصر','السودان','ليبيا','تونس','الجزائر','المغرب','موريتانيا']],['شرق أفريقيا',['إثيوبيا','إريتريا','جيبوتي','الصومال','كينيا','تنزانيا','أوغندا','رواندا','بوروندي','جنوب السودان','جزر القمر','سيشل','مدغشقر','موريشيوس']],['غرب أفريقيا',['نيجيريا','غانا','ساحل العاج','السنغال','غينيا','غينيا بيساو','غامبيا','سيراليون','ليبيريا','توغو','بنين','مالي','بوركينا فاسو','النيجر','الرأس الأخضر']],['وسط أفريقيا',['تشاد','الكاميرون','أفريقيا الوسطى','الغابون','غينيا الاستوائية','الكونغو','الكونغو الديمقراطية','ساو تومي وبرينسيب','أنغولا']],['جنوب أفريقيا',['جنوب أفريقيا','ناميبيا','موزمبيق','زامبيا','زيمبابوي','ملاوي','بوتسوانا','ليسوتو','إسواتيني']]];
+function dBrowse(){
+  const out=[];let last=null;try{last=JSON.parse(localStorage.getItem(LAST_KEY))}catch{}
+  if(last&&last.c)out.push({h:'آخر وجهة استخدمتها'},{c:last.c,p:last.p||''});
+  if(guessC&&!(last&&last.c===guessC))out.push({c:guessC,p:'',b:1});
+  REG.forEach(([h,cs])=>{out.push({h});cs.forEach(c=>out.push({c,p:'',b:1}))});
+  return out;
+}
+const dTag=c=>Object.prototype.hasOwnProperty.call(LAND,c)?'بحراً أو براً':Object.prototype.hasOwnProperty.call(TRANSIT,c)?'بحراً ثم براً':'';
+// A country picked from the full list: with one port it is chosen at once; with several ports (or a
+// land route) its ports open, starting with "any port".
+const dPick0=dPick;
+dPick=function(o){
+  if(o&&o.b){const ports=DEST.filter(d=>d[1]===o.c);
+    if(ports.length>1||Object.prototype.hasOwnProperty.call(LAND,o.c)){dQ.value=o.c;dAct=-1;dSync();dQ.focus();dOpen();dL.scrollTop=0;return}
+    return dPick0({c:o.c,p:ports.length===1?ports[0][0]:''})}
+  return dPick0(o);
+};
+function landUpdate(){
+  const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
+  const tr=!via&&Object.prototype.hasOwnProperty.call(TRANSIT,c);
+  $('#modeRow').hidden=!via&&!tr;$('#modeL').hidden=$('#modeRow .seg').hidden=!via;
+  if(!via&&S.mode!=='sea')setSeg('mode','sea');
+  $('#landNote').textContent=via?'براً عبر '+via+' · الشاحنة ≈ '+TRUCK_T+' طن':Object.prototype.hasOwnProperty.call(TRANSIT,c)?'الشحن '+TRANSIT[c]+'.':'';
+}
+function modeApply(){
+  const land=S.mode==='land';
+  $$('#rfq .seaopt').forEach(b=>b.hidden=land);$$('#rfq .landopt').forEach(b=>b.hidden=!land);
+  if(land&&!['DAP','FCA'].includes(S.incoterm))setSeg('incoterm','DAP');
+  if(!land&&['DAP','FCA'].includes(S.incoterm))setSeg('incoterm','CIF');
+  $('#qtyU').textContent=land?'شاحنة':'حاوية';qty.setAttribute('aria-label',land?'عدد الشاحنات':'عدد الحاويات');
+  $('#qtyHint').textContent=land?'الشاحنة ≈ '+TRUCK_T+' طن':'';
+  tierUpdate();
+}
 function setDest(c,p,keepText){
   dest.value=c||'';port.value=p||'';
   if(!keepText)dQ.value=destLabel();
-  dSync();
+  dSync();landUpdate();
 }
 function dPick(o){
   setDest(o.c,o.p);dClose();$('#destPick').classList.remove('bad');$('#destErr').textContent='';
@@ -1170,25 +1387,25 @@ $('#presets').innerHTML=[1,5,10,20,50].map(n=>`<button type="button" data-act="q
 function openRfq(id,trigger){
   S.selected=PRODUCTS.find(p=>p.id===id)||null; if(!S.selected) return;
   const p=S.selected;
-  $('#pbox').innerHTML=`<div class="pthumb" aria-hidden="true">${art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:''}<strong>${esc(p.name)}</strong><div class="pmeta">${[p.type,p.pack,p.size].filter(Boolean).map(v=>`<span>${esc(v)}</span>`).join('')}<span class="sku">${esc(p.sku)}</span></div></div>`;
+  $('#pbox').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?' photo':''}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:''}<strong>${esc(p.name)} · ${esc(p.size||'')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join('')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:''}</div>`;qty.dataset.tpc=p.tpc||'';
   try{$('#rfqCo').value=localStorage.getItem('septlion.company')||''}catch{$('#rfqCo').value=''}$('#rfqNote').value='';
   qty.value=1; $$('#rfq details.opt:not(.lv)').forEach(d=>d.open=false);if($('#rfqCo').value)$('#noteD').open=true;dClose();$('#destPick').classList.remove('bad');$('#destErr').textContent='';setDest('','');
   setSeg('incoterm','CIF'); setSeg('payment','LC — اعتماد مستندي'); tierUpdate();
   open($('#rfq'),trigger);
 }
-const TERMS={CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',FOB:'<b>FOB</b> — التسليم على ظهر السفينة في ميناء الشحن، والشحن على المشتري.'};
-const PAYS={LC:'<b>LC</b> — اعتماد مستندي عبر البنك.',TT:'<b>TT</b> — تحويل بنكي مباشر.'};
+const TERMS={DAP:'<b>DAP</b> — نسلّم بالشاحنات عند المنفذ الحدودي، والتخليص على المشتري.',FCA:'<b>FCA</b> — تستلم البضاعة محمّلة على شاحنتك من المطحن في مصر.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',FOB:'<b>FOB</b> — التسليم على ظهر السفينة في ميناء الشحن، والشحن على المشتري.'};
+const PAYS={LC:'<b>LC</b> — اعتماد مستندي يغطي القيمة كاملة قبل الشحن.',TT:'<b>TT</b> — تحويل بنكي للقيمة كاملة قبل الشحن.'};
 function rfqSum(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   $('#termSum').textContent=`${S.incoterm||''} · ${(S.payment||'').split(' ')[0]}`;
-  $('#termHelp').innerHTML=`<span style="display:block">${TERMS[S.incoterm]||''}</span><span style="display:block">${PAYS[(S.payment||'').split(' ')[0]]||''}</span>`;
+  $('#termHelp').innerHTML=TERMS[S.incoterm]||'';$('#payHelp').innerHTML=PAYS[(S.payment||'').split(' ')[0]]||'';
   $$('#presets button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===n)));
 }
-function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum()}
-const CONTACT={wa:'201070088181',mail:'info@septlion.com',tel:'+20 107 008 8181'};
+function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum();if(key==='mode')modeApply();else if(key==='incoterm')tierUpdate()}
+const CONTACT={wa:'249123667759',mail:'info@septlion.com',tel:'+249 123 667 759'};
 function reqText(x){
   const L=['طلب عرض سعر — سبتليون',`رقم الطلب: ${x.id}`];
-  if(x.kind==='sku'){L.push(`الصنف: ${x.title}`);if(x.description)L.push(`الوصف: ${x.description}`);L.push(`الكمية: ${x.qty} حاوية`,`الوجهة: ${x.dest}${x.port?' — '+x.port:''}`,`التسليم: ${x.incoterm}`,`الدفع: ${x.payment}`);if(x.company)L.push(`الشركة: ${x.company}`);if(x.note)L.push(`ملاحظات: ${x.note}`)}
+  if(x.kind==='sku'){L.push(`الصنف: ${x.title}`);if(x.description)L.push(`الوصف: ${x.description}`);L.push(`الكمية: ${x.qty} ${x.mode==='land'?'شاحنة (≈ 62.5 طن للشاحنة)':'حاوية'}`,`الشحن: ${x.mode==='land'?'بري':'بحري'}`,`الوجهة: ${x.dest}${x.port?' — '+x.port:''}`,`التسليم: ${x.incoterm}`,`الدفع: ${x.payment}`);if(x.company)L.push(`الشركة: ${x.company}`);if(x.note)L.push(`ملاحظات: ${x.note}`)}
   else{L.push(`الاحتياج: ${x.description}`);if(x.quantity)L.push(`الكمية: ${x.quantity}`);if(x.destination)L.push(`الوجهة: ${x.destination}`);if(x.terms)L.push(`شروط أخرى: ${x.terms}`);if(x.phone)L.push(`واتساب العميل: ${x.phone}`)}
   return L.join('\n');
 }
@@ -1204,7 +1421,7 @@ function submitRfq(){
   if(!dest.value){$('#destPick').classList.add('bad');$('#destErr').textContent='اكتب وجهة التسليم أو اخترها من الاقتراحات.';dQ.focus();return}
   if(!Number.isSafeInteger(n)||n<1){qty.focus();toast('يرجى تحديد عدد صحيح من الحاويات.');return}
   const list=store.get(REQ_KEY,[]);
-  const x={id:'RFQ-'+Date.now().toString().slice(-7),kind:'sku',productId:p?p.id:'',title:p?`${p.name} — ${p.size}`:'احتياج جديد',description:p?p.desc:'',dest:dest.value,port:port.value,qty:n,incoterm:S.incoterm,payment:S.payment,company:$('#rfqCo').value.trim(),note:$('#rfqNote').value.trim(),evaluation:'pending',sent:false,createdAt:new Date().toISOString()};
+  const x={id:'RFQ-'+Date.now().toString().slice(-7),kind:'sku',productId:p?p.id:'',title:p?`${p.name} — ${p.size}`:'احتياج جديد',description:p?p.desc:'',dest:dest.value,port:port.value,qty:n,mode:S.mode==='land'?'land':'sea',incoterm:S.incoterm,payment:S.payment,company:$('#rfqCo').value.trim(),note:$('#rfqNote').value.trim(),evaluation:'pending',sent:false,createdAt:new Date().toISOString()};
   try{x.company?localStorage.setItem('septlion.company',x.company):localStorage.removeItem('septlion.company')}catch{}
   list.unshift(x);
   store.set(REQ_KEY,list); closeSheets(true);
@@ -1217,9 +1434,9 @@ const stLabel=(x,st)=>x.demo||x.sent||x.evaluation!=='pending'?st.label:'محف�
 function renderOrders(){
   const list=store.get(REQ_KEY,[]);
   $('#ordersEmpty').hidden=list.length>0;
-  $('#orderList').innerHTML=list.length?`<p class="hint" style="margin:16px 2px 10px">طلباتك محفوظة على هذا الجهاز. يصلنا الطلب بعد تأكيد بريدك.</p>`+list.map(x=>{
+  $('#orderList').innerHTML=list.length?`<p class="hint" style="margin:16px 2px 10px">طلباتك محفوظة على هذا الجهاز. يصلنا الطلب فور إرساله، ونرد عليك عبر واتساب.</p>`+list.map(x=>{
     const st=STATUS[x.evaluation]||STATUS.pending;
-    const meta=x.kind==='sku'?`${esc(x.dest)}${x.port?' · '+esc(x.port):''} · ${esc(x.qty)} حاوية · ${esc(x.incoterm)}`:esc(x.description);
+    const meta=x.kind==='sku'?`${esc(x.dest)}${x.port?' · '+esc(x.port):''} · ${esc(x.qty)} ${x.mode==='land'?'شاحنة':'حاوية'} · ${esc(x.incoterm)}`:esc(x.description);
     return `<article class="card"><div class="card-head"><strong>${esc(x.title||x.id)}</strong><span class="latin" style="font-size:10px;color:var(--sky);letter-spacing:.06em">${esc(x.id)}</span></div><p>${meta}</p><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span>${x.sent?'':reqBtns(x)}<button class="btn btn-ghost" style="margin-top:8px" data-act="track" data-id="${esc(x.id)}">عرض حالة الطلب <span class="arrow">←</span></button></article>`}).join(''):'';
 }
 function renderTrack(){
@@ -1292,7 +1509,7 @@ $('#needForm').addEventListener('submit',e=>{
   list.unshift(x);
   store.set(REQ_KEY,list);
   e.target.reset(); S.needText=''; stage='start';topic='';extra='';
-  $('#doneBox').innerHTML=`<div class="mk">✓</div><h1>طلبك محفوظ.</h1><p>أكّد بريدك ليصل الطلب إلى فريق سبتليون.</p>${reqBtns(x)}<button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>`;
+  $('#doneBox').innerHTML=`<div class="mk">✓</div><h1>طلبك محفوظ.</h1><p>أكمل اسمك ورقم واتساب ليصل الطلب إلى فريق سبتليون.</p>${reqBtns(x)}<button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>`;
   go('needDone'); SeptlionBridge.submit(x);
 });
 
@@ -1314,7 +1531,7 @@ document.addEventListener('click',e=>{
     case 'brand': S.brand=a.dataset.v;renderFeed();break;
     case 'clear-q': S.q='';$('#q').value='';if(!a.closest('#subrail'))$('#q').focus();renderFeed();break;
     case 'close-suggest': $('#q').blur();break;
-    case 'zoom':{const p=PRODUCTS.find(x=>x.id===a.dataset.id);if(!p)break;const host=a.closest('.visual'),g0=host&&host.querySelector('.gallery'),idx=g0?Math.round(Math.abs(g0.scrollLeft)/Math.max(1,g0.clientWidth)):0;zoomFrom=a;$('#zoomBox').innerHTML=galleryHTML(p);$('#zoomCap').innerHTML=`<strong>${esc(p.name)} · ${esc(p.size)}</strong><span>${esc(fieldsOf(p).map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span><span>السعر: ${esc(p.price||'حسب عرض السعر')} · MOQ والتوريد: حسب عرض السعر</span>`;$('#zoom').hidden=false;const g=$('#zoomBox .gallery');g.scrollTo({left:(getComputedStyle(g).direction==='rtl'?-1:1)*idx*g.clientWidth,behavior:'instant'});syncGallery(g);$('#zoom .x').focus({preventScroll:true});break}
+    case 'zoom':{const p=PRODUCTS.find(x=>x.id===a.dataset.id);if(!p)break;const host=a.closest('.visual'),g0=host&&host.querySelector('.gallery'),idx=g0?Math.round(Math.abs(g0.scrollLeft)/Math.max(1,g0.clientWidth)):0;zoomFrom=a;$('#zoomBox').innerHTML=galleryHTML(p);$('#zoomCap').innerHTML=`<strong>${esc(p.name)} · ${esc(p.size)}</strong>${zoomSpec(p)}<span>السعر: ${esc(p.price||'حسب الطلب')}${fieldsOf(p).some(f=>f.zl==='أقل طلب')?'':' · MOQ والتوريد: حسب الطلب'}</span>`;$('#zoom').hidden=false;const g=$('#zoomBox .gallery');g.scrollTo({left:(getComputedStyle(g).direction==='rtl'?-1:1)*idx*g.clientWidth,behavior:'instant'});syncGallery(g);$('#zoom .x').focus({preventScroll:true});break}
     case 'gnav':{const g=a.closest('.visual').querySelector('.gallery'),sg=getComputedStyle(g).direction==='rtl'?-1:1;g.scrollBy({left:sg*Number(a.dataset.d)*g.clientWidth,behavior:'smooth'});break}
     case 'close-zoom': closeZoom();break;
     case 'sort': S.sort=a.dataset.v;renderFeed();break;
@@ -1368,7 +1585,7 @@ function normalize(d){
     const p={id,name:str(r.name),cat:str(r.sector||r.cat)||'عام',sub:str(r.sub)||'عام',type,brand:brand||NO_BRAND,pack,size,price:str(r.price),
       art:(r.art==='sack'||r.art==='bottle')?r.art:'none',short:str(r.short),tag:str(r.tag),kw:str(r.kw),
       imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean).map(u=>/^(https?:|\/|data:)/.test(u)?u:'/new-app/'+u),
-      fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v)})).filter(f=>f.v)};
+      tpc:Number(r.tpc)>0?Number(r.tpc):0,fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false),card:!(f&&f.card===false),wide:!!(f&&f.wide)})).filter(f=>f.v)};
     p.desc=[type,[pack,size].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
     p.sku=str(r.sku)||id.toUpperCase();
     return p}).filter(Boolean);
@@ -1381,6 +1598,7 @@ function applyData(d){
   renderFeed();
 }
 async function loadCatalog(){
+  try{const d=await SeptlionBridge.platformCatalog();if(d){store.set(CATALOG_KEY,d);return d}}catch{}
   try{
     const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);
     const r=await fetch(new URL('/new-app/data/products.json',location.href),{cache:'no-cache',signal:c.signal});clearTimeout(t);

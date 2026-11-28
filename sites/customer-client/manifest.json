@@ -8,11 +8,11 @@
     },
     {
       "path": "index.html",
-      "sha256": "7b6ff0ae995542c9e5972ede367f69a4d2fe3c897ab9b847cd325e723f12d23d"
+      "sha256": "4b9aeed3c0a047fd5abf14cfcfaa6ffbf46ad8b8c955d0673673fd6ef44035e3"
     },
     {
       "path": "septlion-bridge.js",
-      "sha256": "50d6a54c98084562ace27dd4341d8e2f4f0f16e845b0daa8570c1ee99adfbccc"
+      "sha256": "aefaf1768298c80c7e6969935bd9af53405d03bfd44020a3fae2c7a0421d6fc0"
     },
     {
       "path": "sw.js",

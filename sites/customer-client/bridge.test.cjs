@@ -100,3 +100,65 @@ test('phone numbers are grouped, checked and joined', () => {
   const i = B.buildInput({ id: 'RFQ-5', kind: 'sku', title: 'x', dest: 'مصر', qty: 1 }, { ...contact, whatsapp: B.joinPhone('QA', '5512 3456') }, {}, null);
   assert.equal(i.buyer.whatsapp, '97455123456');
 });
+
+test('home page cards come from the team panel catalog', () => {
+  const items = [
+    { id: 'prod-zollana-asasi', name: 'زولانا أساسي', description: 'دقيق القمح متعدد الاستخدامات', sector: { id: 'sector-food', name: 'الأغذية' },
+      skus: [
+        { id: 'sku-asasi-50', name: 'زولانا أساسي 50 كجم', skuCode: 'ZOL-ASASI-50', specifications: { packing: 'شوال منسوج 50 كجم', container: '20 قدماً', perContainer: 'نحو 450 شوالاً' },
+          media: [{ url: 'https://www.septlion.com/new-app/uploads/b.webp', type: 'IMAGE', sortOrder: 1 }, { url: 'https://www.septlion.com/new-app/uploads/a.webp', type: 'IMAGE', sortOrder: 0 }, { url: 'http://x/c.webp', type: 'IMAGE', sortOrder: 2 }] },
+      ] },
+    { id: 'prod-new-rice', name: 'أرز', sector: { name: 'الأغذية' }, skus: [{ id: 'rice-5kg', name: 'أرز 5 كجم', specifications: { packing: 'كيس 5 كجم', sub: 'أرز' } }] },
+    { id: 'empty', name: '', skus: [] },
+  ];
+  const d = B.fromPlatform(items);
+  assert.deepEqual(d.sectors, [{ name: 'الأغذية', subs: ['الأغذية', 'أرز'] }]);
+  assert.equal(d.products.length, 2);
+  const [a, r] = d.products;
+  assert.equal(a.id, 'asasi50');
+  assert.equal(a.name, 'زولانا أساسي');
+  assert.equal(a.size, '50 كجم');
+  assert.equal(a.pack, 'شوال منسوج');
+  assert.deepEqual(a.imgs, ['https://www.septlion.com/new-app/uploads/a.webp', 'https://www.septlion.com/new-app/uploads/b.webp']);
+  assert.deepEqual(a.fields.map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً · 22.5 طن', 'نحو 450 شوالاً', 'شوال منسوج', '50 كجم']);
+  // On the card: the unit, then the minimum load on its own line; the rest is for the enlarged view.
+  assert.deepEqual(a.fields.filter(f => f.card !== false).map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً · 22.5 طن']);
+  assert.equal(a.fields[1].wide, true);
+  // 450 bags of 50 kg: 22.5 tons per container, for the quote sheet's tonnage.
+  assert.equal(a.tpc, 22.5);
+  assert.equal(r.tpc, 0);
+  assert.deepEqual(B.catalogRef('asasi50'), { productId: 'prod-zollana-asasi', skuId: 'sku-asasi-50' });
+  assert.equal(r.id, 'rice-5kg');
+  assert.deepEqual(B.catalogRef('rice-5kg'), { productId: 'prod-new-rice', skuId: 'rice-5kg' });
+  assert.deepEqual(B.fromPlatform(null), { version: 'platform', sectors: [], products: [] });
+});
+
+test('quality facts come first on the card', () => {
+  const d = B.fromPlatform([{ id: 'p', name: 'زولانا خبازو', sector: { name: 'الأغذية' }, skus: [{ id: 'sku-khabbazo-50', name: 'زولانا خبازو 50 كجم',
+    specifications: { packing: 'شوال منسوج 50 كجم', protein: '12%', moisture: 'حتى 14%', origin: 'مصر', certificates: 'حلال · FSSC 22000 · ISO 22000', payment: 'كاملاً قبل الشحن بتحويل مقدم أو اعتماد مستندي', gluten: '26 – 28%', ash: '0.60 – 0.65%', extraction: '72%', container: '20 قدماً', delivery: 'FOB مصر أو CIF ميناؤك' } }] }]);
+  const fs = d.products[0].fields;
+  assert.deepEqual(fs.slice(0, 7).map(f => f.v),
+    ['بروتين 12%', 'منشأ مصر', 'حلال · FSSC', 'شوال 50 كجم', 'FOB أو CIF', 'الدفع قبل الشحن', 'أقل طلب: حاوية 20 قدماً']);
+  assert.equal(fs[4].zv, 'FOB مصر أو CIF ميناؤك');
+  assert.equal(fs[5].zv, 'كاملاً قبل الشحن بتحويل مقدم أو اعتماد مستندي');
+  assert.equal(fs[6].wide, true);
+  // In the enlarged view the packing and size are listed apart, and the short unit is hidden.
+  assert.equal(fs[3].zoom, false);
+  assert.deepEqual(fs.slice(-2).map(f => f.v), ['شوال منسوج', '50 كجم']);
+});
+
+test('any product gets the same card: its own grade, MOQ and specs', () => {
+  const d = B.fromPlatform([{ id: 'prod-sugar', name: 'سكر أبيض', sector: { name: 'الأغذية' }, skus: [{ id: 'sku-sugar-50', name: 'سكر أبيض 50 كجم', unit: 'MT', minimumOrderQty: 25,
+    specifications: { packing: 'شوال 50 كجم', grade: 'ICUMSA 45', origin: 'البرازيل', certificates: 'حلال', delivery: 'CIF', payment: 'مقدماً', 'الاستقطاب': '99.8%', 'الرطوبة القصوى': '0.04%' } }] }]);
+  const fs = d.products[0].fields;
+  assert.deepEqual(fs.filter(f => f.card !== false).slice(0, 7).map(f => f.v),
+    ['ICUMSA 45', 'منشأ البرازيل', 'حلال', 'شوال 50 كجم', 'CIF', 'الدفع مقدماً', 'أقل طلب: 25 طن']);
+  assert.deepEqual(fs.filter(f => f.zl === 'الاستقطاب' || f.zl === 'الرطوبة القصوى').map(f => f.zv), ['99.8%', '0.04%']);
+});
+
+test('sea and land delivery reads "بحر أو بر" on the card', () => {
+  const d = B.fromPlatform([{ id: 'p', name: 'دقيق', skus: [{ id: 'sku-x-50', name: 'دقيق 50 كجم', specifications: { packing: 'شوال 50 كجم', delivery: 'FOB مصر أو CIF ميناؤك أو DAP براً' } }] }]);
+  const f = d.products[0].fields.find(x => x.zl === 'التسليم');
+  assert.equal(f.v, 'بحر أو بر');
+  assert.equal(f.zv, 'FOB مصر أو CIF ميناؤك أو DAP براً');
+});

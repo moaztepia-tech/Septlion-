@@ -92,7 +92,7 @@ test('each market page states how cargo gets there: sea, road, or sea then road'
  for(const slug of Object.keys(SHIPPING)) assert.ok(MARKETS.some(m=>m.slug===slug),slug);
  const pages=allMarketPages(products);
  const by=u=>pages.find(p=>p.url==='https://www.septlion.com/markets/'+u).html;
- assert.ok(by('sudan/').includes('بحراً إلى بورتسودان') && by('sudan/').includes('حدربة'));
+ assert.ok(by('sudan/').includes('بحراً إلى بورتسودان') && by('sudan/').includes('أشكيت وأوسيف'));
  assert.ok(by('saudi-arabia/').includes('سفاجا–ضبا'));
  assert.ok(by('qatar/').includes('سلوى'));
  assert.ok(by('mali/').includes('puis par camion jusqu'));

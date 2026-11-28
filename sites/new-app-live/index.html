@@ -670,7 +670,7 @@ details.opt.lv>:not(summary){margin-inline:0}
   <div class="commit"><div class="mk">◈</div><div><span>OUR COMMITMENT</span><strong>أكثر من مجرد العثور على مورد.</strong><p>تعمل SEPTLION طرفًا تجاريًا مسؤولًا ضمن نطاق الاتفاق، وتنسّق التوريد والعلامات والخدمات اللوجستية.</p></div></div>
   <div class="signoff"><span class="lg lg-v" role="img" aria-label="سبتليون Septlion"><svg viewBox="109.5 80.9 860.6 727.6" aria-hidden="true"><use href="#lg-v"/></svg></span><p class="slogan">أتقن الخطوات، قصّر المسافات</p><small>MASTER STEPS. SHORTEN DISTANCES.</small></div>
   <section class="contact" aria-labelledby="ctH"><h3 id="ctH">تواصل مع فريق سبتليون</h3><p>للاستفسار عن منتج أو متابعة طلب قائم.</p>
-    <a class="cbtn pri wa" href="https://wa.me/201070088181" target="_blank" rel="noopener"><span class="ci"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 18.8z"/><path d="M9.3 8.8c.2 2.6 3.1 5.4 5.9 5.9l1-1.3-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2z"/></svg></span><span class="ct"><small>واتساب</small><b class="ltr" dir="ltr">+20 107 008 8181</b></span><span class="go" aria-hidden="true">←</span></a>
+    <a class="cbtn pri wa" href="https://wa.me/249123667759" target="_blank" rel="noopener"><span class="ci"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 18.8z"/><path d="M9.3 8.8c.2 2.6 3.1 5.4 5.9 5.9l1-1.3-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2z"/></svg></span><span class="ct"><small>واتساب</small><b class="ltr" dir="ltr">+249 123 667 759</b></span><span class="go" aria-hidden="true">←</span></a>
     <a class="cbtn ml" href="mailto:info@septlion.com"><span class="ci"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7.5 8 6 8-6"/></svg></span><span class="ct"><small>البريد الإلكتروني</small><b class="ltr" dir="ltr">info@septlion.com</b></span><span class="go" aria-hidden="true">←</span></a>
     <button class="copy" type="button" data-act="copy" data-v="info@septlion.com">نسخ البريد الإلكتروني</button>
   </section>
@@ -1159,7 +1159,7 @@ function rfqSum(){
   $$('#presets button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===n)));
 }
 function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum()}
-const CONTACT={wa:'201070088181',mail:'info@septlion.com',tel:'+20 107 008 8181'};
+const CONTACT={wa:'249123667759',mail:'info@septlion.com',tel:'+249 123 667 759'};
 function reqText(x){
   const L=['طلب عرض سعر — سبتليون',`رقم الطلب: ${x.id}`];
   if(x.kind==='sku'){L.push(`الصنف: ${x.title}`);if(x.description)L.push(`الوصف: ${x.description}`);L.push(`الكمية: ${x.qty} حاوية`,`الوجهة: ${x.dest}${x.port?' — '+x.port:''}`,`التسليم: ${x.incoterm}`,`الدفع: ${x.payment}`);if(x.company)L.push(`الشركة: ${x.company}`);if(x.note)L.push(`ملاحظات: ${x.note}`)}
