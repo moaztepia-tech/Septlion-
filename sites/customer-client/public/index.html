@@ -936,7 +936,7 @@ function art(p){
 const rows=r=>r.map(([k,v])=>`<div class="fact"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
 // عرض حقائق موثّقة فقط — لا أسعار ولا أرقام تقديرية
 const productRows=p=>[['النوع',p.type],['التعبئة',p.pack]];
-const tradeRows=()=>[['السعر','حسب العرض'],['MOQ','يُحدد في العرض'],['التوريد','حسب الطلب']];
+const tradeRows=()=>[['السعر','حسب الطلب'],['MOQ','يُحدد في العرض'],['التوريد','حسب الطلب']];
 
 /* ============ اكتشف ============ */
 let hyd,io=null;
@@ -1015,7 +1015,7 @@ function slideHTML(p,i,arr,lazy){const n=arr?arr.length:0,hasB=p.brand!==NO_BRAN
   const dots=n>1&&n<=8?`<span class="vdots" aria-hidden="true">${arr.map((_,k)=>`<i${k===i?' class="on"':''}></i>`).join('')}</span>`:'';
   if(lazy)return `<article class="slide" data-id="${esc(p.id)}" data-i="${i}" data-lazy aria-label="${esc(p.name)} ${esc(p.size)}"></article>`;
   return `<article class="slide" data-id="${esc(p.id)}" aria-label="${esc(p.name)} ${esc(p.size)}"><div class="pc">
-    <header class="pc-head"><div class="pc-title"><h2>${esc(p.name)}</h2><span class="pc-price${p.price?' has':''}"><small>السعر</small><b dir="auto">${esc(p.price||'حسب العرض')}</b></span></div>
+    <header class="pc-head"><div class="pc-title"><h2>${esc(p.name)}</h2><span class="pc-price${p.price?' has':''}"><small>السعر</small><b dir="auto">${esc(p.price||'حسب الطلب')}</b></span></div>
     ${fieldsHTML(p)}</header>
     <div class="visual" data-act="zoom" data-id="${esc(p.id)}">${galleryHTML(p)}${dots}${multi?'<button class="garr prev" data-act="gnav" data-d="-1" aria-label="الصورة السابقة">›</button><button class="garr next" data-act="gnav" data-d="1" aria-label="الصورة التالية">‹</button>':''}<button class="vzoom" data-act="zoom" data-id="${esc(p.id)}" aria-label="تكبير صور ${esc(p.name)} ${esc(p.size)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button></div>
     <button class="btn btn-primary" data-act="request" data-id="${esc(p.id)}">اطلب هذا الصنف <span class="arrow">←</span></button></div></article>`}
@@ -1372,7 +1372,7 @@ document.addEventListener('click',e=>{
     case 'brand': S.brand=a.dataset.v;renderFeed();break;
     case 'clear-q': S.q='';$('#q').value='';if(!a.closest('#subrail'))$('#q').focus();renderFeed();break;
     case 'close-suggest': $('#q').blur();break;
-    case 'zoom':{const p=PRODUCTS.find(x=>x.id===a.dataset.id);if(!p)break;const host=a.closest('.visual'),g0=host&&host.querySelector('.gallery'),idx=g0?Math.round(Math.abs(g0.scrollLeft)/Math.max(1,g0.clientWidth)):0;zoomFrom=a;$('#zoomBox').innerHTML=galleryHTML(p);$('#zoomCap').innerHTML=`<strong>${esc(p.name)} · ${esc(p.size)}</strong>${zoomSpec(p)}<span>السعر: ${esc(p.price||'حسب عرض السعر')}${fieldsOf(p).some(f=>f.zl==='أقل طلب')?'':' · MOQ والتوريد: حسب عرض السعر'}</span>`;$('#zoom').hidden=false;const g=$('#zoomBox .gallery');g.scrollTo({left:(getComputedStyle(g).direction==='rtl'?-1:1)*idx*g.clientWidth,behavior:'instant'});syncGallery(g);$('#zoom .x').focus({preventScroll:true});break}
+    case 'zoom':{const p=PRODUCTS.find(x=>x.id===a.dataset.id);if(!p)break;const host=a.closest('.visual'),g0=host&&host.querySelector('.gallery'),idx=g0?Math.round(Math.abs(g0.scrollLeft)/Math.max(1,g0.clientWidth)):0;zoomFrom=a;$('#zoomBox').innerHTML=galleryHTML(p);$('#zoomCap').innerHTML=`<strong>${esc(p.name)} · ${esc(p.size)}</strong>${zoomSpec(p)}<span>السعر: ${esc(p.price||'حسب الطلب')}${fieldsOf(p).some(f=>f.zl==='أقل طلب')?'':' · MOQ والتوريد: حسب الطلب'}</span>`;$('#zoom').hidden=false;const g=$('#zoomBox .gallery');g.scrollTo({left:(getComputedStyle(g).direction==='rtl'?-1:1)*idx*g.clientWidth,behavior:'instant'});syncGallery(g);$('#zoom .x').focus({preventScroll:true});break}
     case 'gnav':{const g=a.closest('.visual').querySelector('.gallery'),sg=getComputedStyle(g).direction==='rtl'?-1:1;g.scrollBy({left:sg*Number(a.dataset.d)*g.clientWidth,behavior:'smooth'});break}
     case 'close-zoom': closeZoom();break;
     case 'sort': S.sort=a.dataset.v;renderFeed();break;

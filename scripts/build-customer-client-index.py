@@ -33,7 +33,7 @@ one("imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean)",
 # Enlarged card (founder, 2026-11-27): the full specification as a short list in three groups
 # (quality, packing and shipping, origin and certificates) instead of one run-on line.
 one("<span>${esc(fieldsOf(p).map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span><span>السعر: ${esc(p.price||'حسب عرض السعر')} · MOQ والتوريد: حسب عرض السعر</span>",
-    "${zoomSpec(p)}<span>السعر: ${esc(p.price||'حسب عرض السعر')}${fieldsOf(p).some(f=>f.zl==='أقل طلب')?'':' · MOQ والتوريد: حسب عرض السعر'}</span>")
+    "${zoomSpec(p)}<span>السعر: ${esc(p.price||'حسب الطلب')}${fieldsOf(p).some(f=>f.zl==='أقل طلب')?'':' · MOQ والتوريد: حسب الطلب'}</span>")
 one("function fieldsOf(p){", """const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','المنشأ والشهادات']],ZKEY=['البروتين','الرطوبة','الجلوتين الرطب'];
 function zoomSpec(p){
   const fs=fieldsOf(p).filter(f=>f.zoom!==false);
@@ -164,6 +164,9 @@ one("const ico=k=>", """Object.assign(ICONS,{
 const ico=k=>""")
 # Card facts: hide enlarged-only details and give the minimum load its own full line.
 one('const fieldsHTML=p=>{const f=fieldsOf(p).slice(0,6),cols=Math.max(1,Math.ceil(f.length/2));return `<ul class="fields" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li title="${esc(x.l||\'\')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||\'\')}: </span><span class="v${/^[A-Za-z0-9 .\\-\\/]+$/.test(x.v)?\' lat\':\'\'}" dir="auto">${esc(x.v)}</span></li>`).join(\'\')}</ul>`};', 'const fieldsHTML=p=>{const a=fieldsOf(p).filter(x=>x.card!==false),w=a.filter(x=>x.wide).slice(0,1),f=a.filter(x=>!x.wide).slice(0,6).concat(w),cols=Math.max(1,Math.ceil((f.length-w.length)/2));return `<ul class="fields${w.length?\' w3\':\'\'}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${f.map(x=>`<li${x.wide?\' class="wide"\':\'\'} title="${esc(x.l||\'\')}">${ico(x.ic)}<span class="sr-only">${esc(x.l||\'\')}: </span><span class="v${/^[A-Za-z0-9 .\\-\\/]+$/.test(x.v)?\' lat\':\'\'}" dir="auto">${esc(x.v)}</span></li>`).join(\'\')}</ul>`};')
+# Price wording: the price depends on the buyer's quantity, port and terms, so "حسب الطلب".
+every("esc(p.price||'حسب العرض')", "esc(p.price||'حسب الطلب')", 1)
+one("['السعر','حسب العرض']", "['السعر','حسب الطلب']")
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n
