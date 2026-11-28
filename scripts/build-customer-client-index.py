@@ -68,7 +68,27 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .zspec dt{font-size:11px;color:#9db3d6}
 .zspec dd{margin:0;font-size:13px;font-weight:700;color:#f2f6fd;overflow-wrap:anywhere}
 .zchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px!important}
-.zchips i{font-style:normal;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#ffffff14;border:1px solid #ffffff24}""")
+.zchips i{font-style:normal;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#ffffff14;border:1px solid #ffffff24}
+/* Enlarged view as a spec sheet: a shorter photo, the name on top, the sheet scrolling on
+   its own, and the price fixed at the bottom. Each section is one card of label/value rows. */
+.zoom:has(.zspec){grid-template-rows:minmax(0,38vh) minmax(0,1fr);gap:12px;place-items:stretch;padding-top:52px}
+.zoom:has(.zspec) .zoombox{justify-self:center;width:min(100%,520px)}
+.zoom:has(.zspec) .zoomcap{grid-template-rows:auto minmax(0,1fr) auto;min-height:0;gap:8px;justify-self:center;width:min(100%,520px)}
+.zoom .zspec{max-height:none;min-height:0;overflow:auto;gap:10px;width:100%;margin:0;padding:0 0 2px;border:0;border-radius:0;background:none;overscroll-behavior:contain}
+.zoom:has(.zspec) .zoombox .gslide{padding:4px 0 22px}
+.zspec .ztiles b.zlong{font-size:12.5px;white-space:nowrap}
+.zspec section{padding:10px 14px 2px;border-radius:14px;background:#ffffff08;border:1px solid #ffffff12}
+.zspec h3{color:var(--gold);font-size:11.5px;margin-bottom:8px}
+.zspec .ztiles{margin-bottom:4px}
+.zspec .ztiles div{background:#ffffff0a}
+.zspec dl{grid-template-columns:1fr!important;gap:0!important;margin-top:0!important}
+.zspec dl div,.zspec dl .zwide{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:9px 0;border-radius:0;background:none;border-top:1px solid #ffffff10}
+.zspec .ztiles+dl div:first-child{border-top:0}
+.zspec dl div:first-child{border-top:0}
+.zspec dt{flex:none;font-size:12.5px}
+.zspec dd{text-align:end;font-size:13.5px;line-height:1.5}
+.zspec dd.zchips{justify-content:flex-end;margin-top:0!important}
+.zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}""")
 one("fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v)})).filter(f=>f.v)};",
     "fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false),card:!(f&&f.card===false),wide:!!(f&&f.wide)})).filter(f=>f.v)};")
 # Requests go to the SEPTLION platform after an email code (septlion-bridge.js); WhatsApp stays as a fallback.
