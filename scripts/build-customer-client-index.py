@@ -94,7 +94,12 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .rfq .qtons{white-space:nowrap;padding:3px 9px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
 .rfq .qtons:empty{display:none}
 .sheet.rfq .terms .seg[data-key=incoterm]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
-.rfq .landnote{margin:8px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
+.rfq .moderow{margin-top:12px;display:grid;gap:6px}
+.rfq .moderow .label{font-size:12px;font-weight:700;color:#9db3d6}
+.rfq .moderow .seg button{min-height:42px;font-size:13px}
+.rfq .qhint{margin:6px 4px 0;font-size:11.5px;color:#9db3d6;text-align:center}
+.rfq .qhint:empty{display:none}
+.rfq .landnote{margin:2px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
 .rfq .landnote:empty{display:none}
 .rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
 .rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
@@ -211,30 +216,48 @@ one("const PAYS={LC:'<b>LC</b> — اعتماد مستندي عبر البنك.'
 # Automatic tonnage beside the container count for goods sold by weight (tons per container
 # comes from the catalog).
 one("fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:", "tpc:Number(r.tpc)>0?Number(r.tpc):0,fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:")
-one('<span>حاوية</span></div>', '<span>حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div>')
-one("  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;", "  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;\n  const tpc=Number(qty.dataset.tpc)||0,trk=S.incoterm==='DAP'?`${n} ${n===1?'شاحنة':n===2?'شاحنتان':n<=10?'شاحنات':'شاحنة'}`:'';$('#qtyT').textContent=[tpc?`${+(n*tpc).toFixed(1)} طن`:'',trk].filter(Boolean).join(' · ');")
+one('<span>حاوية</span></div>', '<span id="qtyU">حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div>')
+one("  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;", "  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} ${S.mode==='land'?'شاحنة':'حاوية'}`;\n  const tpc=S.mode==='land'?TRUCK_T:Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';")
+one('<div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>', '<p class="qhint" id="qtyHint" aria-live="polite"></p><div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>')
+one("qty:n,incoterm:S.incoterm,", "qty:n,mode:S.mode==='land'?'land':'sea',incoterm:S.incoterm,")
+one("L.push(`الكمية: ${x.qty} حاوية`,", "L.push(`الكمية: ${x.qty} ${x.mode==='land'?'شاحنة (≈ 25 طن للشاحنة)':'حاوية'}`,`الشحن: ${x.mode==='land'?'بري':'بحري'}`,")
+one("${esc(x.qty)} حاوية · ${esc(x.incoterm)}", "${esc(x.qty)} ${x.mode==='land'?'شاحنة':'حاوية'} · ${esc(x.incoterm)}")
 # Land shipping, worked out from the destination like the tonnage: countries reached overland
 # from Egypt get a third delivery choice "بر · DAP" (trucks to the border or the buyer's city),
 # and it is chosen for them when they have no sea port.
-one('<button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button></div></div>', '<button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" id="landBtn" hidden>بر · DAP</button></div></div>')
-one("function setDest(c,p,keepText){\n  dest.value=c||'';port.value=p||'';\n  if(!keepText)dQ.value=destLabel();\n  dSync();\n}", """// Countries reached overland from Egypt: 1 = no sea port (land is chosen), 0 = sea or land.
-const LAND={'السودان':0,'ليبيا':0,'تشاد':1,'جنوب السودان':1,'مصر':1};
+one('<button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button></div></div>', '<button type="button" role="radio" aria-checked="false" data-v="FOB" class="seaopt">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" class="landopt" hidden>تسليم الحدود · DAP</button><button type="button" role="radio" aria-checked="false" data-v="FCA" class="landopt" hidden>تسليم المطحن · FCA</button></div></div>')
+one('<button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button>', '<button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button>')
+one("function setDest(c,p,keepText){\n  dest.value=c||'';port.value=p||'';\n  if(!keepText)dQ.value=destLabel();\n  dSync();\n}", """// Countries a mill in Egypt reaches by truck, with the border crossing used (expert panel:
+// Sudan and eastern Libya only; Chad and South Sudan are served by sea through other ports).
+const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=25;
 function landUpdate(){
-  const c=(dest.value||'').trim(),land=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:null;
-  $('#landBtn').hidden=land===null;
-  if(land===1&&S.incoterm!=='DAP')setSeg('incoterm','DAP');
-  else if(land===null&&S.incoterm==='DAP')setSeg('incoterm','CIF');
-  $('#landNote').textContent=land===null?'':land===1?'يصل براً بالشاحنات إلى '+c:'يمكن الشحن بحراً أو براً إلى '+c;
+  const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
+  $('#modeRow').hidden=!via;
+  if(!via&&S.mode!=='sea')setSeg('mode','sea');
+  $('#landNote').textContent=via?'يمكن الشحن بحراً، أو براً بالشاحنات عبر '+via+'.':'';
+}
+function modeApply(){
+  const land=S.mode==='land';
+  $$('#rfq .seaopt').forEach(b=>b.hidden=land);$$('#rfq .landopt').forEach(b=>b.hidden=!land);
+  if(land&&!['DAP','FCA'].includes(S.incoterm))setSeg('incoterm','DAP');
+  if(!land&&['DAP','FCA'].includes(S.incoterm))setSeg('incoterm','CIF');
+  $('#qtyU').textContent=land?'شاحنة':'حاوية';qty.setAttribute('aria-label',land?'عدد الشاحنات':'عدد الحاويات');
+  $('#qtyHint').textContent=land?'الشاحنة ≈ '+TRUCK_T+' طن':'';
+  tierUpdate();
 }
 function setDest(c,p,keepText){
   dest.value=c||'';port.value=p||'';
   if(!keepText)dQ.value=destLabel();
   dSync();landUpdate();
 }""")
-one('<p class="err" id="destErr" role="alert"></p>', '<p class="err" id="destErr" role="alert"></p><p class="landnote" id="landNote" aria-live="polite"></p>')
-one("const TERMS={CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',", "const TERMS={DAP:'<b>DAP</b> — شحن بري بالشاحنات حتى الحدود أو مدينتك، والتخليص على المشتري.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',")
+one('<p class="err" id="destErr" role="alert"></p>', '<p class="err" id="destErr" role="alert"></p><div class="moderow" id="modeRow" hidden><span class="label" id="modeL">طريقة الشحن</span><div class="seg" role="radiogroup" aria-labelledby="modeL" data-key="mode"><button type="button" role="radio" aria-checked="true" data-v="sea">بحراً · حاويات</button><button type="button" role="radio" aria-checked="false" data-v="land">براً · شاحنات</button></div><p class="landnote" id="landNote" aria-live="polite"></p></div>')
+one("const TERMS={CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',", "const TERMS={DAP:'<b>DAP</b> — نسلّم بالشاحنات عند المنفذ الحدودي، والتخليص في بلد الوصول على المشتري.',FCA:'<b>FCA</b> — تستلم البضاعة محمّلة على شاحنتك من المطحن في مصر.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',")
 # By land each container travels on one truck, so the counter also shows the trucks.
-one('function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum()}', 'function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum();if(key===\'incoterm\')tierUpdate()}')
+one('function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum()}', 'function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute(\'aria-checked\',String(b.dataset.v===v)));rfqSum();if(key===\'mode\')modeApply();else if(key===\'incoterm\')tierUpdate()}')
+# Destination comes first: it decides sea or land, and so the unit of the quantity.
+_q0 = s.index('<div class="rlabel"><i>1</i>كم تحتاج؟</div>'); _d0 = s.index('<div class="rlabel"><i>2</i>إلى أين؟</div>'); _t0 = s.index('<div class="rlabel"><i>3</i>')
+assert _q0 < _d0 < _t0
+s = s[:_q0] + s[_d0:_t0].replace('<i>2</i>إلى أين؟', '<i>1</i>إلى أين؟') + s[_q0:_d0].replace('<i>1</i>كم تحتاج؟', '<i>2</i>كم تحتاج؟') + s[_t0:]
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n

@@ -524,7 +524,12 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .rfq .qtons{white-space:nowrap;padding:3px 9px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
 .rfq .qtons:empty{display:none}
 .sheet.rfq .terms .seg[data-key=incoterm]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
-.rfq .landnote{margin:8px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
+.rfq .moderow{margin-top:12px;display:grid;gap:6px}
+.rfq .moderow .label{font-size:12px;font-weight:700;color:#9db3d6}
+.rfq .moderow .seg button{min-height:42px;font-size:13px}
+.rfq .qhint{margin:6px 4px 0;font-size:11.5px;color:#9db3d6;text-align:center}
+.rfq .qhint:empty{display:none}
+.rfq .landnote{margin:2px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
 .rfq .landnote:empty{display:none}
 .rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
 .rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
@@ -863,13 +868,7 @@ details.opt.lv>:not(summary){margin-inline:0}
   <div class="rfq-body">
     <div class="pbox" id="pbox"></div>
 
-    <div class="rlabel"><i>1</i>كم تحتاج؟</div>
-    <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span>حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
-    <div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>
-    <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
-    <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
-
-    <div class="rlabel"><i>2</i>إلى أين؟</div>
+    <div class="rlabel"><i>1</i>إلى أين؟</div>
     <div id="destPick" class="dpick">
       <div class="dbox" id="dBox">
         <span class="dpin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></span>
@@ -879,12 +878,18 @@ details.opt.lv>:not(summary){margin-inline:0}
       <div class="dlist" id="destList" role="listbox" aria-label="اقتراحات الوجهة" hidden></div>
       <div class="dq" id="destQuick" role="group" aria-label="وجهات سريعة"></div>
     </div>
-    <p class="err" id="destErr" role="alert"></p><p class="landnote" id="landNote" aria-live="polite"></p>
+    <p class="err" id="destErr" role="alert"></p><div class="moderow" id="modeRow" hidden><span class="label" id="modeL">طريقة الشحن</span><div class="seg" role="radiogroup" aria-labelledby="modeL" data-key="mode"><button type="button" role="radio" aria-checked="true" data-v="sea">بحراً · حاويات</button><button type="button" role="radio" aria-checked="false" data-v="land">براً · شاحنات</button></div><p class="landnote" id="landNote" aria-live="polite"></p></div>
+
+    <div class="rlabel"><i>2</i>كم تحتاج؟</div>
+    <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span id="qtyU">حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
+    <p class="qhint" id="qtyHint" aria-live="polite"></p><div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>
+    <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
+    <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
 
     <div class="rlabel"><i>3</i>التسليم والدفع</div>
     <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>
       <div class="tpanel"><div class="grid2">
-        <div class="field"><span class="label" id="incoL">التسليم</span><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" id="landBtn" hidden>بر · DAP</button></div></div>
+        <div class="field"><span class="label" id="incoL">التسليم</span><div class="seg" role="radiogroup" aria-labelledby="incoL" data-key="incoterm"><button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button><button type="button" role="radio" aria-checked="false" data-v="FOB" class="seaopt">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" class="landopt" hidden>تسليم الحدود · DAP</button><button type="button" role="radio" aria-checked="false" data-v="FCA" class="landopt" hidden>تسليم المطحن · FCA</button></div></div>
         <div class="field"><span class="label" id="payL">الدفع</span><div class="seg" role="radiogroup" aria-labelledby="payL" data-key="payment"><button type="button" role="radio" aria-checked="true" data-v="LC — اعتماد مستندي">اعتماد مستندي</button><button type="button" role="radio" aria-checked="false" data-v="TT — تحويل بنكي">تحويل مقدم</button></div></div>
       </div>
       <p class="helper" id="termHelp" aria-live="polite"></p></div>
@@ -1164,8 +1169,8 @@ $('#levels').innerHTML=LEVELS.map((l,i)=>`<button type="button" data-act="level"
 function tierUpdate(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   let i=LEVELS.findIndex(l=>n>=l[2]&&(l[3]===null||n<=l[3])); if(i<0)i=6; const l=LEVELS[i];
-  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;
-  const tpc=Number(qty.dataset.tpc)||0,trk=S.incoterm==='DAP'?`${n} ${n===1?'شاحنة':n===2?'شاحنتان':n<=10?'شاحنات':'شاحنة'}`:'';$('#qtyT').textContent=[tpc?`${+(n*tpc).toFixed(1)} طن`:'',trk].filter(Boolean).join(' · ');
+  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} ${S.mode==='land'?'شاحنة':'حاوية'}`;
+  const tpc=S.mode==='land'?TRUCK_T:Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';
   $$('#levels button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
   rfqSum();
 }
@@ -1231,14 +1236,23 @@ function dQuick(){
 }
 $('#destQuick').addEventListener('click',e=>{const b=e.target.closest('button');if(b)dPick({c:b.dataset.c,p:b.dataset.p})});
 function dSync(){dBox.classList.toggle('ok',!!dest.value);dClr.hidden=!dest.value&&!dQ.value;dQuick();rfqSum()}
-// Countries reached overland from Egypt: 1 = no sea port (land is chosen), 0 = sea or land.
-const LAND={'السودان':0,'ليبيا':0,'تشاد':1,'جنوب السودان':1,'مصر':1};
+// Countries a mill in Egypt reaches by truck, with the border crossing used (expert panel:
+// Sudan and eastern Libya only; Chad and South Sudan are served by sea through other ports).
+const LAND={'السودان':'أرقين أو قسطل','ليبيا':'السلوم'},TRUCK_T=25;
 function landUpdate(){
-  const c=(dest.value||'').trim(),land=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:null;
-  $('#landBtn').hidden=land===null;
-  if(land===1&&S.incoterm!=='DAP')setSeg('incoterm','DAP');
-  else if(land===null&&S.incoterm==='DAP')setSeg('incoterm','CIF');
-  $('#landNote').textContent=land===null?'':land===1?'يصل براً بالشاحنات إلى '+c:'يمكن الشحن بحراً أو براً إلى '+c;
+  const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
+  $('#modeRow').hidden=!via;
+  if(!via&&S.mode!=='sea')setSeg('mode','sea');
+  $('#landNote').textContent=via?'يمكن الشحن بحراً، أو براً بالشاحنات عبر '+via+'.':'';
+}
+function modeApply(){
+  const land=S.mode==='land';
+  $$('#rfq .seaopt').forEach(b=>b.hidden=land);$$('#rfq .landopt').forEach(b=>b.hidden=!land);
+  if(land&&!['DAP','FCA'].includes(S.incoterm))setSeg('incoterm','DAP');
+  if(!land&&['DAP','FCA'].includes(S.incoterm))setSeg('incoterm','CIF');
+  $('#qtyU').textContent=land?'شاحنة':'حاوية';qty.setAttribute('aria-label',land?'عدد الشاحنات':'عدد الحاويات');
+  $('#qtyHint').textContent=land?'الشاحنة ≈ '+TRUCK_T+' طن':'';
+  tierUpdate();
 }
 function setDest(c,p,keepText){
   dest.value=c||'';port.value=p||'';
@@ -1275,7 +1289,7 @@ function openRfq(id,trigger){
   setSeg('incoterm','CIF'); setSeg('payment','LC — اعتماد مستندي'); tierUpdate();
   open($('#rfq'),trigger);
 }
-const TERMS={DAP:'<b>DAP</b> — شحن بري بالشاحنات حتى الحدود أو مدينتك، والتخليص على المشتري.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',FOB:'<b>FOB</b> — التسليم على ظهر السفينة في ميناء الشحن، والشحن على المشتري.'};
+const TERMS={DAP:'<b>DAP</b> — نسلّم بالشاحنات عند المنفذ الحدودي، والتخليص في بلد الوصول على المشتري.',FCA:'<b>FCA</b> — تستلم البضاعة محمّلة على شاحنتك من المطحن في مصر.',CIF:'<b>CIF</b> — السعر يشمل الشحن والتأمين حتى ميناء الوصول.',FOB:'<b>FOB</b> — التسليم على ظهر السفينة في ميناء الشحن، والشحن على المشتري.'};
 const PAYS={LC:'<b>LC</b> — اعتماد مستندي يغطي القيمة كاملة قبل الشحن.',TT:'<b>TT</b> — تحويل بنكي للقيمة كاملة قبل الشحن.'};
 function rfqSum(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
@@ -1283,11 +1297,11 @@ function rfqSum(){
   $('#termHelp').innerHTML=`<span style="display:block">${TERMS[S.incoterm]||''}</span><span style="display:block">${PAYS[(S.payment||'').split(' ')[0]]||''}</span>`;
   $$('#presets button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===n)));
 }
-function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum();if(key==='incoterm')tierUpdate()}
+function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));rfqSum();if(key==='mode')modeApply();else if(key==='incoterm')tierUpdate()}
 const CONTACT={wa:'249123667759',mail:'info@septlion.com',tel:'+249 123 667 759'};
 function reqText(x){
   const L=['طلب عرض سعر — سبتليون',`رقم الطلب: ${x.id}`];
-  if(x.kind==='sku'){L.push(`الصنف: ${x.title}`);if(x.description)L.push(`الوصف: ${x.description}`);L.push(`الكمية: ${x.qty} حاوية`,`الوجهة: ${x.dest}${x.port?' — '+x.port:''}`,`التسليم: ${x.incoterm}`,`الدفع: ${x.payment}`);if(x.company)L.push(`الشركة: ${x.company}`);if(x.note)L.push(`ملاحظات: ${x.note}`)}
+  if(x.kind==='sku'){L.push(`الصنف: ${x.title}`);if(x.description)L.push(`الوصف: ${x.description}`);L.push(`الكمية: ${x.qty} ${x.mode==='land'?'شاحنة (≈ 25 طن للشاحنة)':'حاوية'}`,`الشحن: ${x.mode==='land'?'بري':'بحري'}`,`الوجهة: ${x.dest}${x.port?' — '+x.port:''}`,`التسليم: ${x.incoterm}`,`الدفع: ${x.payment}`);if(x.company)L.push(`الشركة: ${x.company}`);if(x.note)L.push(`ملاحظات: ${x.note}`)}
   else{L.push(`الاحتياج: ${x.description}`);if(x.quantity)L.push(`الكمية: ${x.quantity}`);if(x.destination)L.push(`الوجهة: ${x.destination}`);if(x.terms)L.push(`شروط أخرى: ${x.terms}`);if(x.phone)L.push(`واتساب العميل: ${x.phone}`)}
   return L.join('\n');
 }
@@ -1303,7 +1317,7 @@ function submitRfq(){
   if(!dest.value){$('#destPick').classList.add('bad');$('#destErr').textContent='اكتب وجهة التسليم أو اخترها من الاقتراحات.';dQ.focus();return}
   if(!Number.isSafeInteger(n)||n<1){qty.focus();toast('يرجى تحديد عدد صحيح من الحاويات.');return}
   const list=store.get(REQ_KEY,[]);
-  const x={id:'RFQ-'+Date.now().toString().slice(-7),kind:'sku',productId:p?p.id:'',title:p?`${p.name} — ${p.size}`:'احتياج جديد',description:p?p.desc:'',dest:dest.value,port:port.value,qty:n,incoterm:S.incoterm,payment:S.payment,company:$('#rfqCo').value.trim(),note:$('#rfqNote').value.trim(),evaluation:'pending',sent:false,createdAt:new Date().toISOString()};
+  const x={id:'RFQ-'+Date.now().toString().slice(-7),kind:'sku',productId:p?p.id:'',title:p?`${p.name} — ${p.size}`:'احتياج جديد',description:p?p.desc:'',dest:dest.value,port:port.value,qty:n,mode:S.mode==='land'?'land':'sea',incoterm:S.incoterm,payment:S.payment,company:$('#rfqCo').value.trim(),note:$('#rfqNote').value.trim(),evaluation:'pending',sent:false,createdAt:new Date().toISOString()};
   try{x.company?localStorage.setItem('septlion.company',x.company):localStorage.removeItem('septlion.company')}catch{}
   list.unshift(x);
   store.set(REQ_KEY,list); closeSheets(true);
@@ -1318,7 +1332,7 @@ function renderOrders(){
   $('#ordersEmpty').hidden=list.length>0;
   $('#orderList').innerHTML=list.length?`<p class="hint" style="margin:16px 2px 10px">طلباتك محفوظة على هذا الجهاز. يصلنا الطلب بعد تأكيد بريدك.</p>`+list.map(x=>{
     const st=STATUS[x.evaluation]||STATUS.pending;
-    const meta=x.kind==='sku'?`${esc(x.dest)}${x.port?' · '+esc(x.port):''} · ${esc(x.qty)} حاوية · ${esc(x.incoterm)}`:esc(x.description);
+    const meta=x.kind==='sku'?`${esc(x.dest)}${x.port?' · '+esc(x.port):''} · ${esc(x.qty)} ${x.mode==='land'?'شاحنة':'حاوية'} · ${esc(x.incoterm)}`:esc(x.description);
     return `<article class="card"><div class="card-head"><strong>${esc(x.title||x.id)}</strong><span class="latin" style="font-size:10px;color:var(--sky);letter-spacing:.06em">${esc(x.id)}</span></div><p>${meta}</p><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span>${x.sent?'':reqBtns(x)}<button class="btn btn-ghost" style="margin-top:8px" data-act="track" data-id="${esc(x.id)}">عرض حالة الطلب <span class="arrow">←</span></button></article>`}).join(''):'';
 }
 function renderTrack(){

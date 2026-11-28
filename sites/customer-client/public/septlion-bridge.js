@@ -16,6 +16,8 @@
   const SUPABASE_KEY = 'sb_publishable_u6QtC_XIPHKn08EuWosI4g_DL8DdgbD';
   const SESSION_KEY = 'septlion_session';
   const INCOTERMS = ['CIF', 'CFR', 'FOB'];
+  // Land terms the quote sheet offers; a truck carries about 25 t of bagged flour.
+  const LAND_TERMS = ['DAP', 'FCA'], TRUCK_TONS = 25;
 
   const digits = v => String(v == null ? '' : v).replace(/[٠-٩۰-۹]/g, c => {
     const a = '٠١٢٣٤٥٦٧٨٩'.indexOf(c); return String(a < 0 ? '۰۱۲۳۴۵۶۷۸۹'.indexOf(c) : a);
@@ -89,6 +91,7 @@
       if (!Number.isSafeInteger(n) || n < 1) throw new Error('حدد عدد الحاويات.');
       const destination = [clean(x.dest, 200), clean(x.port, 90)].filter(Boolean).join(' · ');
       if (!destination) throw new Error('حدد وجهة التسليم.');
+      const land = x.mode === 'land';
       const input = Object.assign(base, {
         product: clean(x.title, 500), destination, quantity: n,
         // Country and port in their own fields: the port prices CIF/CFR, the country sets documents.
@@ -96,7 +99,12 @@
         incoterm: INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF', paymentPreference: paymentCode(x.payment),
         packing: clean(x.description, 300) || null,
         knownFacts: { note: clean(x.note, 1000) || undefined, localProductId: x.productId || undefined },
-      });
+      }, land ? {
+        // By land: trucks of about 25 t, and the land term (DAP border / FCA mill) kept in the facts.
+        quantity: n * TRUCK_TONS, unit: 'MT', containerCount: null, incoterm: 'FOB',
+        knownFacts: { note: clean(x.note, 1000) || undefined, localProductId: x.productId || undefined,
+          shipping: { mode: 'land', trucks: n, term: LAND_TERMS.includes(x.incoterm) ? x.incoterm : 'DAP' } },
+      } : {});
       const ref = catalogRef(x.productId);
       const sku = ref && catalog && catalog.find(p => p.id === ref.productId && (p.skus || []).some(s => s.id === ref.skuId));
       if (sku) { input.catalogProductId = ref.productId; input.variants = [{ skuId: ref.skuId, containers: n }]; }
@@ -140,9 +148,9 @@
       if (!country) throw new Error('حدد وجهة التسليم.');
       return Object.assign(base, {
         product: clean(x.title, 300), country, destinationPort: clean(x.port, 160) || undefined,
-        quantity: n + ' FCL', packing: clean(x.description, 120) || undefined,
-        incoterm: INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF',
-        notes: [pay && 'الدفع: ' + pay, clean(x.note, 1000)].filter(Boolean).join(' · ') || undefined,
+        quantity: x.mode === 'land' ? n * TRUCK_TONS + ' MT' : n + ' FCL', packing: clean(x.description, 120) || undefined,
+        incoterm: x.mode === 'land' ? 'FOB' : INCOTERMS.includes(x.incoterm) ? x.incoterm : 'CIF',
+        notes: [x.mode === 'land' && 'الشحن: بري · ' + n + ' شاحنة · ' + (LAND_TERMS.includes(x.incoterm) ? x.incoterm : 'DAP'), pay && 'الدفع: ' + pay, clean(x.note, 1000)].filter(Boolean).join(' · ') || undefined,
       });
     }
     const q = parseQuantity(x.quantity) || (extra.amount ? { amount: Number(digits(extra.amount)), unit: extra.unit } : null);
