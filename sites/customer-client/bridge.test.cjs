@@ -132,13 +132,14 @@ test('home page cards come from the team panel catalog', () => {
 
 test('quality facts come first on the card', () => {
   const d = B.fromPlatform([{ id: 'p', name: 'زولانا خبازو', sector: { name: 'الأغذية' }, skus: [{ id: 'sku-khabbazo-50', name: 'زولانا خبازو 50 كجم',
-    specifications: { packing: 'شوال منسوج 50 كجم', protein: '12%', moisture: 'حتى 14%', origin: 'مصر', certificates: 'حلال · ISO', gluten: '26 – 28%', ash: '0.60 – 0.65%', extraction: '72%', container: '20 قدماً', delivery: 'FOB مصر أو CIF ميناؤك' } }] }]);
+    specifications: { packing: 'شوال منسوج 50 كجم', protein: '12%', moisture: 'حتى 14%', origin: 'مصر', certificates: 'حلال · FSSC 22000 · ISO 22000', payment: 'مقدماً قبل الشحن', gluten: '26 – 28%', ash: '0.60 – 0.65%', extraction: '72%', container: '20 قدماً', delivery: 'FOB مصر أو CIF ميناؤك' } }] }]);
   const fs = d.products[0].fields;
   assert.deepEqual(fs.slice(0, 7).map(f => f.v),
-    ['بروتين 12%', 'استخراج 72%', 'حلال', 'منشأ مصر', 'شوال 50 كجم', 'شحن FOB أو CIF', 'أقل طلب: حاوية 20 قدماً']);
-  assert.equal(fs[5].zv, 'FOB مصر أو CIF ميناؤك');
+    ['بروتين 12%', 'منشأ مصر', 'حلال · FSSC', 'شوال 50 كجم', 'FOB أو CIF', 'الدفع مقدماً', 'أقل طلب: حاوية 20 قدماً']);
+  assert.equal(fs[4].zv, 'FOB مصر أو CIF ميناؤك');
+  assert.equal(fs[5].zv, 'مقدماً قبل الشحن');
   assert.equal(fs[6].wide, true);
   // In the enlarged view the packing and size are listed apart, and the short unit is hidden.
-  assert.equal(fs[4].zoom, false);
+  assert.equal(fs[3].zoom, false);
   assert.deepEqual(fs.slice(-2).map(f => f.v), ['شوال منسوج', '50 كجم']);
 });
