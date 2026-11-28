@@ -336,6 +336,9 @@
   const $ = s => document.querySelector(s);
   // The page exposes its sheet, toast and storage helpers as window.SeptlionPage.
   const page = () => root.SeptlionPage || {};
+  // Reply promise shown to the buyer (expert council; founder's choice), and the official
+  // WhatsApp Business number (empty until the founder gives it: the button stays hidden).
+  const REPLY_TIME = 'خلال 4 ساعات عمل', QUOTE_TIME = 'خلال يوم عمل', WORK_HOURS = 'الأحد–الخميس، بتوقيت القاهرة', OFFICIAL_WA = '';
   const escH = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const headers = token => Object.assign({ 'Content-Type': 'application/json', apikey: SUPABASE_KEY }, token ? { Authorization: 'Bearer ' + token } : {});
   const body = async r => { try { return await r.json(); } catch (e) { return null; } };
@@ -487,9 +490,10 @@
   const seg = (name, label, options, value) => '<div class="field"><span class="label">' + label + '</span><div class="sb-seg">' + options.map(o => '<label><input type="radio" name="' + name + '" value="' + escH(o[0]) + '"' + (o[0] === value ? ' checked' : '') + '>' + escH(o[1]) + '</label>').join('') + '</div></div>';
   function render(message) {
     const x = current, f = sheet.querySelector('#sbForm'), need = missing(x), saved = store.get('septlion.bridge.contact', {});
+    const tt = sheet.querySelector('#sbTitle'); if (tt) tt.textContent = 'أرسل طلبك إلى سبتليون';
     let h = '';
     if (step === 'contact') {
-      h += '<p class="hint">يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب بعرض واضح.</p>';
+      h += '<p class="hint">يصل طلبك مباشرة إلى فريق سبتليون. نرد عليك عبر واتساب ' + REPLY_TIME + '، ونرسل عرض السعر الرسمي على بريدك أيضاً إن كتبته.</p>';
       h += field('sbName', 'الاسم', 'autocomplete="name" required', saved.name);
       h += field('sbCompany', 'الشركة <small>أو اسمك إن لم تكن شركة</small>', 'autocomplete="organization" required', x.company || saved.company);
       h += field('sbWa', 'رقم واتساب', 'type="tel" inputmode="tel" dir="ltr" autocomplete="tel" required', x.phone || saved.whatsapp);
@@ -500,6 +504,7 @@
       if (need.includes('payment')) h += seg('sbPay', 'الدفع', [['LC', 'اعتماد مستندي'], ['TT', 'تحويل بنكي'], ['OTHER', 'نتفق لاحقًا']], saved.payment || 'OTHER');
       h += '<p class="err" id="sbErr" role="alert">' + escH(message || '') + '</p>';
       h += '<button class="btn btn-primary" type="submit" style="margin-top:14px">أرسل الطلب <span class="arrow">←</span></button>';
+      h += '<p class="sb-privacy">نستخدم بياناتك للرد على طلبك فقط، ولا نشاركها مع أي جهة خارج سبتليون.</p>';
     } else {
       h += '<p class="hint">أرسلنا رمزًا إلى <b dir="ltr">' + escH(api._pending.contact.email) + '</b>. اكتبه هنا. قد يصل إلى مجلد الرسائل غير المرغوبة.</p>';
       h += field('sbCode', 'رمز التحقق', 'class="input sb-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required', '');
@@ -551,12 +556,25 @@
   function done(ref) {
     track('/e/request-sent');
     markSent(current.id, ref);
-    if (page().closeSheets) page().closeSheets(true);
-    const box = $('#doneBox');
-    if (box && $('#needDone') && current.kind === 'free') {
-      box.innerHTML = '<div class="mk">✓</div><h1>تم استلام طلبك.</h1><p>' + (ref ? 'رقم الطلب <b class="latin">' + escH(ref) + '</b>. ' : '') + 'سيتواصل معك فريقنا عبر واتساب أو البريد بعرض مناسب.</p><button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>';
-    }
-    if (page().toast) page().toast('تم استلام طلبك' + (ref ? ' — رقم الطلب ' + ref : ''), { label: 'طلباتي', go: 'orders' });
+    // Confirmation screen (expert council): reference, summary, when and from where we reply,
+    // the bank-details warning, next steps.
+    const box = sheet && sheet.querySelector('#sbForm'), c = (api._pending && api._pending.contact) || {}, mail = String(c.email || '').trim(), wa = String(c.whatsapp || '').trim();
+    if (box) {
+      const t = sheet.querySelector('#sbTitle'); if (t) t.textContent = 'تم استلام طلبك';
+      const x = current, unit = x.mode === 'land' ? 'شاحنة' : 'حاوية';
+      const sum = x.kind === 'sku' ? [x.title, x.qty ? x.qty + ' ' + unit : '', [x.dest, x.port].filter(Boolean).join(' — '), x.incoterm].filter(Boolean).join(' · ') : (x.title || '');
+      box.innerHTML = '<div class="sb-done"><div class="mk">✓</div>' +
+        (ref ? '<p class="dref">رقم الطلب <b class="latin" id="dRef">' + escH(ref) + '</b> <button type="button" class="dcopy" data-copy="' + escH(ref) + '">نسخ</button></p>' : '') +
+        (sum ? '<p class="dsum">' + escH(sum) + '</p>' : '') +
+        '<p>نرد عليك عبر واتساب' + (wa ? ' على <b dir="ltr">' + escH(wa) + '</b>' : '') + ' ' + REPLY_TIME + ' (' + WORK_HOURS + ')، ونرسل عرض السعر الرسمي ' + QUOTE_TIME + (mail ? ' على واتساب وبريدك' : '') + '.</p>' +
+        '<ol class="dsteps"><li>يراجع فريقنا الكمية والوجهة والشروط.</li><li>نرسل لك عرض السعر الرسمي مع مدة صلاحيته.</li><li>بعد موافقتك نصدر الفاتورة المبدئية ونحدد مواعيد الشحن.</li></ol>' +
+        '<p class="dwarn"><b>للأمان:</b> لن نغيّر بياناتنا البنكية أبداً عبر واتساب أو البريد. بيانات الدفع تصلك فقط في الفاتورة المبدئية الرسمية، واتصل بنا للتأكد قبل أي تحويل.</p>' +
+        (OFFICIAL_WA ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + OFFICIAL_WA + '?text=' + encodeURIComponent('مرحباً، رقم طلبي ' + (ref || '')) + '">راسلنا على واتساب الآن</a><button class="btn btn-ghost" data-go="orders">طلباتي</button>' : '<button class="btn btn-primary" data-go="orders" style="margin-top:12px">طلباتي</button>') +
+        '<button class="btn btn-ghost" data-go="home">تصفح أصنافاً أخرى</button></div>';
+      const cp = box.querySelector('.dcopy');
+      if (cp) cp.addEventListener('click', () => { try { navigator.clipboard.writeText(cp.dataset.copy); cp.textContent = 'تم النسخ'; } catch (e) { /* no clipboard */ } });
+      box.scrollTop = 0;
+    } else if (page().toast) page().toast('تم استلام طلبك' + (ref ? ' — رقم الطلب ' + ref : ''), { label: 'طلباتي', go: 'orders' });
     step = 'contact'; current = null;
   }
 

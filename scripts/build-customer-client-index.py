@@ -128,6 +128,15 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 #rfq .terms .helper{margin:6px 2px 0;font-size:11px;line-height:1.5;min-height:0}
 #rfq #noteD>summary{min-height:34px;padding-block:4px}
 #rfq .rfq-foot{padding-top:6px;padding-bottom:calc(8px + var(--safe-b))}
+/* The company is asked in the send step, so the notes box keeps only the notes. */
+#rfq .fld-opt:has(#rfqCo){display:none}
+#rfq #noteD .fld-opt{margin-top:0!important}
+#sbForm .sb-done{text-align:center;display:grid;gap:8px;padding-bottom:6px}#sbForm .sb-done .mk{margin:0 auto;width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:#2e7d5b33;color:#7fe0b0;font-size:26px}#sbForm .sb-done p{margin:0;font-size:13.5px;line-height:1.7;color:#dbe6f8}#sbForm .sb-done .btn{width:100%}#sbForm .sb-done .dref{font-size:15px}#sbForm .sb-done .dref b{font-size:20px;color:#f3dfa6}
+#sbForm .sb-done .dsteps{margin:10px auto 4px;padding-inline-start:20px;text-align:start;max-width:320px;font-size:13px;line-height:1.9;color:#c3d1ee}
+#sbForm .sb-done .dcopy{margin-inline-start:6px;padding:3px 10px;border-radius:99px;border:1px solid #ffffff33;background:none;color:#c3d1ee;font:600 12px var(--font)}
+#sbForm .sb-done .dsum{font-size:13px;color:#c3d1ee}
+#sbForm .sb-done .dwarn{margin:12px auto;max-width:340px;padding:10px 12px;border-radius:12px;border:1px solid #f3dfa64d;background:#f3dfa612;font-size:12.5px;line-height:1.7;color:#f3dfa6;text-align:start}
+.sb-privacy{margin:8px 2px 0;font-size:11px;color:#8da4c9;text-align:center}
 @media(max-height:820px){#rfq .rfq-body{gap:3px}#rfq .rlabel{margin-top:2px;min-height:20px;font-size:13.5px}#rfq .moderow .seg button,#rfq .terms .seg button{min-height:34px}#rfq .dbox,#rfq .qty{min-height:42px}#rfq .trow{padding:7px 10px 6px}#rfq .trow .tier{padding-bottom:5px}#rfq #pbox{padding:4px 8px}#rfq #pbox .pthumb{width:42px;height:42px;min-width:42px}#rfq .terms{padding:6px 8px}#rfq .terms .helper{margin-top:4px}#rfq #noteD>summary{min-height:30px}}
 #rfq.sheet.rfq .rfq-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:14px;scrollbar-width:thin}
 /* Levels: one card with the current level, a 7-step progress track and the step to the next level. */
@@ -190,7 +199,7 @@ one("""const reqBtns=x=>`<div class="sendbox">${cbtn('pri wa',ICO_WA,'الأسر
     """const ICO_SEND='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4 18-7z"/></svg>';
 const reqBtns=x=>`<div class="sendbox">${cbtn('pri ml',ICO_SEND,'يصل مباشرة إلى فريق سبتليون','إرسال الطلب',`type="button" data-act="send-platform" data-id="${esc(x.id)}"`)}<button class="btn-link" style="justify-self:center;color:var(--sky,#9db3d6);font-weight:500" data-act="send-wa" data-id="${esc(x.id)}">أو أرسله عبر واتساب</button></div>`;""")
 one("case 'send-wa':{", "case 'send-platform':{const x=reqById(a.dataset.id);x&&SeptlionBridge.submit(x);break}\n    case 'send-wa':{")
-one("سيُفتح واتساب برسالة جاهزة؛ اضغط «إرسال» ليصلنا الطلب.", "يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب.")
+one("سيُفتح واتساب برسالة جاهزة؛ اضغط «إرسال» ليصلنا الطلب.", "يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب خلال 4 ساعات عمل.")
 one("طلبك محفوظ على جهازك ولم يصلنا بعد. أرسله عبر واتساب أو البريد لنبدأ المراجعة.", "طلبك محفوظ على جهازك ولم يصلنا بعد. اضغط «إرسال الطلب» لنبدأ المراجعة.")
 # Destination search: each country with its flag, its ports listed under it.
 one("function dOptions(raw){", """const FLAG_ISO={'السعودية':'SA','السودان':'SD','الإمارات':'AE','مصر':'EG','تنزانيا':'TZ','كينيا':'KE','اليمن':'YE','غانا':'GH','نيجيريا':'NG','جيبوتي':'DJ','تشاد':'TD'};
@@ -365,6 +374,7 @@ one('$(\'#levels\').innerHTML=LEVELS.map((l,i)=>`<button type="button" data-act=
 one("  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} ${S.mode==='land'?'شاحنة':'حاوية'}`;", '  const land=S.mode===\'land\',uw=land?\'شاحنة\':\'حاوية\';\n  $(\'#tier\').innerHTML=`<span class="lvname">${l[0]} · ${l[1]}</span><span class="lvrange">${l[3]===null?l[2]+\' \'+uw+\' فأكثر\':l[2]+\'–\'+l[3]+\' \'+uw}</span>`;')
 one("  $$('#levels button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));", '  $$(\'#levels button\').forEach((b,j)=>{b.setAttribute(\'aria-pressed\',String(j===i));b.classList.toggle(\'done\',j<i);b.classList.toggle(\'cur\',j===i)});\n  const nx=LEVELS[i+1];$(\'#lvNext\').innerHTML=nx?`<button type="button" data-lv="${i+1}">أضف ${lvU(nx[2]-n,land)} لتصل إلى <b>${nx[0]} · ${nx[1]}</b></button>`:\'<span>أعلى مستوى طلب</span>\';')
 one('aria-label="مستويات الطلب السبعة"></div></details></div>', 'aria-label="مستويات الطلب السبعة"></div></details><p class="lvnext" id="lvNext" aria-live="polite"></p></div>')
+one('<summary>إضافة اسم الشركة أو ملاحظات<span class="ed">', '<summary>إضافة ملاحظات<span class="ed">')
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n

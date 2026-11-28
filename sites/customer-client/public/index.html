@@ -558,6 +558,15 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 #rfq .terms .helper{margin:6px 2px 0;font-size:11px;line-height:1.5;min-height:0}
 #rfq #noteD>summary{min-height:34px;padding-block:4px}
 #rfq .rfq-foot{padding-top:6px;padding-bottom:calc(8px + var(--safe-b))}
+/* The company is asked in the send step, so the notes box keeps only the notes. */
+#rfq .fld-opt:has(#rfqCo){display:none}
+#rfq #noteD .fld-opt{margin-top:0!important}
+#sbForm .sb-done{text-align:center;display:grid;gap:8px;padding-bottom:6px}#sbForm .sb-done .mk{margin:0 auto;width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:#2e7d5b33;color:#7fe0b0;font-size:26px}#sbForm .sb-done p{margin:0;font-size:13.5px;line-height:1.7;color:#dbe6f8}#sbForm .sb-done .btn{width:100%}#sbForm .sb-done .dref{font-size:15px}#sbForm .sb-done .dref b{font-size:20px;color:#f3dfa6}
+#sbForm .sb-done .dsteps{margin:10px auto 4px;padding-inline-start:20px;text-align:start;max-width:320px;font-size:13px;line-height:1.9;color:#c3d1ee}
+#sbForm .sb-done .dcopy{margin-inline-start:6px;padding:3px 10px;border-radius:99px;border:1px solid #ffffff33;background:none;color:#c3d1ee;font:600 12px var(--font)}
+#sbForm .sb-done .dsum{font-size:13px;color:#c3d1ee}
+#sbForm .sb-done .dwarn{margin:12px auto;max-width:340px;padding:10px 12px;border-radius:12px;border:1px solid #f3dfa64d;background:#f3dfa612;font-size:12.5px;line-height:1.7;color:#f3dfa6;text-align:start}
+.sb-privacy{margin:8px 2px 0;font-size:11px;color:#8da4c9;text-align:center}
 @media(max-height:820px){#rfq .rfq-body{gap:3px}#rfq .rlabel{margin-top:2px;min-height:20px;font-size:13.5px}#rfq .moderow .seg button,#rfq .terms .seg button{min-height:34px}#rfq .dbox,#rfq .qty{min-height:42px}#rfq .trow{padding:7px 10px 6px}#rfq .trow .tier{padding-bottom:5px}#rfq #pbox{padding:4px 8px}#rfq #pbox .pthumb{width:42px;height:42px;min-width:42px}#rfq .terms{padding:6px 8px}#rfq .terms .helper{margin-top:4px}#rfq #noteD>summary{min-height:30px}}
 #rfq.sheet.rfq .rfq-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:14px;scrollbar-width:thin}
 /* Levels: one card with the current level, a 7-step progress track and the step to the next level. */
@@ -877,7 +886,7 @@ details.opt.lv>:not(summary){margin-inline:0}
     <div class="field"><label for="fPhone">رقم واتساب مع رمز الدولة</label><input class="input" id="fPhone" type="tel" inputmode="tel" dir="ltr" placeholder="+249 …" autocomplete="tel" aria-describedby="fPhoneErr"><p class="err" id="fPhoneErr" role="alert"></p></div>
     <p class="hint" style="margin-top:10px">سنتواصل معك على هذا الرقم عبر واتساب لمتابعة الطلب.</p>
     <button class="btn btn-primary" type="submit" style="margin-top:18px">طلب عرض سعر <span class="arrow">←</span></button>
-    <p class="compose-note">يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب.</p>
+    <p class="compose-note">يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب خلال 4 ساعات عمل.</p>
   </form>
 </section>
 
@@ -947,7 +956,7 @@ details.opt.lv>:not(summary){margin-inline:0}
       <p class="helper" id="payHelp" aria-live="polite"></p></div>
     </div>
 
-    <details class="opt" id="noteD"><summary>إضافة اسم الشركة أو ملاحظات<span class="ed">اختياري</span></summary>
+    <details class="opt" id="noteD"><summary>إضافة ملاحظات<span class="ed">اختياري</span></summary>
       <div class="pop"><div class="fld-opt"><label class="label" for="rfqCo">اسم الشركة أو الاسم</label><input class="input" id="rfqCo" autocomplete="organization" placeholder="مثال: شركة النور للتجارة"></div>
       <div class="fld-opt" style="margin-top:10px"><label class="label" for="rfqNote">ملاحظات</label><textarea class="input" id="rfqNote" rows="2" placeholder="موعد التسليم المطلوب، مواصفات إضافية…"></textarea></div></div>
     </details>
