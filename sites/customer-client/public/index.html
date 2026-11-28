@@ -531,6 +531,23 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .rfq .qhint:empty{display:none}
 .rfq .landnote{margin:2px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
 .dh .dtag{margin-inline-start:auto;font-style:normal;font-size:11px;font-weight:700;color:#f3dfa6;border:1px solid rgba(243,223,166,.35);border-radius:999px;padding:1px 8px;white-space:nowrap}
+/* Levels: one card with the current level, a 7-step progress track and the step to the next level. */
+.rfq .trow{margin-top:10px;padding:12px 12px 10px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
+.rfq .trow .tier{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 0 10px}
+.rfq .tier .lvname{font-size:14px;font-weight:800;color:#f3dfa6}
+.rfq .tier .lvrange{font-size:12px;font-weight:700;color:#c3d1ee;white-space:nowrap}
+.rfq .trow details.opt.lv>.levels.lvtrack{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;direction:rtl}
+.sheet.rfq .levels.lvtrack button{min-height:30px;padding:4px 0;border:0;border-radius:0;background:none;display:grid;gap:5px;justify-items:stretch;color:#7f95ba}
+.rfq .levels.lvtrack button[aria-pressed=true]{background:none;border:0}
+.rfq .lvtrack i{display:block;height:6px;border-radius:99px;background:#ffffff1f;transition:background .2s}
+.rfq .lvtrack button.done i{background:#c9a24a99}
+.rfq .lvtrack button.cur i{background:#f3dfa6;box-shadow:0 0 0 3px #f3dfa633}
+.rfq .trow details.opt.lv{margin:0!important;padding:0!important;border:0;min-height:0}
+.rfq .lvtrack b{font:800 10px var(--latin);text-align:center}
+.rfq .lvtrack button.cur b{color:#fff}
+.rfq .lvnext{margin:10px 0 0;padding-top:8px;border-top:1px solid #ffffff14;font-size:12px;color:#9db3d6}
+.rfq .lvnext button{background:none;border:0;padding:4px 0;color:#c3d1ee;font:600 12px var(--font);text-align:start;cursor:pointer}
+.rfq .lvnext button b{color:#f3dfa6;font-weight:800}
 .rfq #destQuick.dq:not(:empty){display:flex;margin-top:8px}
 .rfq .landnote:empty{display:none}
 .rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
@@ -887,7 +904,7 @@ details.opt.lv>:not(summary){margin-inline:0}
     <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span id="qtyU">حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
     <p class="qhint" id="qtyHint" aria-live="polite"></p><div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>
     <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
-    <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
+    <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details><p class="lvnext" id="lvNext" aria-live="polite"></p></div>
 
     <div class="rlabel"><i>3</i><span id="incoL">التسليم</span></div>
     <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>
@@ -1171,13 +1188,19 @@ $$('.sheet').forEach(sh=>{let y0=0,t=false;
 
 /* ============ نافذة طلب عرض السعر ============ */
 const qty=$('#qty');
-$('#levels').innerHTML=LEVELS.map((l,i)=>`<button type="button" data-act="level" data-i="${i}" aria-pressed="false" aria-label="${l[0]} ${l[1]}"><strong>${l[0]}</strong><span>${l[1]}</span></button>`).join('');
+const lvU=(n,land)=>land?(n===1?'شاحنة واحدة':n===2?'شاحنتين':n<=10?n+' شاحنات':n+' شاحنة'):(n===1?'حاوية واحدة':n===2?'حاويتين':n<=10?n+' حاويات':n+' حاوية');
+$('#levels').classList.add('lvtrack');
+$('#levels').innerHTML=LEVELS.map((l,i)=>`<button type="button" data-lv="${i}" aria-pressed="false" aria-label="${l[0]} ${l[1]}"><i></i><b>${l[0]}</b></button>`).join('');
+// Tapping a level (or the hint under the bar) sets the quantity to that level's minimum.
+$('#rfq').addEventListener('click',e=>{const t=e.target.closest('[data-lv]');if(!t)return;qty.value=LEVELS[Number(t.dataset.lv)][2];qty.dispatchEvent(new Event('input',{bubbles:true}))});
 function tierUpdate(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   let i=LEVELS.findIndex(l=>n>=l[2]&&(l[3]===null||n<=l[3])); if(i<0)i=6; const l=LEVELS[i];
-  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} ${S.mode==='land'?'شاحنة':'حاوية'}`;
+  const land=S.mode==='land',uw=land?'شاحنة':'حاوية';
+  $('#tier').innerHTML=`<span class="lvname">${l[0]} · ${l[1]}</span><span class="lvrange">${l[3]===null?l[2]+' '+uw+' فأكثر':l[2]+'–'+l[3]+' '+uw}</span>`;
   const tpc=S.mode==='land'?TRUCK_T:Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';
-  $$('#levels button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
+  $$('#levels button').forEach((b,j)=>{b.setAttribute('aria-pressed',String(j===i));b.classList.toggle('done',j<i);b.classList.toggle('cur',j===i)});
+  const nx=LEVELS[i+1];$('#lvNext').innerHTML=nx?`<button type="button" data-lv="${i+1}">أضف ${lvU(nx[2]-n,land)} لتصل إلى <b>${nx[0]} · ${nx[1]}</b></button>`:'<span>أعلى مستوى طلب</span>';
   rfqSum();
 }
 
