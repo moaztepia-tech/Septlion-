@@ -969,7 +969,7 @@ const ZG=[['q','الجودة'],['s','التعبئة والشحن'],['c','الم�
 function zoomSpec(p){
   const fs=fieldsOf(p).filter(f=>f.zoom!==false);
   if(!fs.some(f=>f.zl))return `<span>${esc(fs.map(f=>(f.l?f.l+': ':'')+f.v).join(' · '))}</span>`;
-  const key=ZKEY.map(k=>fs.find(f=>f.zl===k)).filter(Boolean),rest=fs.filter(f=>!key.includes(f));
+  const k0=ZKEY.map(k=>fs.find(f=>f.zl===k)).filter(Boolean),key=k0.length?k0:fs.filter(f=>f.g==='q'&&f.zoom!==false&&f.zv.length<=14).slice(0,3),rest=fs.filter(f=>!key.includes(f));
   const tiles=key.length?`<div class="ztiles">${key.map(f=>`<div><b${f.zv.length>6?' class="zlong"':''}><bdi>${esc(f.zv)}</bdi></b><small>${esc(f.zl)}</small></div>`).join('')}</div>`:'';
   const wide=f=>f.zl==='الشهادات'||f.zv.length>22;
   const fill=r=>{let run=0;return r.map((f,i)=>{if(wide(f)){run=0;return Object.assign({},f,{w:1})}run++;const nx=r[i+1];return Object.assign({},f,{w:run%2===1&&(!nx||wide(nx))?1:0})})};

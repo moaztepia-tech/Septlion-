@@ -143,3 +143,12 @@ test('quality facts come first on the card', () => {
   assert.equal(fs[3].zoom, false);
   assert.deepEqual(fs.slice(-2).map(f => f.v), ['شوال منسوج', '50 كجم']);
 });
+
+test('any product gets the same card: its own grade, MOQ and specs', () => {
+  const d = B.fromPlatform([{ id: 'prod-sugar', name: 'سكر أبيض', sector: { name: 'الأغذية' }, skus: [{ id: 'sku-sugar-50', name: 'سكر أبيض 50 كجم', unit: 'MT', minimumOrderQty: 25,
+    specifications: { packing: 'شوال 50 كجم', grade: 'ICUMSA 45', origin: 'البرازيل', certificates: 'حلال', delivery: 'CIF', payment: 'مقدماً', 'الاستقطاب': '99.8%', 'الرطوبة القصوى': '0.04%' } }] }]);
+  const fs = d.products[0].fields;
+  assert.deepEqual(fs.filter(f => f.card !== false).slice(0, 7).map(f => f.v),
+    ['ICUMSA 45', 'منشأ البرازيل', 'حلال', 'شوال 50 كجم', 'CIF', 'الدفع مقدماً', 'أقل طلب: 25 طن']);
+  assert.deepEqual(fs.filter(f => f.zl === 'الاستقطاب' || f.zl === 'الرطوبة القصوى').map(f => f.zv), ['99.8%', '0.04%']);
+});

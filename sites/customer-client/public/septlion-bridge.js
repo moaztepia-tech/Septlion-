@@ -259,7 +259,10 @@
         const zoomItem = x => Object.assign(x, { card: false });
         if (pack) zoomOnly.push(zoomItem(f('pack', 'التعبئة', pack, 's', 'التعبئة')));
         if (size) zoomOnly.push(zoomItem(f('size', 'الحجم', size, 's', 'الحجم')));
-        if (val('protein')) card.push(f('wheat', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
+        // The grade: the one quality figure that tells this product's grades apart. The team
+        // writes it per product ("بروتين 12%", "ICUMSA 45", "كسر 5%"); flour falls back to protein.
+        if (val('grade', 24)) card.push(f('type', 'الدرجة', val('grade', 24), 'q', 'الدرجة'));
+        else if (val('protein')) card.push(f('wheat', '', 'بروتين ' + val('protein'), 'q', 'البروتين', val('protein')));
         if (val('origin')) card.push(f('origin', 'المنشأ', 'منشأ ' + val('origin'), 'c', 'المنشأ', val('origin')));
         // "حلال · FSSC": the certificate import needs and the one food buyers audit for.
         const certCard = [firstCert, firstCert !== 'FSSC 22000' && /FSSC/i.test(certs) ? 'FSSC' : ''].filter(Boolean).join(' · ');
@@ -269,7 +272,9 @@
         // The minimum load with how much it holds: "حاوية 20 قدماً · 450 شوالاً".
         const perBox = val('perContainer', 120).replace(/^نحو\s+/, '');
         // It gets its own full line under the six facts, so it is never cut short.
-        const wide = val('container') ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
+        const UNIT_AR = { MT: 'طن', KG: 'كجم', FCL: 'حاوية' };
+        const moq = Number(sku.minimumOrderQty) > 0 && UNIT_AR[sku.unit] ? sku.minimumOrderQty + ' ' + UNIT_AR[sku.unit] : '';
+        const wide = !val('container') && moq ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + moq, 's', 'أقل طلب', moq), { wide: true })] : val('container') ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
         // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
         const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
         if (val('delivery', 80)) card.push(f('ship', 'التسليم', terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
@@ -290,6 +295,10 @@
         if (certs && certs !== firstCert) more.push(f('grade', 'الشهادات', certs, 'c', 'الشهادات'));
         if (val('documents', 200)) more.push(f('dot', 'المستندات', val('documents', 200), 'c', 'المستندات'));
         if (val('brand')) more.push(f('brand', 'العلامة', val('brand'), 'c', 'العلامة'));
+        // Any other product's own specs, written with Arabic names ("الاستقطاب": "99.8%"), show
+        // in the enlarged quality list, so a new product needs no code change.
+        Object.keys(spec).filter(k => /[\u0600-\u06FF]/.test(k) && typeof spec[k] !== 'object')
+          .forEach(k => { const v = clean(spec[k], 80), l = clean(k, 40); if (v && l) more.push(f('dot', '', l + ' ' + v, 'q', l, v)); });
         // The card shows at most six; pad it from the details so it never looks empty.
         while (card.length < 6 && more.length) card.push(more.shift());
         const fields = card.concat(wide, more, zoomOnly);
