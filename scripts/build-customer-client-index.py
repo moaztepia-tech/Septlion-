@@ -101,6 +101,10 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .rfq .qhint:empty{display:none}
 .rfq .landnote{margin:2px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
 .dh .dtag{margin-inline-start:auto;font-style:normal;font-size:11px;font-weight:700;color:#f3dfa6;border:1px solid rgba(243,223,166,.35);border-radius:999px;padding:1px 8px;white-space:nowrap}
+/* The quote sheet grew (destination list, sea/land, four steps): keep it inside the screen, scroll its
+   middle and keep the title and the send button always in view. */
+#rfq.sheet.rfq{max-height:94dvh;overflow:hidden}
+#rfq.sheet.rfq .rfq-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:14px;scrollbar-width:thin}
 /* Levels: one card with the current level, a 7-step progress track and the step to the next level. */
 .rfq .trow{margin-top:10px;padding:12px 12px 10px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
 .rfq .trow .tier{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 0 10px}
