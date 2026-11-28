@@ -877,7 +877,7 @@ details.opt.lv>:not(summary){margin-inline:0}
     <div class="field"><label for="fPhone">رقم واتساب مع رمز الدولة</label><input class="input" id="fPhone" type="tel" inputmode="tel" dir="ltr" placeholder="+249 …" autocomplete="tel" aria-describedby="fPhoneErr"><p class="err" id="fPhoneErr" role="alert"></p></div>
     <p class="hint" style="margin-top:10px">سنتواصل معك على هذا الرقم عبر واتساب لمتابعة الطلب.</p>
     <button class="btn btn-primary" type="submit" style="margin-top:18px">طلب عرض سعر <span class="arrow">←</span></button>
-    <p class="compose-note">نؤكد بريدك مرة واحدة، ثم يصل طلبك مباشرة إلى فريق سبتليون.</p>
+    <p class="compose-note">يصل طلبك مباشرة إلى فريق سبتليون، ونرد عليك عبر واتساب.</p>
   </form>
 </section>
 
@@ -981,7 +981,7 @@ const STATUS={
   alternative:{label:'يتوفر خيار بديل',msg:'قد تتوفر مواصفات أو شروط مختلفة، ولا تُعتمد إلا بموافقتك.',step:2},
   unavailable:{label:'تعذّر تلبية الطلب',msg:'لا نستطيع تلبية الاحتياج بالشروط الحالية. نوضح ذلك بدل تقديم وعد غير مؤكد.',step:1,stop:true}
 };
-const FLOW=[['تقديم الاحتياج','يصل الطلب إلى SEPTLION بعد تأكيد بريدك'],['تقييم إمكانية التلبية','التحقق من المواصفات والكمية والوجهة والموردين والشروط بواسطة فريق SEPTLION'],['عرض السعر','يُصدر فقط بعد التحقق من القدرة والشروط التجارية'],['التنفيذ والمتابعة','بعد قبول العرض واستكمال الاتفاق']];
+const FLOW=[['تقديم الاحتياج','يصل الطلب مباشرة إلى SEPTLION بعد كتابة اسمك ورقم واتساب'],['تقييم إمكانية التلبية','التحقق من المواصفات والكمية والوجهة والموردين والشروط بواسطة فريق SEPTLION'],['عرض السعر','يُصدر فقط بعد التحقق من القدرة والشروط التجارية'],['التنفيذ والمتابعة','بعد قبول العرض واستكمال الاتفاق']];
 
 /* ============ حالة التطبيق ============ */
 const S={cat:'الكل',sub:'الكل',brand:'الكل',size:'الكل',prefill:'',sort:'rel',view:store.get('septlion.preview.view.v1','feed'),q:'',items:[],idx:0,selected:null,qty:1,incoterm:'CIF',payment:'LC — اعتماد مستندي',trackId:null,needText:''};
@@ -1425,7 +1425,7 @@ const stLabel=(x,st)=>x.demo||x.sent||x.evaluation!=='pending'?st.label:'محف�
 function renderOrders(){
   const list=store.get(REQ_KEY,[]);
   $('#ordersEmpty').hidden=list.length>0;
-  $('#orderList').innerHTML=list.length?`<p class="hint" style="margin:16px 2px 10px">طلباتك محفوظة على هذا الجهاز. يصلنا الطلب بعد تأكيد بريدك.</p>`+list.map(x=>{
+  $('#orderList').innerHTML=list.length?`<p class="hint" style="margin:16px 2px 10px">طلباتك محفوظة على هذا الجهاز. يصلنا الطلب فور إرساله، ونرد عليك عبر واتساب.</p>`+list.map(x=>{
     const st=STATUS[x.evaluation]||STATUS.pending;
     const meta=x.kind==='sku'?`${esc(x.dest)}${x.port?' · '+esc(x.port):''} · ${esc(x.qty)} ${x.mode==='land'?'شاحنة':'حاوية'} · ${esc(x.incoterm)}`:esc(x.description);
     return `<article class="card"><div class="card-head"><strong>${esc(x.title||x.id)}</strong><span class="latin" style="font-size:10px;color:var(--sky);letter-spacing:.06em">${esc(x.id)}</span></div><p>${meta}</p><span class="state" data-s="${esc(x.evaluation||'pending')}">${esc(stLabel(x,st))}</span>${x.sent?'':reqBtns(x)}<button class="btn btn-ghost" style="margin-top:8px" data-act="track" data-id="${esc(x.id)}">عرض حالة الطلب <span class="arrow">←</span></button></article>`}).join(''):'';
@@ -1500,7 +1500,7 @@ $('#needForm').addEventListener('submit',e=>{
   list.unshift(x);
   store.set(REQ_KEY,list);
   e.target.reset(); S.needText=''; stage='start';topic='';extra='';
-  $('#doneBox').innerHTML=`<div class="mk">✓</div><h1>طلبك محفوظ.</h1><p>أكّد بريدك ليصل الطلب إلى فريق سبتليون.</p>${reqBtns(x)}<button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>`;
+  $('#doneBox').innerHTML=`<div class="mk">✓</div><h1>طلبك محفوظ.</h1><p>أكمل اسمك ورقم واتساب ليصل الطلب إلى فريق سبتليون.</p>${reqBtns(x)}<button class="btn btn-ghost" data-go="orders" style="margin-top:8px">طلباتي</button><button class="btn btn-ghost" data-go="home">العودة للرئيسية</button>`;
   go('needDone'); SeptlionBridge.submit(x);
 });
 
