@@ -269,12 +269,17 @@
         if (firstCert) card.push(Object.assign(f('brand', '', certCard, 'c', 'الشهادات'), { zoom: certs === firstCert }));
         const unit = [pack.split(' ')[0], size].filter(Boolean).join(' ');
         if (unit) card.push(Object.assign(f('size', 'التعبئة', unit, 's', 'التعبئة'), { zoom: false }));
-        // The minimum load with how much it holds: "حاوية 20 قدماً · 450 شوالاً".
+        // Tons per container, for the quote sheet's automatic tonnage: set by the team as
+        // "tonsPerContainer", or worked out from the bags per container and the bag weight.
+        const num = t => Number((String(t || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/\d+(?:\.\d+)?/) || [])[0]) || 0;
+        const kgM = size.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/(\d+(?:\.\d+)?)\s*(كجم|كغ|كيلو|kg)/i);
+        const tpc = num(spec.tonsPerContainer) || (num(spec.perContainer) && kgM ? Math.round(num(spec.perContainer) * Number(kgM[1])) / 1000 : 0);
+        // The minimum load with how much it holds: "حاوية 20 قدماً · 450 شوالاً · 22.5 طن".
         const perBox = val('perContainer', 120).replace(/^نحو\s+/, '');
         // It gets its own full line under the six facts, so it is never cut short.
         const UNIT_AR = { MT: 'طن', KG: 'كجم', FCL: 'حاوية' };
         const moq = Number(sku.minimumOrderQty) > 0 && UNIT_AR[sku.unit] ? sku.minimumOrderQty + ' ' + UNIT_AR[sku.unit] : '';
-        const wide = !val('container') && moq ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + moq, 's', 'أقل طلب', moq), { wide: true })] : val('container') ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
+        const wide = !val('container') && moq ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + moq, 's', 'أقل طلب', moq), { wide: true })] : val('container') ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox, tpc ? +tpc.toFixed(1) + ' طن' : ''].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
         // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
         const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
         if (val('delivery', 80)) card.push(f('ship', 'التسليم', terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
@@ -303,11 +308,6 @@
         // The card shows at most six; pad it from the details so it never looks empty.
         while (card.length < 6 && more.length) card.push(more.shift());
         const fields = card.concat(wide, more, zoomOnly);
-        // Tons per container, for the quote sheet's automatic tonnage: set by the team as
-        // "tonsPerContainer", or worked out from the bags per container and the bag weight.
-        const num = t => Number((String(t || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/\d+(?:\.\d+)?/) || [])[0]) || 0;
-        const kgM = size.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/(\d+(?:\.\d+)?)\s*(كجم|كغ|كيلو|kg)/i);
-        const tpc = num(spec.tonsPerContainer) || (num(spec.perContainer) && kgM ? Math.round(num(spec.perContainer) * Number(kgM[1])) / 1000 : 0);
         products.push({
           id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
           type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack, size,

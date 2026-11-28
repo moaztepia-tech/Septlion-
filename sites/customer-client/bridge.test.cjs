@@ -120,9 +120,9 @@ test('home page cards come from the team panel catalog', () => {
   assert.equal(a.size, '50 كجم');
   assert.equal(a.pack, 'شوال منسوج');
   assert.deepEqual(a.imgs, ['https://www.septlion.com/new-app/uploads/a.webp', 'https://www.septlion.com/new-app/uploads/b.webp']);
-  assert.deepEqual(a.fields.map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً', 'نحو 450 شوالاً', 'شوال منسوج', '50 كجم']);
+  assert.deepEqual(a.fields.map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً · 22.5 طن', 'نحو 450 شوالاً', 'شوال منسوج', '50 كجم']);
   // On the card: the unit, then the minimum load on its own line; the rest is for the enlarged view.
-  assert.deepEqual(a.fields.filter(f => f.card !== false).map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً']);
+  assert.deepEqual(a.fields.filter(f => f.card !== false).map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً · 22.5 طن']);
   assert.equal(a.fields[1].wide, true);
   // 450 bags of 50 kg: 22.5 tons per container, for the quote sheet's tonnage.
   assert.equal(a.tpc, 22.5);
