@@ -100,7 +100,12 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .rfq .pmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .rfq .pmeta span{font-size:11px;padding:2px 8px;border-radius:999px;background:#ffffff10;border:1px solid #ffffff1a;color:#dbe6f8}
 .rfq .pmoq{display:block;margin-top:5px;font-size:11px;color:var(--gold)}
-.sheet.rfq .presets{display:flex}
+.rfq .opt.lv>summary{display:none}
+.rfq .opt.lv{margin-top:8px}
+.sheet.rfq .levels{gap:4px}
+.sheet.rfq .levels button{min-height:52px;padding:4px 1px;border-radius:9px;gap:3px}
+.sheet.rfq .levels strong{font-size:10.5px}
+.sheet.rfq .levels span{font-size:9px;line-height:1.25}
 .rfq .tier{font-size:11.5px;color:#9db3d6;padding-top:6px}
 .rfq .terms{padding:12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff1f}
 .sheet.rfq .terms .grid2{grid-template-columns:1fr 1fr;gap:12px}
@@ -192,7 +197,6 @@ one("['السعر','حسب العرض']", "['السعر','حسب الطلب']")
 one('$(\'#pbox\').innerHTML=`<div class="pthumb" aria-hidden="true">${art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)}</strong><div class="pmeta">${[p.type,p.pack,p.size].filter(Boolean).map(v=>`<span>${esc(v)}</span>`).join(\'\')}<span class="sku">${esc(p.sku)}</span></div></div>`;', '$(\'#pbox\').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?\' photo\':\'\'}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)} · ${esc(p.size||\'\')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join(\'\')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:\'\'}</div>`;')
 one('<div class="rlabel">كم تحتاج؟</div>', '<div class="rlabel"><i>1</i>كم تحتاج؟</div>')
 one('<div class="rlabel">إلى أين؟</div>', '<div class="rlabel"><i>2</i>إلى أين؟</div>')
-one('<details class="opt lv" open><summary>عرض مستويات الطلب</summary>', '<details class="opt lv"><summary>مستويات الطلب</summary>')
 one('<details class="opt" id="termsD"><summary>الشروط: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>', '<div class="rlabel"><i>3</i>التسليم والدفع</div>\n    <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>')
 one('data-v="LC — اعتماد مستندي">LC · اعتماد</button>', 'data-v="LC — اعتماد مستندي">اعتماد مستندي</button>')
 one('data-v="TT — تحويل بنكي">TT · تحويل</button>', 'data-v="TT — تحويل بنكي">تحويل مقدم</button>')
