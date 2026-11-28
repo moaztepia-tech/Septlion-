@@ -100,6 +100,7 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .rfq .qhint{margin:6px 4px 0;font-size:11.5px;color:#9db3d6;text-align:center}
 .rfq .qhint:empty{display:none}
 .rfq .landnote{margin:2px 4px 0;font-size:12px;font-weight:700;color:#f3dfa6}
+.dh .dtag{margin-inline-start:auto;font-style:normal;font-size:11px;font-weight:700;color:#f3dfa6;border:1px solid rgba(243,223,166,.35);border-radius:999px;padding:1px 8px;white-space:nowrap}
 .rfq .landnote:empty{display:none}
 .rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
 .rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
@@ -151,10 +152,11 @@ function dOptions(raw){
   const src=dOptions0(raw),out=[],li=src.findIndex(o=>o.h==='آخر وجهة استخدمتها');
   if(li>=0)out.push(src[li],src[li+1]);
   const opts=src.filter((o,i)=>!o.h&&!o.free&&!(li>=0&&i===li+1));
-  [...new Set(opts.map(o=>o.c))].forEach(c=>{
-    const ports=DEST.filter(d=>d[1]===c);
+  const q=norm(raw),rank=c=>{const n=norm(c);return (n===q?0:n.startsWith(q)?1:2)*100+n.length};
+  [...new Set(opts.map(o=>o.c))].sort((x,y)=>q?rank(x)-rank(y):0).forEach(c=>{
+    const ports=DEST.filter(d=>d[1]===c),has=o=>Object.prototype.hasOwnProperty.call(o,c);
     if(!ports.length){out.push(...opts.filter(o=>o.c===c));return}
-    out.push({h:'<span class="dflag">'+flagC(c)+'</span> '+esc(c)});
+    out.push({h:'<span class="dflag">'+flagC(c)+'</span> '+esc(c)+(has(LAND)?'<em class="dtag">بحراً أو براً</em>':has(TRANSIT)?'<em class="dtag">بحراً ثم براً</em>':'')});
     ports.forEach(d=>out.push({c,p:d[0],g:1}));
   });
   return out.concat(src.filter(o=>o.free));
@@ -227,14 +229,17 @@ one("${esc(x.qty)} حاوية · ${esc(x.incoterm)}", "${esc(x.qty)} ${x.mode===
 # and it is chosen for them when they have no sea port.
 one('<button type="button" role="radio" aria-checked="false" data-v="FOB">FOB</button></div></div>', '<button type="button" role="radio" aria-checked="false" data-v="FOB" class="seaopt">FOB</button><button type="button" role="radio" aria-checked="false" data-v="DAP" class="landopt" hidden>تسليم الحدود · DAP</button><button type="button" role="radio" aria-checked="false" data-v="FCA" class="landopt" hidden>تسليم المطحن · FCA</button></div></div>')
 one('<button type="button" role="radio" aria-checked="true" data-v="CIF">CIF</button>', '<button type="button" role="radio" aria-checked="true" data-v="CIF" class="seaopt">CIF</button>')
-one("function setDest(c,p,keepText){\n  dest.value=c||'';port.value=p||'';\n  if(!keepText)dQ.value=destLabel();\n  dSync();\n}", """// Countries a mill in Egypt reaches by truck, with the border crossing used (expert panel:
-// Sudan and eastern Libya only; Chad and South Sudan are served by sea through other ports).
-const LAND={'السودان':'أرقين أو أشكيت أو أوسيف','ليبيا':'السلوم'},TRUCK_T=62.5;
+one("function setDest(c,p,keepText){\n  dest.value=c||'';port.value=p||'';\n  if(!keepText)dQ.value=destLabel();\n  dSync();\n}", """Object.assign(FLAG_ISO,{'الكويت':'KW','قطر':'QA','البحرين':'BH','عُمان':'OM','الأردن':'JO','العراق':'IQ','سوريا':'SY','لبنان':'LB','فلسطين':'PS','تركيا':'TR','ليبيا':'LY','تونس':'TN','الجزائر':'DZ','المغرب':'MA','موريتانيا':'MR','إريتريا':'ER','الصومال':'SO','إثيوبيا':'ET','جنوب السودان':'SS','أوغندا':'UG','رواندا':'RW','بوروندي':'BI','جزر القمر':'KM','سيشل':'SC','مدغشقر':'MG','موريشيوس':'MU','السنغال':'SN','غامبيا':'GM','غينيا بيساو':'GW','غينيا':'GN','سيراليون':'SL','ليبيريا':'LR','ساحل العاج':'CI','توغو':'TG','بنين':'BJ','الرأس الأخضر':'CV','مالي':'ML','بوركينا فاسو':'BF','النيجر':'NE','الكاميرون':'CM','أفريقيا الوسطى':'CF','الغابون':'GA','غينيا الاستوائية':'GQ','الكونغو':'CG','الكونغو الديمقراطية':'CD','ساو تومي وبرينسيب':'ST','أنغولا':'AO','جنوب أفريقيا':'ZA','ناميبيا':'NA','موزمبيق':'MZ','زامبيا':'ZM','زيمبابوي':'ZW','ملاوي':'MW','بوتسوانا':'BW','ليسوتو':'LS','إسواتيني':'SZ'});
+// Countries a mill in Egypt reaches by truck, with the route used (same routes as the market pages).
+const LAND={'السودان':'أرقين أو أشكيت أو أوسيف','ليبيا':'منفذ السلوم','تونس':'ليبيا ومعبر رأس جدير','الأردن':'عبّارة الشاحنات نويبع–العقبة','السعودية':'عبّارة الشاحنات سفاجا–ضبا','الكويت':'السعودية ومنفذ النويصيب','قطر':'السعودية ومنفذ سلوى–أبو سمرة','البحرين':'السعودية وجسر الملك فهد','الإمارات':'السعودية ومنفذ البطحاء–الغويفات','عُمان':'السعودية أو الإمارات','العراق':'الأردن ومنفذ الكرامة–طريبيل','سوريا':'الأردن ومنفذ جابر–نصيب','لبنان':'الأردن وسوريا','اليمن':'السعودية ومنفذ الوديعة'},TRUCK_T=62.5;
+// Inland countries: containers by sea to a port, then trucks inland. No choice to make, only a note.
+const TRANSIT={'تشاد':'بحراً إلى دوالا، ثم بالشاحنات إلى نجامينا','إثيوبيا':'بحراً إلى جيبوتي، ثم بالشاحنات إلى أديس أبابا','جنوب السودان':'بحراً إلى مومباسا، ثم بالشاحنات عبر أوغندا إلى جوبا','أوغندا':'بحراً إلى مومباسا، ثم بالشاحنات إلى كمبالا','رواندا':'بحراً إلى دار السلام أو مومباسا، ثم بالشاحنات إلى كيغالي','بوروندي':'بحراً إلى دار السلام، ثم بالشاحنات إلى بوجومبورا','أفريقيا الوسطى':'بحراً إلى دوالا، ثم بالشاحنات إلى بانغي','مالي':'بحراً إلى داكار أو أبيدجان، ثم بالشاحنات إلى باماكو','بوركينا فاسو':'بحراً إلى أبيدجان أو لومي، ثم بالشاحنات إلى واغادوغو','النيجر':'بحراً إلى كوتونو أو لومي، ثم بالشاحنات إلى نيامي','زامبيا':'بحراً إلى دار السلام أو ديربان، ثم بالشاحنات إلى لوساكا','زيمبابوي':'بحراً إلى بيرا أو ديربان، ثم بالشاحنات إلى هراري','ملاوي':'بحراً إلى ناكالا أو بيرا، ثم بالشاحنات إلى ليلونغوي','بوتسوانا':'بحراً إلى ديربان أو والفيس باي، ثم بالشاحنات إلى غابورون','ليسوتو':'بحراً إلى ديربان، ثم بالشاحنات إلى ماسيرو','إسواتيني':'بحراً إلى مابوتو أو ديربان، ثم بالشاحنات إلى مبابان','فلسطين':'بحراً إلى العقبة، ثم بالشاحنات عبر جسر الملك حسين'};
 function landUpdate(){
   const c=(dest.value||'').trim(),via=Object.prototype.hasOwnProperty.call(LAND,c)?LAND[c]:'';
-  $('#modeRow').hidden=!via;
+  const tr=!via&&Object.prototype.hasOwnProperty.call(TRANSIT,c);
+  $('#modeRow').hidden=!via&&!tr;$('#modeL').hidden=$('#modeRow .seg').hidden=!via;
   if(!via&&S.mode!=='sea')setSeg('mode','sea');
-  $('#landNote').textContent=via?'يمكن الشحن بحراً، أو براً بالشاحنات عبر '+via+'.':'';
+  $('#landNote').textContent=via?'يمكن الشحن بحراً، أو براً بالشاحنات عبر '+via+'.':Object.prototype.hasOwnProperty.call(TRANSIT,c)?'الشحن '+TRANSIT[c]+'.':'';
 }
 function modeApply(){
   const land=S.mode==='land';
@@ -258,6 +263,10 @@ one('function setSeg(key,v){S[key]=v;$$(`.seg[data-key="${key}"] button`).forEac
 _q0 = s.index('<div class="rlabel"><i>1</i>كم تحتاج؟</div>'); _d0 = s.index('<div class="rlabel"><i>2</i>إلى أين؟</div>'); _t0 = s.index('<div class="rlabel"><i>3</i>')
 assert _q0 < _d0 < _t0
 s = s[:_q0] + s[_d0:_t0].replace('<i>2</i>إلى أين؟', '<i>1</i>إلى أين؟') + s[_q0:_d0].replace('<i>1</i>كم تحتاج؟', '<i>2</i>كم تحتاج؟') + s[_t0:]
+one("['نجامينا — نقطة تسليم داخلية','تشاد'", "['نجامينا — عبر دوالا','تشاد'")
+# Every country in Africa and the Middle East in the destination search, with its main port
+# (inland capitals name the port they are reached through).
+one("['ميناء دوالا — عبر الكاميرون','تشاد','douala cameroon الكاميرون']];", "['ميناء دوالا — عبر الكاميرون','تشاد','douala cameroon الكاميرون'],['الشويخ','الكويت','kuwait shuwaikh'],['حمد','قطر','qatar hamad doha الدوحة'],['خليفة بن سلمان','البحرين','bahrain khalifa bin salman'],['صحار','عُمان','oman sohar عمان'],['صلالة','عُمان','salalah'],['العقبة','الأردن','jordan aqaba عمان amman'],['أم قصر','العراق','iraq umm qasr البصرة basra'],['اللاذقية','سوريا','syria latakia'],['طرطوس','سوريا','tartus'],['بيروت','لبنان','lebanon beirut'],['رام الله — عبر العقبة','فلسطين','palestine ramallah aqaba'],['مرسين','تركيا','turkey mersin'],['إسطنبول','تركيا','istanbul ambarli'],['طرابلس','ليبيا','libya tripoli'],['بنغازي','ليبيا','benghazi'],['مصراتة','ليبيا','misrata'],['رادس','تونس','tunisia rades تونس'],['الجزائر العاصمة','الجزائر','algeria algiers'],['وهران','الجزائر','oran'],['الدار البيضاء','المغرب','morocco casablanca'],['طنجة المتوسط','المغرب','tanger med'],['نواكشوط','موريتانيا','mauritania nouakchott'],['مصوع','إريتريا','eritrea massawa'],['مقديشو','الصومال','somalia mogadishu'],['بربرة','الصومال','berbera'],['أديس أبابا — عبر جيبوتي','إثيوبيا','ethiopia addis ababa djibouti'],['جوبا — عبر مومباسا','جنوب السودان','south sudan juba mombasa'],['كمبالا — عبر مومباسا','أوغندا','uganda kampala mombasa'],['كيغالي — عبر دار السلام','رواندا','rwanda kigali'],['بوجومبورا — عبر دار السلام','بوروندي','burundi bujumbura'],['موروني','جزر القمر','comoros moroni'],['فيكتوريا','سيشل','seychelles victoria'],['تاماتاف','مدغشقر','madagascar toamasina tamatave'],['بورت لويس','موريشيوس','mauritius port louis'],['داكار','السنغال','senegal dakar'],['بانجول','غامبيا','gambia banjul'],['بيساو','غينيا بيساو','guinea bissau'],['كوناكري','غينيا','guinea conakry'],['فريتاون','سيراليون','sierra leone freetown'],['مونروفيا','ليبيريا','liberia monrovia'],['أبيدجان','ساحل العاج','ivory coast cote divoire abidjan'],['لومي','توغو','togo lome'],['كوتونو','بنين','benin cotonou'],['برايا','الرأس الأخضر','cape verde praia'],['باماكو — عبر داكار أو أبيدجان','مالي','mali bamako'],['واغادوغو — عبر أبيدجان أو لومي','بوركينا فاسو','burkina faso ouagadougou'],['نيامي — عبر كوتونو أو لومي','النيجر','niger niamey'],['دوالا','الكاميرون','cameroon douala'],['كريبي','الكاميرون','kribi'],['بانغي — عبر دوالا','أفريقيا الوسطى','central african republic bangui'],['ليبرفيل — أوويندو','الغابون','gabon libreville owendo'],['مالابو','غينيا الاستوائية','equatorial guinea malabo'],['بوانت نوار','الكونغو','congo brazzaville pointe noire'],['ماتادي','الكونغو الديمقراطية','dr congo drc kinshasa matadi'],['ساو تومي','ساو تومي وبرينسيب','sao tome'],['لواندا','أنغولا','angola luanda'],['ديربان','جنوب أفريقيا','south africa durban'],['كيب تاون','جنوب أفريقيا','cape town'],['والفيس باي','ناميبيا','namibia walvis bay'],['مابوتو','موزمبيق','mozambique maputo'],['بيرا','موزمبيق','beira'],['لوساكا — عبر دار السلام أو ديربان','زامبيا','zambia lusaka'],['هراري — عبر بيرا أو ديربان','زيمبابوي','zimbabwe harare'],['ليلونغوي — عبر ناكالا أو بيرا','ملاوي','malawi lilongwe'],['غابورون — عبر ديربان أو والفيس باي','بوتسوانا','botswana gaborone'],['ماسيرو — عبر ديربان','ليسوتو','lesotho maseru'],['مبابان — عبر مابوتو أو ديربان','إسواتيني','eswatini swaziland mbabane']];")
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n
