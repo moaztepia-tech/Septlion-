@@ -225,7 +225,7 @@ const U = {
 // Routes that depend on security or politics say so, so the page never promises
 // a crossing that may be closed on the day.
 export const SHIPPING = {
-  sudan: {mode: 'both', route: {ar: 'من مصر عبر معابر أرقين وقسطل، وحدربة على طريق سفاجا والبحر الأحمر', en: 'from Egypt via the Argeen and Qastal crossings, and Hadarba on the Safaga–Red Sea road'}},
+  sudan: {mode: 'both', route: {ar: 'من مصر عبر معابر أرقين وأشكيت وأوسيف', en: 'from Egypt via the Argeen, Ashkeit and Oseif crossings'}},
   libya: {mode: 'both', route: {ar: 'من مصر عبر منفذ السلوم وامساعد', en: 'from Egypt via the Salloum–Musaid crossing'}},
   tunisia: {mode: 'both', route: {ar: 'من مصر عبر ليبيا ومعبر رأس جدير، حسب الوضع على الطريق', fr: "depuis l'Égypte via la Libye et le poste de Ras Jedir, selon la situation sur la route", en: 'from Egypt through Libya and the Ras Jedir crossing, subject to road conditions'}},
   jordan: {mode: 'both', route: {ar: 'من مصر عبر عبّارة الشاحنات نويبع–العقبة، أو من السعودية عبر منفذ المدورة', en: 'from Egypt by truck on the Nuweiba–Aqaba ferry, or from Saudi Arabia via the Mudawwara crossing'}},
