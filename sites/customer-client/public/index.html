@@ -521,6 +521,8 @@ mark{background:#8fa6d638;color:#e4ecfb;border-radius:3px;padding:0 1px}
 .zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}
 /* Quote sheet: numbered steps, a product box with the real photo and key facts, quick
    quantity picks, and the terms shown open. */
+.rfq .qtons{padding:3px 10px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
+.rfq .qtons:empty{display:none}
 .rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
 .rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
 .rfq .pbox{align-items:center;gap:12px;padding:8px;background:#ffffff08;border-color:#ffffff1f}
@@ -859,7 +861,7 @@ details.opt.lv>:not(summary){margin-inline:0}
     <div class="pbox" id="pbox"></div>
 
     <div class="rlabel"><i>1</i>كم تحتاج؟</div>
-    <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span>حاوية</span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
+    <div class="qty"><button type="button" data-act="qty" data-d="-1" aria-label="تقليل عدد الحاويات">−</button><div class="mid"><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="عدد الحاويات"><span>حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div><button type="button" data-act="qty" data-d="1" aria-label="زيادة عدد الحاويات">+</button></div>
     <div class="presets" id="presets" role="group" aria-label="كميات شائعة"></div>
     <div class="trow"><div class="tier" id="tier" aria-live="polite"></div>
     <details class="opt lv" open><summary>عرض مستويات الطلب</summary><div class="levels" id="levels" role="group" aria-label="مستويات الطلب السبعة"></div></details></div>
@@ -1160,6 +1162,7 @@ function tierUpdate(){
   const n=Math.max(1,parseInt(qty.value,10)||1);
   let i=LEVELS.findIndex(l=>n>=l[2]&&(l[3]===null||n<=l[3])); if(i<0)i=6; const l=LEVELS[i];
   $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;
+  const tpc=Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';
   $$('#levels button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
   rfqSum();
 }
@@ -1254,7 +1257,7 @@ $('#presets').innerHTML=[1,5,10,20,50].map(n=>`<button type="button" data-act="q
 function openRfq(id,trigger){
   S.selected=PRODUCTS.find(p=>p.id===id)||null; if(!S.selected) return;
   const p=S.selected;
-  $('#pbox').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?' photo':''}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:''}<strong>${esc(p.name)} · ${esc(p.size||'')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join('')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:''}</div>`;
+  $('#pbox').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?' photo':''}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:''}<strong>${esc(p.name)} · ${esc(p.size||'')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join('')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:''}</div>`;qty.dataset.tpc=p.tpc||'';
   try{$('#rfqCo').value=localStorage.getItem('septlion.company')||''}catch{$('#rfqCo').value=''}$('#rfqNote').value='';
   qty.value=1; $$('#rfq details.opt:not(.lv)').forEach(d=>d.open=false);if($('#rfqCo').value)$('#noteD').open=true;dClose();$('#destPick').classList.remove('bad');$('#destErr').textContent='';setDest('','');
   setSeg('incoterm','CIF'); setSeg('payment','LC — اعتماد مستندي'); tierUpdate();
@@ -1452,7 +1455,7 @@ function normalize(d){
     const p={id,name:str(r.name),cat:str(r.sector||r.cat)||'عام',sub:str(r.sub)||'عام',type,brand:brand||NO_BRAND,pack,size,price:str(r.price),
       art:(r.art==='sack'||r.art==='bottle')?r.art:'none',short:str(r.short),tag:str(r.tag),kw:str(r.kw),
       imgs:(Array.isArray(r.imgs)?r.imgs:[]).map(str).filter(Boolean).map(u=>/^(https?:|\/|data:)/.test(u)?u:'/new-app/'+u),
-      fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false),card:!(f&&f.card===false),wide:!!(f&&f.wide)})).filter(f=>f.v)};
+      tpc:Number(r.tpc)>0?Number(r.tpc):0,fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:str(f&&f.g),zl:str(f&&f.zl),zv:str(f&&f.zv)||str(f&&f.v),zoom:!(f&&f.zoom===false),card:!(f&&f.card===false),wide:!!(f&&f.wide)})).filter(f=>f.v)};
     p.desc=[type,[pack,size].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
     p.sku=str(r.sku)||id.toUpperCase();
     return p}).filter(Boolean);

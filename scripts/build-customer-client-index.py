@@ -91,6 +91,8 @@ one(".zoomcap span{font-size:12px;color:var(--muted)}", """.zoomcap span{font-si
 .zoom:has(.zspec) .zoomcap>span:last-child{justify-self:center;padding:5px 14px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff14;color:#c9d6ec}
 /* Quote sheet: numbered steps, a product box with the real photo and key facts, quick
    quantity picks, and the terms shown open. */
+.rfq .qtons{padding:3px 10px;border-radius:999px;background:#d6b25e1f;border:1px solid #d6b25e55;color:#f3dfa6;font:700 12px var(--latin)}
+.rfq .qtons:empty{display:none}
 .rfq .rlabel{display:flex;align-items:center;gap:8px;margin:18px 2px 8px;font-size:14px}
 .rfq .rlabel i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#0b1f38;font:800 11px var(--latin);font-style:normal}
 .rfq .pbox{align-items:center;gap:12px;padding:8px;background:#ffffff08;border-color:#ffffff1f}
@@ -194,7 +196,7 @@ every("esc(p.price||'حسب العرض')", "esc(p.price||'حسب الطلب')", 
 one("['السعر','حسب العرض']", "['السعر','حسب الطلب']")
 # Quote sheet, laid out as three numbered steps (quantity, destination, terms) under a product
 # box that shows the real photo and the card's key facts; terms open by default.
-one('$(\'#pbox\').innerHTML=`<div class="pthumb" aria-hidden="true">${art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)}</strong><div class="pmeta">${[p.type,p.pack,p.size].filter(Boolean).map(v=>`<span>${esc(v)}</span>`).join(\'\')}<span class="sku">${esc(p.sku)}</span></div></div>`;', '$(\'#pbox\').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?\' photo\':\'\'}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)} · ${esc(p.size||\'\')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join(\'\')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:\'\'}</div>`;')
+one('$(\'#pbox\').innerHTML=`<div class="pthumb" aria-hidden="true">${art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)}</strong><div class="pmeta">${[p.type,p.pack,p.size].filter(Boolean).map(v=>`<span>${esc(v)}</span>`).join(\'\')}<span class="sku">${esc(p.sku)}</span></div></div>`;', '$(\'#pbox\').innerHTML=`<div class="pthumb${p.imgs&&p.imgs.length?\' photo\':\'\'}" aria-hidden="true">${p.imgs&&p.imgs.length?`<img src="${esc(p.imgs[0])}" alt="" loading="lazy" decoding="async">`:art(p)}</div><div class="pinfo">${p.brand!==NO_BRAND?`<span class="brand-t">${esc(p.brand)}</span>`:\'\'}<strong>${esc(p.name)} · ${esc(p.size||\'\')}</strong><div class="pmeta">${fieldsOf(p).filter(f=>f.card!==false&&!f.wide).slice(0,3).map(f=>`<span>${esc(f.v)}</span>`).join(\'\')}</div>${(fieldsOf(p).find(f=>f.wide)||{}).v?`<small class="pmoq">${esc(fieldsOf(p).find(f=>f.wide).v)}</small>`:\'\'}</div>`;qty.dataset.tpc=p.tpc||\'\';')
 one('<div class="rlabel">كم تحتاج؟</div>', '<div class="rlabel"><i>1</i>كم تحتاج؟</div>')
 one('<div class="rlabel">إلى أين؟</div>', '<div class="rlabel"><i>2</i>إلى أين؟</div>')
 one('<details class="opt" id="termsD"><summary>الشروط: <b id="termSum">CIF · LC</b><span class="ed">تعديل</span></summary>', '<div class="rlabel"><i>3</i>التسليم والدفع</div>\n    <div class="terms" id="termsD"><b id="termSum" hidden>CIF · LC</b>')
@@ -203,6 +205,11 @@ one('data-v="TT — تحويل بنكي">TT · تحويل</button>', 'data-v="TT
 one('<div class="pop"><div class="grid2">', '<div class="tpanel"><div class="grid2">')
 one('<p class="helper" id="termHelp" aria-live="polite"></p></div>\n    </details>', '<p class="helper" id="termHelp" aria-live="polite"></p></div>\n    </div>')
 one("const PAYS={LC:'<b>LC</b> — اعتماد مستندي عبر البنك.',TT:'<b>TT</b> — تحويل بنكي مباشر.'};", "const PAYS={LC:'<b>LC</b> — اعتماد مستندي يغطي القيمة كاملة قبل الشحن.',TT:'<b>TT</b> — تحويل بنكي للقيمة كاملة قبل الشحن.'};")
+# Automatic tonnage beside the container count for goods sold by weight (tons per container
+# comes from the catalog).
+one("fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:", "tpc:Number(r.tpc)>0?Number(r.tpc):0,fields:(Array.isArray(r.fields)?r.fields:[]).map(f=>({ic:str(f&&f.ic)||'dot',l:str(f&&f.l),v:str(f&&f.v),g:")
+one('<span>حاوية</span></div>', '<span>حاوية</span><span class="qtons" id="qtyT" aria-live="polite"></span></div>')
+one("  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;", "  $('#tier').textContent=`${l[0]} · ${l[1]} · ${l[3]===null?'501 فأكثر':l[2]+'–'+l[3]} حاوية`;\n  const tpc=Number(qty.dataset.tpc)||0;$('#qtyT').textContent=tpc?`${+(n*tpc).toFixed(1)} طن`:'';")
 # The service worker file lives in /new-app/ and cannot control the root.
 s, n = re.subn(r"if\('serviceWorker' in navigator&&!PREVIEW[^\n]*register\('sw\.js'\)\.catch\(\(\)=>\{\}\)\);?", "/* service worker stays with /new-app/ */", s)
 assert n == 1, n

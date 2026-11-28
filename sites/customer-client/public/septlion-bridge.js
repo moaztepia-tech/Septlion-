@@ -303,11 +303,16 @@
         // The card shows at most six; pad it from the details so it never looks empty.
         while (card.length < 6 && more.length) card.push(more.shift());
         const fields = card.concat(wide, more, zoomOnly);
+        // Tons per container, for the quote sheet's automatic tonnage: set by the team as
+        // "tonsPerContainer", or worked out from the bags per container and the bag weight.
+        const num = t => Number((String(t || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/\d+(?:\.\d+)?/) || [])[0]) || 0;
+        const kgM = size.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/(\d+(?:\.\d+)?)\s*(كجم|كغ|كيلو|kg)/i);
+        const tpc = num(spec.tonsPerContainer) || (num(spec.perContainer) && kgM ? Math.round(num(spec.perContainer) * Number(kgM[1])) / 1000 : 0);
         products.push({
           id, sku: clean(sku.skuCode, 60) || undefined, sector, sub, name,
           type: clean(spec.type, 120), brand: clean(spec.brand, 60), pack, size,
           art: spec.art === 'bottle' ? 'bottle' : 'sack', short: clean(spec.short, 40), tag: clean(spec.tag, 40),
-          kw: [clean(prod.description, 600), clean(sku.name, 160)].filter(Boolean).join(' '), imgs, fields,
+          kw: [clean(prod.description, 600), clean(sku.name, 160)].filter(Boolean).join(' '), imgs, fields, tpc,
         });
       });
     });

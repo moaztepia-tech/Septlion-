@@ -124,6 +124,9 @@ test('home page cards come from the team panel catalog', () => {
   // On the card: the unit, then the minimum load on its own line; the rest is for the enlarged view.
   assert.deepEqual(a.fields.filter(f => f.card !== false).map(f => f.v), ['شوال 50 كجم', 'أقل طلب: حاوية 20 قدماً · 450 شوالاً']);
   assert.equal(a.fields[1].wide, true);
+  // 450 bags of 50 kg: 22.5 tons per container, for the quote sheet's tonnage.
+  assert.equal(a.tpc, 22.5);
+  assert.equal(r.tpc, 0);
   assert.deepEqual(B.catalogRef('asasi50'), { productId: 'prod-zollana-asasi', skuId: 'sku-asasi-50' });
   assert.equal(r.id, 'rice-5kg');
   assert.deepEqual(B.catalogRef('rice-5kg'), { productId: 'prod-new-rice', skuId: 'rice-5kg' });
