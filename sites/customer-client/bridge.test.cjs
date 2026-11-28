@@ -155,3 +155,10 @@ test('any product gets the same card: its own grade, MOQ and specs', () => {
     ['ICUMSA 45', 'منشأ البرازيل', 'حلال', 'شوال 50 كجم', 'CIF', 'الدفع مقدماً', 'أقل طلب: 25 طن']);
   assert.deepEqual(fs.filter(f => f.zl === 'الاستقطاب' || f.zl === 'الرطوبة القصوى').map(f => f.zv), ['99.8%', '0.04%']);
 });
+
+test('sea and land delivery reads "بحر أو بر" on the card', () => {
+  const d = B.fromPlatform([{ id: 'p', name: 'دقيق', skus: [{ id: 'sku-x-50', name: 'دقيق 50 كجم', specifications: { packing: 'شوال 50 كجم', delivery: 'FOB مصر أو CIF ميناؤك أو DAP براً' } }] }]);
+  const f = d.products[0].fields.find(x => x.zl === 'التسليم');
+  assert.equal(f.v, 'بحر أو بر');
+  assert.equal(f.zv, 'FOB مصر أو CIF ميناؤك أو DAP براً');
+});

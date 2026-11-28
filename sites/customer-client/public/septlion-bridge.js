@@ -282,7 +282,9 @@
         const wide = !val('container') && moq ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + moq, 's', 'أقل طلب', moq), { wide: true })] : val('container') ? [Object.assign(f('box', 'أقل طلب', 'أقل طلب: ' + ['حاوية ' + val('container'), perBox, tpc ? +tpc.toFixed(1) + ' طن' : ''].filter(Boolean).join(' · '), 's', 'أقل طلب', 'حاوية ' + val('container')), { wide: true })] : [];
         // The card shows only the trade terms ("FOB أو CIF"); the enlarged view shows them in full.
         const terms = [...new Set(val('delivery', 80).toUpperCase().match(/\b(EXW|FCA|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b/g) || [])];
-        if (val('delivery', 80)) card.push(f('ship', 'التسليم', terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
+        // Sea and land terms together read "بحر أو بر" on the card.
+        const seaLand = terms.includes('DAP') && terms.some(x => x !== 'DAP');
+        if (val('delivery', 80)) card.push(f('ship', 'التسليم', seaLand ? 'بحر أو بر' : terms.length ? terms.join(' أو ') : val('delivery', 80), 's', 'التسليم', val('delivery', 80)));
         // Full payment before shipping (advance transfer or a letter of credit, as Egypt requires)
         // shows as "الدفع قبل الشحن"; other short terms show as they are, longer ones when enlarged.
         const payShort = /قبل الشحن/.test(val('payment', 120)) ? 'قبل الشحن' : val('payment', 120);
